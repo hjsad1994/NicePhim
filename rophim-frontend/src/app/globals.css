@@ -1,0 +1,132 @@
+@import "tailwindcss";
+
+:root {
+  --background: #282B3A;
+  --foreground: #ffffff;
+}
+
+@theme inline {
+  --color-background: var(--background);
+  --color-foreground: var(--foreground);
+  --font-sans: var(--font-inter), ui-sans-serif, system-ui, sans-serif;
+  
+  /* Custom colors for movie site */
+  --color-primary: #dc2626; /* red-600 */
+  --color-primary-dark: #b91c1c; /* red-700 */
+  --color-secondary: #1f2937; /* gray-800 */
+  --color-accent: #fbbf24; /* amber-400 */
+  
+  /* New background variations */
+  --bg-2: #282B3A; /* Main background */
+  --bg-3: #2F3346; /* Section backgrounds */
+  --bg-4: #3E435C; /* Card backgrounds */
+  --bg-5: #535D8E; /* Accent backgrounds */
+  
+  /* Background variations (legacy) */
+  --color-bg-primary: var(--bg-2);
+  --color-bg-secondary: var(--bg-3);
+  --color-bg-tertiary: var(--bg-4);
+  
+  /* Text colors */
+  --color-text-primary: #ffffff; /* white */
+  --color-text-secondary: #d1d5db; /* gray-300 */
+  --color-text-muted: #9ca3af; /* gray-400 */
+}
+
+body {
+  background: var(--background);
+  color: var(--foreground);
+}
+
+/* Custom scrollbar */
+::-webkit-scrollbar {
+  width: 8px;
+}
+
+::-webkit-scrollbar-track {
+  background: #1f2937;
+}
+
+::-webkit-scrollbar-thumb {
+  background: #4b5563;
+  border-radius: 4px;
+}
+
+::-webkit-scrollbar-thumb:hover {
+  background: #6b7280;
+}
+
+/* Focus styles */
+.focus-visible {
+  @apply outline-none ring-2 ring-red-500 ring-offset-2 ring-offset-black;
+}
+
+/* Animation utilities */
+@keyframes fadeIn {
+  from { opacity: 0; }
+  to { opacity: 1; }
+}
+
+@keyframes slideUp {
+  from { 
+    opacity: 0;
+    transform: translateY(20px);
+  }
+  to { 
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+.animate-fade-in {
+  animation: fadeIn 0.3s ease-in-out;
+}
+
+.animate-slide-up {
+  animation: slideUp 0.4s ease-out;
+}
+
+@keyframes bounce {
+  0%, 100% {
+    transform: translateY(0) scale(1);
+  }
+  50% {
+    transform: translateY(-8px) scale(1.05);
+  }
+}
+
+.animate-bounce-hover:hover {
+  animation: bounce 0.5s ease-in-out;
+}
+
+/* Line clamp utilities */
+.line-clamp-2 {
+  display: -webkit-box;
+  -webkit-line-clamp: 2;
+  -webkit-box-orient: vertical;
+  overflow: hidden;
+}
+
+.line-clamp-3 {
+  display: -webkit-box;
+  -webkit-line-clamp: 3;
+  -webkit-box-orient: vertical;
+  overflow: hidden;
+}
+
+/* Gradient text */
+.gradient-text {
+  background: linear-gradient(135deg, #dc2626, #fbbf24);
+  -webkit-background-clip: text;
+  background-clip: text;
+  -webkit-text-fill-color: transparent;
+}
+
+/* Custom aspect ratios */
+.aspect-poster {
+  aspect-ratio: 2/3;
+}
+
+.aspect-banner {
+  aspect-ratio: 16/9;
+}
