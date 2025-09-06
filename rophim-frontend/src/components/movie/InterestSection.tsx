@@ -1,21 +1,9 @@
 'use client';
 
-import { useState } from 'react';
 import Link from 'next/link';
-import { ChevronRightIcon } from '@heroicons/react/24/outline';
 import { MOVIE_GENRES } from '@/constants';
 
 export function InterestSection() {
-  const [selectedTopics, setSelectedTopics] = useState<string[]>([]);
-
-  const handleTopicClick = (topicId: string) => {
-    setSelectedTopics(prev => 
-      prev.includes(topicId) 
-        ? prev.filter(id => id !== topicId)
-        : [...prev, topicId]
-    );
-  };
-
   return (
     <section className="py-12" style={{backgroundColor: 'var(--bg-3)'}}>
       <div className="max-w-full mx-auto px-4 sm:px-6 lg:px-8 xl:px-12">
@@ -25,7 +13,7 @@ export function InterestSection() {
             🤔 Bạn đang quan tâm gì?
           </h2>
           <p className="text-gray-300 text-lg">
-            Chọn các chủ đề bạn yêu thích để chúng tôi gợi ý phim phù hợp
+            Chọn chủ đề bạn yêu thích để khám phá phim hay
           </p>
         </div>
 
@@ -43,15 +31,13 @@ export function InterestSection() {
             const gradientSet = gradients[index % gradients.length];
             
             return (
-              <button
+              <Link
                 key={genre.id}
-                onClick={() => handleTopicClick(genre.id)}
-                className={`px-10 py-5 rounded-xl border-2 transition-all duration-300 text-center flex-shrink-0 text-gray-800 font-semibold text-lg whitespace-nowrap hover:brightness-110 hover:scale-105 hover:shadow-xl min-w-[140px] ${gradientSet.bg} ${gradientSet.border} ${
-                  selectedTopics.includes(genre.id) ? 'ring-2 ring-gray-400' : ''
-                }`}
+                href={`/the-loai/${genre.slug}`}
+                className={`px-10 py-5 rounded-xl border-2 transition-all duration-300 text-center flex-shrink-0 text-gray-800 font-semibold text-lg whitespace-nowrap hover:brightness-110 hover:scale-105 hover:shadow-xl min-w-[140px] ${gradientSet.bg} ${gradientSet.border}`}
               >
                 {genre.name}
-              </button>
+              </Link>
             );
           })}
           
@@ -63,42 +49,6 @@ export function InterestSection() {
             Chủ đề khác
           </Link>
         </div>
-
-        {/* Selected Topics Summary */}
-        {selectedTopics.length > 0 && (
-          <div className="text-center">
-            <div className="inline-flex items-center px-6 py-3 rounded-lg" style={{backgroundColor: 'var(--bg-4)'}}>
-              <span className="text-gray-300 mr-3">
-                Đã chọn {selectedTopics.length} chủ đề:
-              </span>
-              <div className="flex flex-wrap gap-2">
-                {selectedTopics.slice(0, 3).map((topicId) => {
-                  const genre = MOVIE_GENRES.find(g => g.id === topicId);
-                  return (
-                    <span
-                      key={topicId}
-                      className="px-3 py-1 bg-red-600 text-white text-sm rounded-full"
-                    >
-                      {genre?.name}
-                    </span>
-                  );
-                })}
-                {selectedTopics.length > 3 && (
-                  <span className="px-3 py-1 bg-gray-600 text-white text-sm rounded-full">
-                    +{selectedTopics.length - 3} khác
-                  </span>
-                )}
-              </div>
-              <Link
-                href={`/goi-y?topics=${selectedTopics.join(',')}`}
-                className="ml-4 flex items-center text-red-400 hover:text-red-300 font-medium"
-              >
-                Xem gợi ý
-                <ChevronRightIcon className="h-4 w-4 ml-1" />
-              </Link>
-            </div>
-          </div>
-        )}
       </div>
     </section>
   );

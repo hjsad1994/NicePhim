@@ -87,4 +87,11 @@ export const ROUTES = {
   FAVORITES: '/yeu-thich',
   HISTORY: '/lich-su',
   PROFILE: '/ca-nhan',
+  // New routes for enhanced header
+  SINGLE_MOVIES: '/phim-le',
+  SERIES_MOVIES: '/phim-bo',
+  WATCH_TOGETHER: '/xem-chung',
+  ACTORS: '/dien-vien',
+  SCHEDULE: '/lich-chieu',
+  NOTIFICATIONS: '/thong-bao',
 } as const;

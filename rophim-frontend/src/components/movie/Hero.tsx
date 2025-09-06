@@ -71,7 +71,7 @@ export function Hero({ movies }: HeroProps) {
 
       {/* Content */}
       <div className="relative h-full flex items-center">
-        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 w-full">
+        <div className="max-w-full mx-auto px-4 sm:px-6 lg:px-8 xl:px-12 2xl:px-16 w-full">
           <div className="max-w-xl lg:max-w-2xl">
             {/* Title */}
             <h1 className="text-4xl sm:text-5xl lg:text-6xl font-bold text-white mb-4 animate-slide-up">
