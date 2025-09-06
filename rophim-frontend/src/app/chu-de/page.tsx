@@ -1,4 +1,5 @@
 import { Metadata } from 'next';
+import Link from 'next/link';
 
 export const metadata: Metadata = {
   title: 'Chủ đề phim',
@@ -15,7 +16,7 @@ export default function ChuDePage() {
 
   return (
     <div className="min-h-screen" style={{backgroundColor: 'var(--bg-2)'}}>
-      <div className="max-w-full mx-auto px-4 sm:px-6 lg:px-8 xl:px-12 2xl:px-16 py-12">
+      <div className="w-[90%] mx-auto px-4 sm:px-6 lg:px-8 py-12">
         {/* Header */}
         <div className="text-center mb-12">
           <h1 className="text-4xl font-bold text-white mb-4">
@@ -43,12 +44,12 @@ export default function ChuDePage() {
 
         {/* Back to Home */}
         <div className="text-center mt-12">
-          <a
+          <Link
             href="/"
             className="inline-flex items-center px-6 py-3 bg-red-600 hover:bg-red-700 text-white rounded-lg font-medium transition-colors"
           >
             ← Quay lại trang chủ
-          </a>
+          </Link>
         </div>
       </div>
     </div>

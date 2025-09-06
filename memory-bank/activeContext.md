@@ -1,39 +1,38 @@
 # Context Hiện tại
 
-## Giai đoạn: Advanced Header & Navigation System
-Enhanced Header với search, dropdown menus và comprehensive navigation
+## Giai đoạn: Video Player & Watch Page System
+Hoàn thành giao diện xem phim với video player và tính năng cao cấp
 
 ## Công việc hiện tại
-- **VỪA HOÀN THÀNH**: Simplified Header - bỏ icons để chỉ giữ text navigation
-- **ĐANG LÀM**: Testing clean header design và functionality
-- **TIẾP THEO**: Tạo các trang missing cho navigation items mới
+- **VỪA HOÀN THÀNH**: Simple Static MovieCard - removed all hover effects, clean square design
+- **ĐANG LÀM**: Testing static MovieCard performance và navigation functionality
+- **TIẾP THEO**: Video streaming integration và backend APIs
 
 ## Quyết định kỹ thuật gần đây
-- **Clean Header Design**: 3-section layout với minimal icons, text-focused navigation
-- **Icon Reduction**: Chỉ giữ logo N, notification bell, và user profile icon
-- **Text-Only Navigation**: Bỏ tất cả icons trong navigation menu để clean hơn
-- **Search Simplified**: Search bar không icon, chỉ placeholder text
-- **Minimal Approach**: Focus vào content thay vì visual noise
+- **Enhanced Color System**: Hoàn thiện color palette với base #282B3A
+- **CSS Variables**: Tối ưu --bg-2 đến --bg-5 cho consistency
+- **Dark Theme Optimization**: Text colors được optimize cho dark background
+- **Scrollbar Theming**: Custom scrollbar match với color scheme
+- **Primary Color Enhancement**: Red accent được làm sáng cho dark background
 
-## Clean Header System ✅
-- ✅ **Simplified Search**: Thanh tìm kiếm clean không icon, chỉ placeholder text
-- ✅ **Text Navigation**: Tất cả menu items chỉ dùng text, không icons
-- ✅ **Dropdown Menus**: Chủ đề, Thể loại, Quốc gia với ChevronDown icons
-- ✅ **Essential Icons**: Chỉ giữ logo N, notification bell, và user profile
-- ✅ **Clean Mobile**: Bỏ search icon cho mobile, focus vào essential actions
-- ✅ **Consistent Spacing**: Text-only navigation với proper spacing
-- ✅ **Performance**: Reduced icon imports, lighter component
-- ✅ **Accessibility**: Maintained ARIA labels và keyboard navigation
+## Complete Design System ✅
+- ✅ **Darker Color Palette**: Enhanced #1E2029-based theme với deeper tones
+- ✅ **Background Layers**: --bg-2 (#1E2029) → --bg-5 (#2D2E3B) gradual variations
+- ✅ **Primary Colors**: Red accent (#f87171) brightened cho darker backgrounds
+- ✅ **Enhanced Text**: White → Gray-100 → Gray-300 cho superior contrast
+- ✅ **UI Elements**: Custom scrollbar, focus states, animations match darker theme
+- ✅ **VideoPlayer**: Complete với darker theme integration
+- ✅ **Professional Aesthetic**: Deep, sophisticated dark theme
 
 ## Cần làm tiếp theo
-1. **Missing Pages**: Tạo pages cho `/phim-le`, `/phim-bo`, `/xem-chung`, `/dien-vien`, `/lich-chieu`, `/thong-bao`
-2. **Search Functionality**: Implementation search logic cho `/tim-kiem` page
-3. **Mobile Header**: Thêm mobile menu drawer cho navigation
-4. **Notification System**: Backend integration cho notification system
+1. **Video Streaming**: Real video URLs integration thay mock data
+2. **Episode Support**: Phim bộ với multi-episode functionality  
+3. **User System**: Authentication, favorites, watch history
+4. **Search Pages**: Implementation `/tim-kiem` với advanced filters
 
 ## Lưu ý quan trọng
-- **Header Architecture**: 3-zone layout với logical grouping (Logo+Search | Navigation | User Actions)
-- **Accessibility Ready**: Proper ARIA labels, keyboard navigation support
-- **Dropdown UX**: Smooth transitions với Headless UI, proper z-index layering
-- **SEO Friendly**: All navigation links use proper href routing
-- **Performance**: No impact on load time, all interactions client-side optimized
+- **Deeper Dark Theme**: Toàn bộ UI sử dụng #1E2029 base cho sophisticated look
+- **Enhanced Contrast**: Text colors được brighten lên để đảm bảo readability
+- **Red Accent Optimization**: Primary color (#f87171) được làm sáng cho darker background
+- **Scrollbar Integration**: Custom scrollbar perfectly integrated với darker theme
+- **Professional Aesthetic**: Deep, cinematic dark theme ideal cho movie streaming

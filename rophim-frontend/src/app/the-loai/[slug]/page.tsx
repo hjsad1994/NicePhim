@@ -1,5 +1,6 @@
 import { Metadata } from 'next';
 import { notFound } from 'next/navigation';
+import Link from 'next/link';
 import { MOVIE_GENRES } from '@/constants';
 import { MovieSection } from '@/components/movie/MovieSection';
 import { mockMovies } from '@/lib/mockData';
@@ -34,12 +35,12 @@ export default function TheLoaiPage({ params }: TheLoaiPageProps) {
 
   // Filter movies by genre (for now using mock data)
   const genreMovies = mockMovies.filter(movie => 
-    movie.genres.some(movieGenre => movieGenre.toLowerCase() === genre.name.toLowerCase())
+    movie.genres.some(movieGenre => movieGenre.name.toLowerCase() === genre.name.toLowerCase())
   );
 
   return (
     <div className="min-h-screen" style={{backgroundColor: 'var(--bg-2)'}}>
-      <div className="max-w-full mx-auto px-4 sm:px-6 lg:px-8 xl:px-12 2xl:px-16 py-12">
+      <div className="w-[90%] mx-auto px-4 sm:px-6 lg:px-8 py-12">
         {/* Header */}
         <div className="text-center mb-12">
           <h1 className="text-4xl font-bold text-white mb-4">
@@ -74,18 +75,18 @@ export default function TheLoaiPage({ params }: TheLoaiPageProps) {
 
         {/* Back Navigation */}
         <div className="text-center mt-12">
-          <a
+          <Link
             href="/"
             className="inline-flex items-center px-6 py-3 bg-red-600 hover:bg-red-700 text-white rounded-lg font-medium transition-colors mr-4"
           >
             ← Quay lại trang chủ
-          </a>
-          <a
+          </Link>
+          <Link
             href="/chu-de"
             className="inline-flex items-center px-6 py-3 border border-gray-600 text-gray-300 hover:bg-gray-700 rounded-lg font-medium transition-colors"
           >
-            Xem tất cả chủ đề
-          </a>
+            Xem thêm chủ đề
+          </Link>
         </div>
       </div>
     </div>

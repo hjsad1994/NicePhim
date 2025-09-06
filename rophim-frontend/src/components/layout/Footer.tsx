@@ -30,8 +30,8 @@ export function Footer() {
   };
 
   return (
-    <footer className="border-t border-gray-800" style={{backgroundColor: 'var(--bg-4)'}}>
-      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-12">
+    <footer className="border-2 border-gray-400/15 rounded-lg mt-2" style={{backgroundColor: 'var(--bg-4)'}}>
+      <div className="w-[90%] mx-auto px-4 sm:px-6 lg:px-8 py-12">
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-5 gap-8">
           {/* Logo & Description */}
           <div className="lg:col-span-2">

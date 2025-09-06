@@ -33,7 +33,7 @@ export default function Home() {
       <Hero movies={featuredMovies} />
 
       {/* Movie Sections */}
-      <div style={{backgroundColor: 'var(--bg-3)'}}>
+      <div style={{backgroundColor: 'var(--bg-3)'}} className="border-2 border-gray-400/15 rounded-lg">
         <div className="py-8">
           <MovieSection
             title="🔥 Phim Hot"
@@ -44,7 +44,7 @@ export default function Home() {
           />
         </div>
         
-        <div className="py-8">
+        <div className="py-8 border-t border-gray-400/50">
           <MovieSection
             title="🆕 Phim Mới Cập Nhật"
             movies={newMovies}
@@ -59,7 +59,7 @@ export default function Home() {
       <InterestSection />
 
       {/* More Movie Sections */}
-      <div style={{backgroundColor: 'var(--bg-2)'}}>
+      <div style={{backgroundColor: 'var(--bg-2)'}} className="border-2 border-gray-400/15 rounded-lg mt-2">
         <div className="py-8">
           <MovieSection
             title="🎌 Anime Nổi Bật"
@@ -70,7 +70,7 @@ export default function Home() {
           />
         </div>
         
-        <div className="py-8">
+        <div className="py-8 border-t border-gray-400/50">
           <MovieSection
             title="💥 Phim Hành Động"
             movies={actionMovies}

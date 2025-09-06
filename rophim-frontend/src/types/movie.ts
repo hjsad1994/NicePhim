@@ -18,9 +18,19 @@ export interface Movie {
   createdAt: string;
   updatedAt: string;
   viewCount: number;
+  views?: number; // alias for viewCount for compatibility
   likeCount: number;
   isHot?: boolean;
   isFeatured?: boolean;
+  // Additional video page properties
+  director?: string;
+  cast?: string[];
+  keywords?: string[];
+  // Episodes information for display
+  availableEpisodes?: {
+    subtitled: number[]; // PĐ episodes [1,2,3,4]
+    dubbed: number[]; // TM episodes [1,2]
+  };
 }
 
 export interface Episode {

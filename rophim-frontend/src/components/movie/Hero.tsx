@@ -14,8 +14,14 @@ interface HeroProps {
 export function Hero({ movies }: HeroProps) {
   const [currentIndex, setCurrentIndex] = useState(0);
   const [isAutoPlay, setIsAutoPlay] = useState(true);
+  const [animationKey, setAnimationKey] = useState(0);
 
   const currentMovie = movies[currentIndex];
+
+  // Trigger animation when movie changes
+  useEffect(() => {
+    setAnimationKey(prev => prev + 1);
+  }, [currentIndex]);
 
   // Auto-play carousel
   useEffect(() => {
@@ -71,15 +77,21 @@ export function Hero({ movies }: HeroProps) {
 
       {/* Content */}
       <div className="relative h-full flex items-center">
-        <div className="max-w-full mx-auto px-4 sm:px-6 lg:px-8 xl:px-12 2xl:px-16 w-full">
+        <div className="w-[90%] mx-auto px-4 sm:px-6 lg:px-8">
           <div className="max-w-xl lg:max-w-2xl">
             {/* Title */}
-            <h1 className="text-4xl sm:text-5xl lg:text-6xl font-bold text-white mb-4 animate-slide-up">
+            <h1 
+              key={`title-${animationKey}`}
+              className="text-4xl sm:text-5xl lg:text-6xl font-bold text-white mb-4 animate-slide-in-left"
+            >
               {currentMovie.title}
             </h1>
 
             {/* Info */}
-            <div className="flex items-center space-x-4 text-gray-300 mb-4 animate-slide-up">
+            <div 
+              key={`info-${animationKey}`}
+              className="flex items-center space-x-4 text-gray-300 mb-4 animate-slide-in-left-delayed"
+            >
               <span className="bg-red-600 text-white px-2 py-1 rounded text-sm font-medium">
                 {currentMovie.quality}
               </span>
@@ -94,12 +106,18 @@ export function Hero({ movies }: HeroProps) {
             </div>
 
             {/* Description */}
-            <p className="text-gray-200 text-lg mb-8 leading-relaxed animate-slide-up">
+            <p 
+              key={`desc-${animationKey}`}
+              className="text-gray-200 text-lg mb-8 leading-relaxed animate-slide-in-left-delayed-2"
+            >
               {truncateText(currentMovie.description, 200)}
             </p>
 
             {/* Action Buttons */}
-            <div className="flex items-center space-x-4 animate-slide-up">
+            <div 
+              key={`buttons-${animationKey}`}
+              className="flex items-center space-x-4 animate-slide-in-left-delayed-3"
+            >
               <Link
                 href={`/xem/${currentMovie.slug}`}
                 className="flex items-center bg-red-600 hover:bg-red-700 text-white px-6 py-3 rounded-lg font-medium transition-colors"

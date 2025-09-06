@@ -5,8 +5,8 @@ import { MOVIE_GENRES } from '@/constants';
 
 export function InterestSection() {
   return (
-    <section className="py-12" style={{backgroundColor: 'var(--bg-3)'}}>
-      <div className="max-w-full mx-auto px-4 sm:px-6 lg:px-8 xl:px-12">
+    <section className="py-12 border-2 border-gray-400/15 rounded-lg mt-2" style={{backgroundColor: 'var(--bg-3)'}}>
+      <div className="w-[90%] mx-auto px-4 sm:px-6 lg:px-8">
         {/* Section Header */}
         <div className="text-center mb-8">
           <h2 className="text-3xl font-bold text-white mb-4">
@@ -18,15 +18,15 @@ export function InterestSection() {
         </div>
 
         {/* Topics Horizontal Layout */}
-        <div className="flex flex-wrap justify-center gap-6 mb-8">
+        <div className="flex flex-wrap justify-center gap-4 mb-8">
           {MOVIE_GENRES.slice(0, 6).map((genre, index) => {
             const gradients = [
-              { bg: 'bg-gradient-to-r from-red-300 to-red-100', border: 'border-red-200' },
-              { bg: 'bg-gradient-to-r from-blue-300 to-blue-100', border: 'border-blue-200' },
-              { bg: 'bg-gradient-to-r from-green-300 to-green-100', border: 'border-green-200' },
-              { bg: 'bg-gradient-to-r from-purple-300 to-purple-100', border: 'border-purple-200' },
-              { bg: 'bg-gradient-to-r from-orange-300 to-orange-100', border: 'border-orange-200' },
-              { bg: 'bg-gradient-to-r from-pink-300 to-pink-100', border: 'border-pink-200' }
+              { bg: 'bg-gradient-to-r from-red-600 to-red-400', border: 'border-red-500' },
+              { bg: 'bg-gradient-to-r from-blue-600 to-blue-400', border: 'border-blue-500' },
+              { bg: 'bg-gradient-to-r from-green-600 to-green-400', border: 'border-green-500' },
+              { bg: 'bg-gradient-to-r from-purple-600 to-purple-400', border: 'border-purple-500' },
+              { bg: 'bg-gradient-to-r from-orange-600 to-orange-400', border: 'border-orange-500' },
+              { bg: 'bg-gradient-to-r from-pink-600 to-pink-400', border: 'border-pink-500' }
             ];
             const gradientSet = gradients[index % gradients.length];
             
@@ -34,7 +34,7 @@ export function InterestSection() {
               <Link
                 key={genre.id}
                 href={`/the-loai/${genre.slug}`}
-                className={`px-10 py-5 rounded-xl border-2 transition-all duration-300 text-center flex-shrink-0 text-gray-800 font-semibold text-lg whitespace-nowrap hover:brightness-110 hover:scale-105 hover:shadow-xl min-w-[140px] ${gradientSet.bg} ${gradientSet.border}`}
+                className={`px-14 py-7 rounded-xl border-2 transition-all duration-300 text-center flex-shrink-0 text-white font-bold text-xl whitespace-nowrap hover:brightness-110 hover:scale-105 hover:shadow-xl min-w-[180px] ${gradientSet.bg} ${gradientSet.border}`}
               >
                 {genre.name}
               </Link>
@@ -44,7 +44,7 @@ export function InterestSection() {
           {/* Chủ đề khác */}
           <Link
             href="/chu-de"
-            className="px-10 py-5 rounded-xl border-2 border-yellow-200 bg-gradient-to-r from-yellow-300 to-yellow-100 text-gray-800 hover:brightness-110 hover:scale-105 hover:shadow-xl transition-all duration-300 text-center flex-shrink-0 font-semibold text-lg whitespace-nowrap min-w-[140px]"
+            className="px-14 py-7 rounded-xl border-2 border-yellow-500 bg-gradient-to-r from-yellow-600 to-yellow-400 text-white hover:brightness-110 hover:scale-105 hover:shadow-xl transition-all duration-300 text-center flex-shrink-0 font-bold text-xl whitespace-nowrap min-w-[180px]"
           >
             Chủ đề khác
           </Link>

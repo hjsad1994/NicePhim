@@ -56,7 +56,7 @@ const mockComments: CommentData[] = [
       title: 'Spider-Man: No Way Home',
       poster: '/placeholder-movie.jpg',
     },
-    content: 'Phim hay tuyệt vời! CGI đỉnh cao, cốt truyện hấp dẫn. Tom Holland diễn xuất rất tự nhiên và cuốn hút.',
+    content: 'Phim hay tuyệt vời! CGI đỉnh cao, cốt truyện hấp dẫn. Tom Holland diễn xuất rất tự nhiên và cuốn hút. Đây thực sự là một bộ phim Marvel xuất sắc nhất từ trước đến nay với những pha hành động mãn nhãn.',
     rating: 5,
     timestamp: '2 giờ trước',
   },
@@ -70,7 +70,7 @@ const mockComments: CommentData[] = [
       title: 'Squid Game',
       poster: '/placeholder-movie.jpg',
     },
-    content: 'Series hay nhất năm! Kịch bản sâu sắc, diễn xuất tuyệt vời. Những game tưởng chừng đơn giản nhưng lại rất căng thẳng.',
+    content: 'Series hay nhất năm! Kịch bản sâu sắc, diễn xuất tuyệt vời. Những game tưởng chừng đơn giản nhưng lại rất căng thẳng và đầy kịch tính. Tôi không thể rời mắt khỏi màn hình suốt 9 tập phim. Thông điệp xã hội rất ý nghĩa.',
     rating: 5,
     timestamp: '3 giờ trước',
   },
@@ -116,6 +116,20 @@ const mockComments: CommentData[] = [
     rating: 4,
     timestamp: '1 ngày trước',
   },
+  {
+    id: '6',
+    user: {
+      name: 'Quang Minh',
+      avatar: '/placeholder-avatar.jpg',
+    },
+    movie: {
+      title: 'Top Gun: Maverick',
+      poster: '/placeholder-movie.jpg',
+    },
+    content: 'Tom Cruise còn ngầu hơn xưa! Những cảnh bay thật sự nghẹt thở, adrenaline tăng cao suốt phim.',
+    rating: 5,
+    timestamp: '2 ngày trước',
+  },
 ];
 
 export function UnifiedBottomBlock({ 
@@ -146,127 +160,151 @@ export function UnifiedBottomBlock({
   };
 
   return (
-    <section className="py-12" style={{backgroundColor: 'var(--bg-3)'}}>
-      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+    <section className="py-12 border-2 border-gray-400/15 rounded-lg mt-2" style={{backgroundColor: 'var(--bg-3)'}}>
+      <div className="w-[90%] mx-auto px-4 sm:px-6 lg:px-8">
         
-        {/* Top: Comments Slider */}
-        <div className="mb-12">
-          <div className="text-center mb-8">
-            <h2 className="text-3xl font-bold text-white mb-4">
-              💬 Top Bình Luận Nổi Bật
+        {/* Top: Movie Comments Stats Slider */}
+        <div className="mb-12 p-6 rounded-lg border-2 border-gray-400/50" style={{backgroundColor: 'var(--bg-4)'}}>
+          <div className="flex justify-between items-center mb-8">
+            <h2 className="text-2xl font-bold text-yellow-400">
+              🏆 TOP BÌNH LUẬN
             </h2>
-            <p className="text-gray-300 text-lg">
-              Những đánh giá và bình luận hay nhất từ cộng đồng
-            </p>
           </div>
 
           <div className="relative">
-            <div className="overflow-hidden rounded-lg">
-              <div 
-                className="flex transition-transform duration-500 ease-in-out"
-                style={{ transform: `translateX(-${currentCommentIndex * 100}%)` }}
-              >
-                {mockComments.map((comment) => (
-                  <div
-                    key={comment.id}
-                    className="w-full flex-shrink-0 p-6 rounded-lg"
-                    style={{backgroundColor: 'var(--bg-4)'}}
-                  >
-                    <div className="flex items-start space-x-4">
-                      {/* Movie Poster */}
-                      <div className="relative w-16 h-24 bg-gray-700 rounded overflow-hidden flex-shrink-0">
-                        <Image
-                          src={getImageUrl(comment.movie.poster, 'small')}
-                          alt={comment.movie.title}
-                          fill
-                          className="object-cover"
-                          sizes="64px"
-                        />
-                      </div>
-
-                      {/* Comment Content */}
-                      <div className="flex-1 min-w-0">
-                        {/* User Info */}
-                        <div className="flex items-center space-x-3 mb-3">
-                          <div className="relative w-10 h-10 bg-gray-600 rounded-full overflow-hidden">
-                            <Image
-                              src={comment.user.avatar}
-                              alt={comment.user.name}
-                              fill
-                              className="object-cover"
-                              sizes="40px"
-                            />
-                          </div>
-                          <div>
-                            <h4 className="text-white font-medium">{comment.user.name}</h4>
-                            <p className="text-gray-400 text-sm">
-                              bình luận về <span className="text-red-400">{comment.movie.title}</span>
-                            </p>
-                          </div>
-                        </div>
-
-                        {/* Rating */}
-                        <div className="flex items-center space-x-1 mb-3">
-                          {Array.from({ length: 5 }).map((_, i) => (
-                            <StarIcon
-                              key={i}
-                              className={`h-4 w-4 ${
-                                i < comment.rating ? 'text-yellow-400' : 'text-gray-600'
-                              }`}
-                            />
-                          ))}
-                          <span className="text-gray-400 text-sm ml-2">{comment.timestamp}</span>
-                        </div>
-
-                        {/* Comment Text */}
-                        <p className="text-gray-200 leading-relaxed">
-                          &ldquo;{comment.content}&rdquo;
-                        </p>
-                      </div>
-                    </div>
-                  </div>
-                ))}
-              </div>
-            </div>
-
             {/* Navigation Arrows */}
             <button
               onClick={goToPreviousComment}
-              className="absolute left-4 top-1/2 -translate-y-1/2 p-2 bg-black/50 hover:bg-black/70 text-white rounded-full transition-colors"
-              aria-label="Bình luận trước"
+              className="absolute left-2 top-1/2 -translate-y-1/2 p-2 bg-gray-800/80 hover:bg-gray-700 text-white rounded-full transition-colors z-10 border border-gray-400/60"
+              aria-label="Phim trước"
             >
               <ChevronLeftIcon className="h-5 w-5" />
             </button>
             
             <button
               onClick={goToNextComment}
-              className="absolute right-4 top-1/2 -translate-y-1/2 p-2 bg-black/50 hover:bg-black/70 text-white rounded-full transition-colors"
-              aria-label="Bình luận tiếp theo"
+              className="absolute right-2 top-1/2 -translate-y-1/2 p-2 bg-gray-800/80 hover:bg-gray-700 text-white rounded-full transition-colors z-10 border border-gray-400/60"
+              aria-label="Phim tiếp theo"
             >
               <ChevronRightIcon className="h-5 w-5" />
             </button>
 
-            {/* Dots Indicator */}
-            <div className="flex justify-center mt-6 space-x-2">
-              {mockComments.map((_, index) => (
-                <button
-                  key={index}
-                  onClick={() => setCurrentCommentIndex(index)}
-                  className={`w-2 h-2 rounded-full transition-colors ${
-                    index === currentCommentIndex ? 'bg-red-500' : 'bg-gray-600 hover:bg-gray-500'
-                  }`}
-                  aria-label={`Đi đến bình luận ${index + 1}`}
-                />
-              ))}
+            {/* Movie Cards Container */}
+            <div className="overflow-hidden">
+              <div 
+                className="flex gap-4 transition-transform duration-500 ease-in-out"
+                style={{ transform: `translateX(-${currentCommentIndex * 320}px)` }}
+              >
+                {mockComments.map((comment) => (
+                  <div
+                    key={comment.id}
+                    className="flex-shrink-0 group cursor-pointer"
+                    style={{ width: '310px', height: '230px' }}
+                  >
+                    <Link href={`/phim/${comment.movie.title.toLowerCase().replace(/[^a-z0-9]+/g, '-')}`}>
+                      {/* Outer Box - 310x230px with Movie Background */}
+                      <div 
+                        className="relative rounded-lg overflow-hidden h-full group-hover:scale-105 transition-transform duration-300 border-2 border-gray-400/70"
+                        style={{ width: '310px', height: '230px' }}
+                      >
+                        {/* Blurred Movie Background */}
+                        <div className="absolute inset-0">
+                          <Image
+                            src={getImageUrl(comment.movie.poster, 'medium')}
+                            alt={comment.movie.title}
+                            fill
+                            className="object-cover blur-sm opacity-30"
+                            sizes="310px"
+                          />
+                          {/* Dark overlay */}
+                          <div className="absolute inset-0 bg-black/60"></div>
+                        </div>
+
+                        {/* Content Area - 240x170px */}
+                        <div 
+                          className="relative z-10 mx-auto flex h-full"
+                          style={{ width: '240px', height: '170px', paddingTop: '30px' }}
+                        >
+                          {/* Left Side - User Info & Comment */}
+                          <div className="flex-1 flex flex-col">
+                            {/* User Avatar & Info */}
+                            <div className="flex items-start space-x-3 mb-3">
+                              <div className="relative w-12 h-12 bg-gray-600 rounded-full overflow-hidden flex-shrink-0">
+                                <Image
+                                  src={comment.user.avatar}
+                                  alt={comment.user.name}
+                                  fill
+                                  className="object-cover"
+                                  sizes="48px"
+                                />
+                              </div>
+                              <div className="flex-1">
+                                <div className="flex items-center space-x-2">
+                                  <h4 className="text-white font-medium text-sm">{comment.user.name}</h4>
+                                  <span className="text-blue-400 text-xs">
+                                    {Math.random() > 0.5 ? '♂️' : '♀️'}
+                                  </span>
+                                  {/* Infinity Badge */}
+                                  <div className="bg-blue-600 text-white text-[8px] px-1.5 py-0.5 rounded">
+                                    ∞
+                                  </div>
+                                </div>
+                                <p className="text-gray-400 text-xs">{comment.timestamp}</p>
+                              </div>
+                            </div>
+
+                            {/* Comment Text */}
+                            <p className="text-gray-200 text-sm leading-relaxed line-clamp-4 mb-3 overflow-hidden text-ellipsis">
+                              {comment.content}
+                            </p>
+
+                            {/* Stats */}
+                            <div className="flex items-center space-x-4 text-xs text-gray-400 mt-auto">
+                              <span className="flex items-center space-x-1">
+                                <span>👁</span>
+                                <span>{Math.floor(Math.random() * 10) + 1}</span>
+                              </span>
+                              <span className="flex items-center space-x-1">
+                                <span>👍</span>
+                                <span>0</span>
+                              </span>
+                              <span className="flex items-center space-x-1">
+                                <span>💬</span>
+                                <span>{comment.rating}</span>
+                              </span>
+                            </div>
+                          </div>
+
+                          {/* Right Side - Movie Poster */}
+                          <div className="w-20 ml-4 flex-shrink-0">
+                            <div className="relative w-20 h-28 bg-gray-800 rounded-lg overflow-hidden shadow-lg">
+                              <Image
+                                src={getImageUrl(comment.movie.poster, 'small')}
+                                alt={comment.movie.title}
+                                fill
+                                className="object-cover"
+                                sizes="80px"
+                              />
+                            </div>
+                            <h5 className="text-white text-xs font-medium mt-2 line-clamp-2 text-center">
+                              {comment.movie.title}
+                            </h5>
+                          </div>
+                        </div>
+                      </div>
+                    </Link>
+                  </div>
+                ))}
+              </div>
             </div>
           </div>
         </div>
 
         {/* Bottom: 3 Columns */}
-        <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
+        <div className="grid grid-cols-1 lg:grid-cols-3 gap-8 border-t border-gray-400/70 pt-12">
           
           {/* Left: Rating các phim sôi nổi nhất */}
-          <div className="p-6 rounded-lg" style={{backgroundColor: 'var(--bg-4)'}}>
+          <div className="p-6 rounded-lg border border-gray-400/60" style={{backgroundColor: 'var(--bg-4)'}}>
             <div className="mb-6">
               <h3 className="text-xl font-bold text-white flex items-center">
                 <FireIcon className="h-6 w-6 text-orange-500 mr-2" />
@@ -314,7 +352,7 @@ export function UnifiedBottomBlock({
           </div>
 
           {/* Center: Yêu thích nhất */}
-          <div className="p-6 rounded-lg" style={{backgroundColor: 'var(--bg-4)'}}>
+          <div className="p-6 rounded-lg border border-gray-400/60" style={{backgroundColor: 'var(--bg-4)'}}>
             <div className="mb-6">
               <h3 className="text-xl font-bold text-white flex items-center">
                 <HeartIcon className="h-6 w-6 text-red-500 mr-2" />
@@ -362,7 +400,7 @@ export function UnifiedBottomBlock({
           </div>
 
           {/* Right: Thể loại hot */}
-          <div className="p-6 rounded-lg" style={{backgroundColor: 'var(--bg-4)'}}>
+          <div className="p-6 rounded-lg border border-gray-400/60" style={{backgroundColor: 'var(--bg-4)'}}>
             <div className="mb-6">
               <h3 className="text-xl font-bold text-white flex items-center">
                 <FireIcon className="h-6 w-6 text-yellow-500 mr-2" />

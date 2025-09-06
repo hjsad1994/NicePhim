@@ -1,0 +1,730 @@
+'use client';
+
+import { useState } from 'react';
+import { useRouter } from 'next/navigation';
+import Image from 'next/image';
+import { 
+  PhotoIcon,
+  FilmIcon,
+  DocumentIcon,
+  XMarkIcon,
+  PlusIcon
+} from '@heroicons/react/24/outline';
+import { MOVIE_GENRES, COUNTRIES } from '@/constants';
+
+interface MovieFormData {
+  title: string;
+  description: string;
+  releaseYear: number;
+  duration: number;
+  quality: string;
+  imdbRating: number;
+  genres: string[];
+  country: string;
+  director: string;
+  cast: string[];
+  isHot: boolean;
+  type: 'movie' | 'series';
+}
+
+interface Episode {
+  id: string;
+  title: string;
+  episodeNumber: number;
+  video: File | null;
+  subtitle: File | null;
+  dubbed: File | null;
+}
+
+export default function NewMovie() {
+  const router = useRouter();
+  const [formData, setFormData] = useState<MovieFormData>({
+    title: '',
+    description: '',
+    releaseYear: new Date().getFullYear(),
+    duration: 0,
+    quality: 'HD',
+    imdbRating: 0,
+    genres: [],
+    country: '',
+    director: '',
+    cast: [],
+    isHot: false,
+    type: 'movie'
+  });
+
+  const [files, setFiles] = useState({
+    poster: null as File | null,
+    banner: null as File | null,
+    thumbnail: null as File | null,
+    trailer: null as File | null,
+    video: null as File | null
+  });
+
+  const [episodes, setEpisodes] = useState<Episode[]>([]);
+  const [castInput, setCastInput] = useState('');
+  const [previewUrls, setPreviewUrls] = useState({
+    poster: '',
+    banner: '',
+    thumbnail: ''
+  });
+
+  const handleInputChange = (field: keyof MovieFormData, value: any) => {
+    setFormData(prev => ({ ...prev, [field]: value }));
+  };
+
+  const handleFileChange = (field: keyof typeof files, file: File | null) => {
+    setFiles(prev => ({ ...prev, [field]: file }));
+    
+    // Create preview URL for images
+    if (file && ['poster', 'banner', 'thumbnail'].includes(field)) {
+      const url = URL.createObjectURL(file);
+      setPreviewUrls(prev => ({ ...prev, [field]: url }));
+    }
+  };
+
+  const handleGenreToggle = (genreId: string) => {
+    setFormData(prev => ({
+      ...prev,
+      genres: prev.genres.includes(genreId)
+        ? prev.genres.filter(id => id !== genreId)
+        : [...prev.genres, genreId]
+    }));
+  };
+
+  const addCastMember = () => {
+    if (castInput.trim()) {
+      setFormData(prev => ({
+        ...prev,
+        cast: [...prev.cast, castInput.trim()]
+      }));
+      setCastInput('');
+    }
+  };
+
+  const removeCastMember = (index: number) => {
+    setFormData(prev => ({
+      ...prev,
+      cast: prev.cast.filter((_, i) => i !== index)
+    }));
+  };
+
+  const addEpisode = () => {
+    const newEpisode: Episode = {
+      id: Date.now().toString(),
+      title: `Tập ${episodes.length + 1}`,
+      episodeNumber: episodes.length + 1,
+      video: null,
+      subtitle: null,
+      dubbed: null
+    };
+    setEpisodes(prev => [...prev, newEpisode]);
+  };
+
+  const removeEpisode = (id: string) => {
+    setEpisodes(prev => prev.filter(ep => ep.id !== id));
+  };
+
+  const updateEpisode = (id: string, field: keyof Episode, value: any) => {
+    setEpisodes(prev => prev.map(ep => 
+      ep.id === id ? { ...ep, [field]: value } : ep
+    ));
+  };
+
+  const handleSubmit = async (e: React.FormEvent) => {
+    e.preventDefault();
+    
+    // Validation
+    if (!formData.title || !formData.description) {
+      alert('Vui lòng điền đầy đủ thông tin bắt buộc');
+      return;
+    }
+
+    if (!files.poster) {
+      alert('Vui lòng upload poster');
+      return;
+    }
+
+    if (formData.type === 'movie' && !files.video) {
+      alert('Vui lòng upload video phim');
+      return;
+    }
+
+    if (formData.type === 'series' && episodes.length === 0) {
+      alert('Vui lòng thêm ít nhất một tập phim');
+      return;
+    }
+
+    // TODO: Submit to API
+    console.log('Form Data:', formData);
+    console.log('Files:', files);
+    console.log('Episodes:', episodes);
+    
+    alert('Phim đã được thêm thành công!');
+    router.push('/admin/movies');
+  };
+
+  return (
+    <div className="max-w-4xl mx-auto space-y-6">
+      {/* Header */}
+      <div>
+        <h1 className="text-2xl font-bold text-gray-900">Thêm phim mới</h1>
+        <p className="text-gray-600">Điền thông tin để thêm phim vào hệ thống</p>
+      </div>
+
+      <form onSubmit={handleSubmit} className="space-y-6">
+        {/* Basic Information */}
+        <div className="bg-white p-6 rounded-lg shadow-sm border border-gray-200">
+          <h3 className="text-lg font-medium text-gray-900 mb-4">Thông tin cơ bản</h3>
+          
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+            <div>
+              <label className="block text-sm font-medium text-gray-700 mb-2">
+                Tên phim <span className="text-red-500">*</span>
+              </label>
+              <input
+                type="text"
+                value={formData.title}
+                onChange={(e) => handleInputChange('title', e.target.value)}
+                className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-red-500"
+                required
+              />
+            </div>
+
+            <div>
+              <label className="block text-sm font-medium text-gray-700 mb-2">Loại phim</label>
+              <select
+                value={formData.type}
+                onChange={(e) => handleInputChange('type', e.target.value as 'movie' | 'series')}
+                className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-red-500"
+              >
+                <option value="movie">Phim lẻ</option>
+                <option value="series">Phim bộ</option>
+              </select>
+            </div>
+
+            <div>
+              <label className="block text-sm font-medium text-gray-700 mb-2">Năm phát hành</label>
+              <input
+                type="number"
+                value={formData.releaseYear}
+                onChange={(e) => handleInputChange('releaseYear', parseInt(e.target.value))}
+                className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-red-500"
+                min="1900"
+                max={new Date().getFullYear() + 5}
+              />
+            </div>
+
+            <div>
+              <label className="block text-sm font-medium text-gray-700 mb-2">Thời lượng (phút)</label>
+              <input
+                type="number"
+                value={formData.duration}
+                onChange={(e) => handleInputChange('duration', parseInt(e.target.value))}
+                className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-red-500"
+                min="1"
+              />
+            </div>
+
+            <div>
+              <label className="block text-sm font-medium text-gray-700 mb-2">Chất lượng</label>
+              <select
+                value={formData.quality}
+                onChange={(e) => handleInputChange('quality', e.target.value)}
+                className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-red-500"
+              >
+                <option value="CAM">CAM</option>
+                <option value="SD">SD</option>
+                <option value="HD">HD</option>
+                <option value="FHD">FHD</option>
+                <option value="4K">4K</option>
+              </select>
+            </div>
+
+            <div>
+              <label className="block text-sm font-medium text-gray-700 mb-2">Điểm IMDb</label>
+              <input
+                type="number"
+                step="0.1"
+                min="0"
+                max="10"
+                value={formData.imdbRating}
+                onChange={(e) => handleInputChange('imdbRating', parseFloat(e.target.value))}
+                className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-red-500"
+              />
+            </div>
+
+            <div>
+              <label className="block text-sm font-medium text-gray-700 mb-2">Quốc gia</label>
+              <select
+                value={formData.country}
+                onChange={(e) => handleInputChange('country', e.target.value)}
+                className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-red-500"
+              >
+                <option value="">Chọn quốc gia</option>
+                {COUNTRIES.map(country => (
+                  <option key={country.code} value={country.name}>{country.name}</option>
+                ))}
+              </select>
+            </div>
+
+            <div>
+              <label className="block text-sm font-medium text-gray-700 mb-2">Đạo diễn</label>
+              <input
+                type="text"
+                value={formData.director}
+                onChange={(e) => handleInputChange('director', e.target.value)}
+                className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-red-500"
+              />
+            </div>
+          </div>
+
+          <div className="mt-6">
+            <label className="block text-sm font-medium text-gray-700 mb-2">
+              Mô tả phim <span className="text-red-500">*</span>
+            </label>
+            <textarea
+              value={formData.description}
+              onChange={(e) => handleInputChange('description', e.target.value)}
+              rows={4}
+              className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-red-500"
+              required
+            />
+          </div>
+
+          <div className="mt-6">
+            <div className="flex items-center">
+              <input
+                type="checkbox"
+                id="isHot"
+                checked={formData.isHot}
+                onChange={(e) => handleInputChange('isHot', e.target.checked)}
+                className="h-4 w-4 text-red-600 focus:ring-red-500 border-gray-300 rounded"
+              />
+              <label htmlFor="isHot" className="ml-2 block text-sm text-gray-700">
+                Phim hot (hiển thị badge HOT)
+              </label>
+            </div>
+          </div>
+        </div>
+
+        {/* Genres */}
+        <div className="bg-white p-6 rounded-lg shadow-sm border border-gray-200">
+          <h3 className="text-lg font-medium text-gray-900 mb-4">Thể loại</h3>
+          <div className="grid grid-cols-2 md:grid-cols-4 gap-3">
+            {MOVIE_GENRES.map(genre => (
+              <label key={genre.id} className="flex items-center space-x-2 cursor-pointer">
+                <input
+                  type="checkbox"
+                  checked={formData.genres.includes(genre.id)}
+                  onChange={() => handleGenreToggle(genre.id)}
+                  className="h-4 w-4 text-red-600 focus:ring-red-500 border-gray-300 rounded"
+                />
+                <span className="text-sm text-gray-700">{genre.name}</span>
+              </label>
+            ))}
+          </div>
+        </div>
+
+        {/* Cast */}
+        <div className="bg-white p-6 rounded-lg shadow-sm border border-gray-200">
+          <h3 className="text-lg font-medium text-gray-900 mb-4">Diễn viên</h3>
+          
+          <div className="flex gap-2 mb-4">
+            <input
+              type="text"
+              value={castInput}
+              onChange={(e) => setCastInput(e.target.value)}
+              placeholder="Tên diễn viên"
+              className="flex-1 px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-red-500"
+              onKeyPress={(e) => e.key === 'Enter' && (e.preventDefault(), addCastMember())}
+            />
+            <button
+              type="button"
+              onClick={addCastMember}
+              className="px-4 py-2 bg-red-600 text-white rounded-md hover:bg-red-700 transition-colors"
+            >
+              <PlusIcon className="h-4 w-4" />
+            </button>
+          </div>
+
+          <div className="flex flex-wrap gap-2">
+            {formData.cast.map((actor, index) => (
+              <span
+                key={index}
+                className="inline-flex items-center px-3 py-1 rounded-full text-sm bg-gray-100 text-gray-800"
+              >
+                {actor}
+                <button
+                  type="button"
+                  onClick={() => removeCastMember(index)}
+                  className="ml-2 text-gray-400 hover:text-gray-600"
+                >
+                  <XMarkIcon className="h-3 w-3" />
+                </button>
+              </span>
+            ))}
+          </div>
+        </div>
+
+        {/* File Uploads */}
+        <div className="bg-white p-6 rounded-lg shadow-sm border border-gray-200">
+          <h3 className="text-lg font-medium text-gray-900 mb-4">Hình ảnh & Video</h3>
+          
+          <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
+            {/* Poster */}
+            <div>
+              <label className="block text-sm font-medium text-gray-700 mb-2">
+                Poster <span className="text-red-500">*</span>
+              </label>
+              <div className="border-2 border-dashed border-gray-300 rounded-lg p-4 text-center hover:border-red-400 transition-colors">
+                {previewUrls.poster ? (
+                  <div className="relative">
+                    <Image
+                      src={previewUrls.poster}
+                      alt="Poster preview"
+                      width={200}
+                      height={300}
+                      className="mx-auto rounded object-cover"
+                    />
+                    <button
+                      type="button"
+                      onClick={() => handleFileChange('poster', null)}
+                      className="absolute top-2 right-2 bg-red-600 text-white rounded-full p-1"
+                    >
+                      <XMarkIcon className="h-4 w-4" />
+                    </button>
+                  </div>
+                ) : (
+                  <div>
+                    <PhotoIcon className="mx-auto h-12 w-12 text-gray-400" />
+                    <div className="mt-2">
+                      <label htmlFor="poster-upload" className="cursor-pointer">
+                        <span className="text-red-600 hover:text-red-500">Upload poster</span>
+                        <input
+                          id="poster-upload"
+                          type="file"
+                          accept="image/*"
+                          className="hidden"
+                          onChange={(e) => e.target.files && handleFileChange('poster', e.target.files[0])}
+                        />
+                      </label>
+                    </div>
+                  </div>
+                )}
+              </div>
+            </div>
+
+            {/* Banner */}
+            <div>
+              <label className="block text-sm font-medium text-gray-700 mb-2">Banner</label>
+              <div className="border-2 border-dashed border-gray-300 rounded-lg p-4 text-center hover:border-red-400 transition-colors">
+                {previewUrls.banner ? (
+                  <div className="relative">
+                    <Image
+                      src={previewUrls.banner}
+                      alt="Banner preview"
+                      width={300}
+                      height={150}
+                      className="mx-auto rounded object-cover"
+                    />
+                    <button
+                      type="button"
+                      onClick={() => handleFileChange('banner', null)}
+                      className="absolute top-2 right-2 bg-red-600 text-white rounded-full p-1"
+                    >
+                      <XMarkIcon className="h-4 w-4" />
+                    </button>
+                  </div>
+                ) : (
+                  <div>
+                    <PhotoIcon className="mx-auto h-12 w-12 text-gray-400" />
+                    <div className="mt-2">
+                      <label htmlFor="banner-upload" className="cursor-pointer">
+                        <span className="text-red-600 hover:text-red-500">Upload banner</span>
+                        <input
+                          id="banner-upload"
+                          type="file"
+                          accept="image/*"
+                          className="hidden"
+                          onChange={(e) => e.target.files && handleFileChange('banner', e.target.files[0])}
+                        />
+                      </label>
+                    </div>
+                  </div>
+                )}
+              </div>
+            </div>
+
+            {/* Thumbnail */}
+            <div>
+              <label className="block text-sm font-medium text-gray-700 mb-2">Thumbnail</label>
+              <div className="border-2 border-dashed border-gray-300 rounded-lg p-4 text-center hover:border-red-400 transition-colors">
+                {previewUrls.thumbnail ? (
+                  <div className="relative">
+                    <Image
+                      src={previewUrls.thumbnail}
+                      alt="Thumbnail preview"
+                      width={200}
+                      height={120}
+                      className="mx-auto rounded object-cover"
+                    />
+                    <button
+                      type="button"
+                      onClick={() => handleFileChange('thumbnail', null)}
+                      className="absolute top-2 right-2 bg-red-600 text-white rounded-full p-1"
+                    >
+                      <XMarkIcon className="h-4 w-4" />
+                    </button>
+                  </div>
+                ) : (
+                  <div>
+                    <PhotoIcon className="mx-auto h-12 w-12 text-gray-400" />
+                    <div className="mt-2">
+                      <label htmlFor="thumbnail-upload" className="cursor-pointer">
+                        <span className="text-red-600 hover:text-red-500">Upload thumbnail</span>
+                        <input
+                          id="thumbnail-upload"
+                          type="file"
+                          accept="image/*"
+                          className="hidden"
+                          onChange={(e) => e.target.files && handleFileChange('thumbnail', e.target.files[0])}
+                        />
+                      </label>
+                    </div>
+                  </div>
+                )}
+              </div>
+            </div>
+          </div>
+
+          {/* Trailer & Video */}
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-6 mt-6">
+            {/* Trailer */}
+            <div>
+              <label className="block text-sm font-medium text-gray-700 mb-2">Trailer (Optional)</label>
+              <div className="border-2 border-dashed border-gray-300 rounded-lg p-4 text-center hover:border-red-400 transition-colors">
+                {files.trailer ? (
+                  <div className="flex items-center justify-between">
+                    <span className="text-sm text-gray-600 truncate">{files.trailer.name}</span>
+                    <button
+                      type="button"
+                      onClick={() => handleFileChange('trailer', null)}
+                      className="text-red-600 hover:text-red-500"
+                    >
+                      <XMarkIcon className="h-4 w-4" />
+                    </button>
+                  </div>
+                ) : (
+                  <div>
+                    <FilmIcon className="mx-auto h-12 w-12 text-gray-400" />
+                    <div className="mt-2">
+                      <label htmlFor="trailer-upload" className="cursor-pointer">
+                        <span className="text-red-600 hover:text-red-500">Upload trailer</span>
+                        <input
+                          id="trailer-upload"
+                          type="file"
+                          accept="video/*"
+                          className="hidden"
+                          onChange={(e) => e.target.files && handleFileChange('trailer', e.target.files[0])}
+                        />
+                      </label>
+                    </div>
+                  </div>
+                )}
+              </div>
+            </div>
+
+            {/* Video for single movie */}
+            {formData.type === 'movie' && (
+              <div>
+                <label className="block text-sm font-medium text-gray-700 mb-2">
+                  Video phim <span className="text-red-500">*</span>
+                </label>
+                <div className="border-2 border-dashed border-gray-300 rounded-lg p-4 text-center hover:border-red-400 transition-colors">
+                  {files.video ? (
+                    <div className="flex items-center justify-between">
+                      <span className="text-sm text-gray-600 truncate">{files.video.name}</span>
+                      <button
+                        type="button"
+                        onClick={() => handleFileChange('video', null)}
+                        className="text-red-600 hover:text-red-500"
+                      >
+                        <XMarkIcon className="h-4 w-4" />
+                      </button>
+                    </div>
+                  ) : (
+                    <div>
+                      <FilmIcon className="mx-auto h-12 w-12 text-gray-400" />
+                      <div className="mt-2">
+                        <label htmlFor="video-upload" className="cursor-pointer">
+                          <span className="text-red-600 hover:text-red-500">Upload video</span>
+                          <input
+                            id="video-upload"
+                            type="file"
+                            accept="video/*"
+                            className="hidden"
+                            onChange={(e) => e.target.files && handleFileChange('video', e.target.files[0])}
+                          />
+                        </label>
+                      </div>
+                    </div>
+                  )}
+                </div>
+              </div>
+            )}
+          </div>
+        </div>
+
+        {/* Episodes for series */}
+        {formData.type === 'series' && (
+          <div className="bg-white p-6 rounded-lg shadow-sm border border-gray-200">
+            <div className="flex items-center justify-between mb-4">
+              <h3 className="text-lg font-medium text-gray-900">Tập phim</h3>
+              <button
+                type="button"
+                onClick={addEpisode}
+                className="inline-flex items-center px-3 py-2 border border-transparent text-sm font-medium rounded-md text-white bg-red-600 hover:bg-red-700"
+              >
+                <PlusIcon className="mr-2 h-4 w-4" />
+                Thêm tập
+              </button>
+            </div>
+
+            <div className="space-y-4">
+              {episodes.map((episode) => (
+                <div key={episode.id} className="border border-gray-200 rounded-lg p-4">
+                  <div className="flex items-center justify-between mb-4">
+                    <input
+                      type="text"
+                      value={episode.title}
+                      onChange={(e) => updateEpisode(episode.id, 'title', e.target.value)}
+                      className="flex-1 px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-red-500 mr-4"
+                      placeholder="Tên tập phim"
+                    />
+                    <button
+                      type="button"
+                      onClick={() => removeEpisode(episode.id)}
+                      className="text-red-600 hover:text-red-500"
+                    >
+                      <XMarkIcon className="h-5 w-5" />
+                    </button>
+                  </div>
+
+                  <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+                    {/* Video */}
+                    <div>
+                      <label className="block text-sm font-medium text-gray-700 mb-2">Video</label>
+                      <div className="border border-gray-300 rounded-lg p-3 text-center">
+                        {episode.video ? (
+                          <div className="flex items-center justify-between">
+                            <span className="text-sm text-gray-600 truncate">{episode.video.name}</span>
+                            <button
+                              type="button"
+                              onClick={() => updateEpisode(episode.id, 'video', null)}
+                              className="text-red-600 hover:text-red-500"
+                            >
+                              <XMarkIcon className="h-4 w-4" />
+                            </button>
+                          </div>
+                        ) : (
+                          <label className="cursor-pointer">
+                            <FilmIcon className="mx-auto h-8 w-8 text-gray-400" />
+                            <span className="text-sm text-red-600">Upload video</span>
+                            <input
+                              type="file"
+                              accept="video/*"
+                              className="hidden"
+                              onChange={(e) => e.target.files && updateEpisode(episode.id, 'video', e.target.files[0])}
+                            />
+                          </label>
+                        )}
+                      </div>
+                    </div>
+
+                    {/* Subtitle */}
+                    <div>
+                      <label className="block text-sm font-medium text-gray-700 mb-2">Phụ đề</label>
+                      <div className="border border-gray-300 rounded-lg p-3 text-center">
+                        {episode.subtitle ? (
+                          <div className="flex items-center justify-between">
+                            <span className="text-sm text-gray-600 truncate">{episode.subtitle.name}</span>
+                            <button
+                              type="button"
+                              onClick={() => updateEpisode(episode.id, 'subtitle', null)}
+                              className="text-red-600 hover:text-red-500"
+                            >
+                              <XMarkIcon className="h-4 w-4" />
+                            </button>
+                          </div>
+                        ) : (
+                          <label className="cursor-pointer">
+                            <DocumentIcon className="mx-auto h-8 w-8 text-gray-400" />
+                            <span className="text-sm text-red-600">Upload subtitle</span>
+                            <input
+                              type="file"
+                              accept=".srt,.vtt,.ass"
+                              className="hidden"
+                              onChange={(e) => e.target.files && updateEpisode(episode.id, 'subtitle', e.target.files[0])}
+                            />
+                          </label>
+                        )}
+                      </div>
+                    </div>
+
+                    {/* Dubbed */}
+                    <div>
+                      <label className="block text-sm font-medium text-gray-700 mb-2">Thuyết minh</label>
+                      <div className="border border-gray-300 rounded-lg p-3 text-center">
+                        {episode.dubbed ? (
+                          <div className="flex items-center justify-between">
+                            <span className="text-sm text-gray-600 truncate">{episode.dubbed.name}</span>
+                            <button
+                              type="button"
+                              onClick={() => updateEpisode(episode.id, 'dubbed', null)}
+                              className="text-red-600 hover:text-red-500"
+                            >
+                              <XMarkIcon className="h-4 w-4" />
+                            </button>
+                          </div>
+                        ) : (
+                          <label className="cursor-pointer">
+                            <FilmIcon className="mx-auto h-8 w-8 text-gray-400" />
+                            <span className="text-sm text-red-600">Upload thuyết minh</span>
+                            <input
+                              type="file"
+                              accept="video/*"
+                              className="hidden"
+                              onChange={(e) => e.target.files && updateEpisode(episode.id, 'dubbed', e.target.files[0])}
+                            />
+                          </label>
+                        )}
+                      </div>
+                    </div>
+                  </div>
+                </div>
+              ))}
+            </div>
+          </div>
+        )}
+
+        {/* Submit */}
+        <div className="flex justify-end space-x-4">
+          <button
+            type="button"
+            onClick={() => router.back()}
+            className="px-6 py-2 border border-gray-300 text-gray-700 rounded-md hover:bg-gray-50 transition-colors"
+          >
+            Hủy
+          </button>
+          <button
+            type="submit"
+            className="px-6 py-2 bg-red-600 text-white rounded-md hover:bg-red-700 transition-colors"
+          >
+            Thêm phim
+          </button>
+        </div>
+      </form>
+    </div>
+  );
+}

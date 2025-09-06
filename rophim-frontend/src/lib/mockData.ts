@@ -6,6 +6,10 @@ export const mockMovies: Movie[] = [
     id: '1',
     title: 'Spider-Man: No Way Home',
     slug: 'spider-man-no-way-home',
+    availableEpisodes: {
+      subtitled: [1, 2, 3, 4],
+      dubbed: [1, 2]
+    },
     description: 'Peter Parker được huyền thoại Doctor Strange giúp đỡ để khôi phục bí mật danh tính của anh ta. Khi một câu thần chú bị sai, những kẻ thù nguy hiểm từ các thế giới khác bắt đầu xuất hiện, buộc Peter phải khám phá ra ý nghĩa thực sự của việc trở thành Người Nhện.',
     poster: '/placeholder-movie.jpg',
     banner: '/placeholder-banner.jpg',
@@ -31,6 +35,10 @@ export const mockMovies: Movie[] = [
     id: '2',
     title: 'Squid Game',
     slug: 'squid-game',
+    availableEpisodes: {
+      subtitled: [1, 2, 3, 4, 5, 6],
+      dubbed: [1, 2, 3]
+    },
     description: 'Hàng trăm người chơi nợ nần chấp nhận lời mời tham gia vào các trò chơi dành cho trẻ em với giải thưởng khổng lồ. Nhưng những rủi ro thì cũng khổng lồ như vậy.',
     poster: '/placeholder-movie.jpg',
     banner: '/placeholder-banner.jpg',
@@ -58,6 +66,10 @@ export const mockMovies: Movie[] = [
     id: '3',
     title: 'The Batman',
     slug: 'the-batman',
+    availableEpisodes: {
+      subtitled: [1, 2, 3],
+      dubbed: [1]
+    },
     description: 'Trong năm thứ hai của mình khi chiến đấu với tội phạm, Batman khám phá ra sự tham nhũng ở Gotham City có liên quan đến gia đình của chính mình.',
     poster: '/placeholder-movie.jpg',
     banner: '/placeholder-banner.jpg',

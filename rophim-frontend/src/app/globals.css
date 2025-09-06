@@ -1,7 +1,7 @@
 @import "tailwindcss";
 
 :root {
-  --background: #282B3A;
+  --background: #1E2029;
   --foreground: #ffffff;
 }
 
@@ -10,27 +10,27 @@
   --color-foreground: var(--foreground);
   --font-sans: var(--font-inter), ui-sans-serif, system-ui, sans-serif;
   
-  /* Custom colors for movie site */
-  --color-primary: #dc2626; /* red-600 */
-  --color-primary-dark: #b91c1c; /* red-700 */
+  /* Custom colors for movie site - Red theme consistent với darker background */
+  --color-primary: #f87171; /* red-400 - brighter cho darker background */
+  --color-primary-dark: #ef4444; /* red-500 */
   --color-secondary: #1f2937; /* gray-800 */
   --color-accent: #fbbf24; /* amber-400 */
   
-  /* New background variations */
-  --bg-2: #282B3A; /* Main background */
-  --bg-3: #2F3346; /* Section backgrounds */
-  --bg-4: #3E435C; /* Card backgrounds */
-  --bg-5: #535D8E; /* Accent backgrounds */
+  /* Background variations - Darker tone palette */
+  --bg-2: #1E2029; /* Main background - Darker base */
+  --bg-3: #23242F; /* Section backgrounds - Slightly lighter */
+  --bg-4: #282935; /* Card backgrounds - Medium tone */
+  --bg-5: #2D2E3B; /* Header/Footer backgrounds - Lightest variant */
   
   /* Background variations (legacy) */
   --color-bg-primary: var(--bg-2);
   --color-bg-secondary: var(--bg-3);
   --color-bg-tertiary: var(--bg-4);
   
-  /* Text colors */
+  /* Text colors - Enhanced contrast cho darker background */
   --color-text-primary: #ffffff; /* white */
-  --color-text-secondary: #d1d5db; /* gray-300 */
-  --color-text-muted: #9ca3af; /* gray-400 */
+  --color-text-secondary: #f3f4f6; /* gray-100 - brighter for better contrast */
+  --color-text-muted: #d1d5db; /* gray-300 - lighter muted text */
 }
 
 body {
@@ -38,27 +38,75 @@ body {
   color: var(--foreground);
 }
 
-/* Custom scrollbar */
+/* Custom scrollbar - Updated cho darker theme */
 ::-webkit-scrollbar {
   width: 8px;
 }
 
 ::-webkit-scrollbar-track {
-  background: #1f2937;
+  background: #1E2029; /* Match main background */
 }
 
 ::-webkit-scrollbar-thumb {
-  background: #4b5563;
+  background: #2D2E3B; /* Match --bg-5 */
   border-radius: 4px;
 }
 
 ::-webkit-scrollbar-thumb:hover {
-  background: #6b7280;
+  background: #373847; /* Lighter hover state */
 }
 
 /* Focus styles */
 .focus-visible {
   @apply outline-none ring-2 ring-red-500 ring-offset-2 ring-offset-black;
+}
+
+/* Enhanced line-clamp with ellipsis */
+.line-clamp-4 {
+  display: -webkit-box;
+  -webkit-line-clamp: 4;
+  -webkit-box-orient: vertical;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+/* Hero content slide animations with faster blur effect */
+@keyframes slideInFromLeft {
+  0% {
+    transform: translateX(-50%);
+    opacity: 0;
+    filter: blur(6px);
+  }
+  40% {
+    filter: blur(1px);
+  }
+  70% {
+    filter: blur(0px);
+  }
+  100% {
+    transform: translateX(0);
+    opacity: 1;
+    filter: blur(0px);
+  }
+}
+
+.animate-slide-in-left {
+  animation: slideInFromLeft 0.3s cubic-bezier(0.25, 0.46, 0.45, 0.94) forwards;
+}
+
+.animate-slide-in-left-delayed {
+  animation: slideInFromLeft 0.3s cubic-bezier(0.25, 0.46, 0.45, 0.94) forwards;
+  opacity: 0;
+}
+
+.animate-slide-in-left-delayed-2 {
+  animation: slideInFromLeft 0.3s cubic-bezier(0.25, 0.46, 0.45, 0.94) forwards;
+  opacity: 0;
+}
+
+.animate-slide-in-left-delayed-3 {
+  animation: slideInFromLeft 0.3s cubic-bezier(0.25, 0.46, 0.45, 0.94) forwards;
+  opacity: 0;
 }
 
 /* Animation utilities */
