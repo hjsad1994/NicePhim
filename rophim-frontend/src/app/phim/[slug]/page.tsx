@@ -9,7 +9,6 @@ import {
   HeartIcon, 
   ShareIcon, 
   StarIcon, 
-  EyeIcon, 
   CalendarIcon,
   ClockIcon,
   TagIcon,
@@ -18,7 +17,7 @@ import {
 import { HeartIcon as HeartOutlineIcon } from '@heroicons/react/24/outline';
 import { Movie } from '@/types/movie';
 import { mockMovies } from '@/lib/mockData';
-import { formatViewCount, getImageUrl } from '@/lib/utils';
+import { getImageUrl } from '@/lib/utils';
 
 interface MovieDetailPageProps {
   params: {
@@ -145,10 +144,6 @@ export default function MovieDetailPage({ params }: MovieDetailPageProps) {
                     <span className="font-semibold">{movie.imdbRating}</span>
                   </div>
                 )}
-                <div className="flex items-center gap-2">
-                  <EyeIcon className="h-5 w-5" />
-                  <span>{formatViewCount(movie.viewCount)}</span>
-                </div>
                 <div className="flex items-center gap-2">
                   <CalendarIcon className="h-5 w-5" />
                   <span>{movie.releaseYear}</span>

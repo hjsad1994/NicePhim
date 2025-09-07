@@ -178,3 +178,141 @@ body {
 .aspect-banner {
   aspect-ratio: 16/9;
 }
+
+/* Custom classes for UnifiedBottomBlock */
+.cards-row.wide {
+  width: 100%;
+  margin: 0 auto;
+}
+
+.row-content {
+  position: relative;
+}
+
+.comm-wrap {
+  border-radius: 12px;
+  padding: 24px;
+  margin: 16px 0;
+  border: 2px solid rgba(156, 163, 175, 0.15);
+}
+
+.top-discuss {
+  margin-bottom: 24px;
+}
+
+.comm-title.line-center {
+  display: flex;
+  align-items: center;
+  justify-content: flex-start;
+}
+
+.d-item.td-d-item {
+  width: 248.2px;
+  height: 192px;
+  border-radius: 8px;
+  overflow: hidden;
+  position: relative;
+  cursor: pointer;
+  transition: transform 0.3s ease;
+  background: var(--bg-4);
+}
+
+.d-item.td-d-item:hover {
+  transform: scale(1.02);
+}
+
+.di-poster {
+  position: absolute;
+  inset: 0;
+  z-index: 0;
+}
+
+.di-v {
+  position: relative;
+  z-index: 10;
+  padding: 16px;
+  height: 100%;
+  display: flex;
+  flex-direction: column;
+  justify-content: space-between;
+}
+
+.user-avatar img {
+  width: 48px;
+  height: 48px;
+  border-radius: 50%;
+  object-fit: cover;
+}
+
+.d-thumb {
+  flex-shrink: 0;
+}
+
+.d-thumb img {
+  border-radius: 4px;
+  object-fit: cover;
+}
+
+.irt-table {
+  margin-top: 0;
+}
+
+.it-col {
+  background: rgba(45, 46, 59, 0.5);
+  border-radius: 8px;
+  padding: 16px;
+}
+
+.chart-list .item {
+  transition: background-color 0.2s ease;
+}
+
+.chart-list .item:hover {
+  background-color: rgba(31, 41, 55, 0.5);
+}
+
+.comment-slide-wrapper {
+  position: relative;
+}
+
+.sw-comment-slide {
+  max-height: 320px;
+  overflow: hidden;
+}
+
+.re-item {
+  display: flex;
+  align-items: center;
+  padding: 8px;
+  border-radius: 4px;
+  transition: background-color 0.2s ease;
+  min-height: 67.5px;
+}
+
+.re-item:hover {
+  background-color: rgba(31, 41, 55, 0.5);
+}
+
+.user-comment {
+  flex: 1;
+  min-width: 0;
+}
+
+.for {
+  flex-shrink: 0;
+  display: flex;
+  align-items: center;
+  gap: 4px;
+}
+
+/* Perfect 6 comments display */
+.swiper.swiper-initialized.swiper-horizontal {
+  overflow: hidden;
+  width: calc(6 * 264.2px); /* Exactly 6 comments width (248.2px + 16px margin) */
+  margin: 0 auto;
+}
+
+.td-list {
+  max-width: calc(6 * 264.2px); /* Container width for 6 comments */
+  margin: 0 auto;
+}

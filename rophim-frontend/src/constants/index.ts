@@ -12,7 +12,6 @@ export const MOVIE_GENRES = [
   { id: 'animation', name: 'Hoạt Hình', slug: 'hoat-hinh' },
   { id: 'comedy', name: 'Hài Hước', slug: 'hai-huoc' },
   { id: 'drama', name: 'Chính Kịch', slug: 'chinh-kich' },
-  { id: 'fantasy', name: 'Viễn Tưởng', slug: 'vien-tuong' },
   { id: 'horror', name: 'Kinh Dị', slug: 'kinh-di' },
   { id: 'romance', name: 'Lãng Mạn', slug: 'lang-man' },
   { id: 'thriller', name: 'Ly Kỳ', slug: 'ly-ky' },

@@ -17,15 +17,15 @@ export function MovieCard({
 }: MovieCardProps) {
   const sizeClasses = {
     small: {
-      container: 'w-32 sm:w-36',
+      container: 'w-40 sm:w-44',
       title: 'text-xs',
     },
     medium: {
-      container: 'w-40 sm:w-48',
+      container: 'w-48 sm:w-56',
       title: 'text-sm',
     },
     large: {
-      container: 'w-48 sm:w-56',
+      container: 'w-56 sm:w-64',
       title: 'text-base',
     },
   };
@@ -55,7 +55,7 @@ export function MovieCard({
               alt={movie.title}
               fill
               className="object-cover"
-              sizes={size === 'small' ? '144px' : size === 'medium' ? '192px' : '224px'}
+              sizes={size === 'small' ? '176px' : size === 'medium' ? '224px' : '256px'}
             />
 
             {/* Quality Badge */}

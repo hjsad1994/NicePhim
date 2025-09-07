@@ -1,5 +1,5 @@
 import Image from 'next/image';
-import { StarIcon, EyeIcon, HeartIcon, FireIcon } from '@heroicons/react/24/solid';
+import { StarIcon, HeartIcon, FireIcon } from '@heroicons/react/24/solid';
 import { Movie } from '@/types/movie';
 import { getImageUrl, formatViewCount } from '@/lib/utils';
 
@@ -67,10 +67,6 @@ export function BottomSections({
                       <div className="flex items-center text-yellow-400">
                         <StarIcon className="h-3 w-3 mr-1" />
                         <span className="text-xs">{movie.imdbRating}</span>
-                      </div>
-                      <div className="flex items-center text-gray-400">
-                        <EyeIcon className="h-3 w-3 mr-1" />
-                        <span className="text-xs">{formatViewCount(movie.viewCount)}</span>
                       </div>
                     </div>
                   </div>

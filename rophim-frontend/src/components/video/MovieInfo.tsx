@@ -97,34 +97,47 @@ export function MovieInfo({ movie }: MovieInfoProps) {
         </div>
       </div>
 
-      {/* Quick Info Grid */}
-      <div className="grid grid-cols-2 md:grid-cols-4 gap-4 mb-6">
-        <div className="bg-gray-800 rounded-lg p-3">
-          <div className="flex items-center text-gray-400 text-sm mb-1">
-            <FilmIcon className="h-4 w-4 mr-1" />
-            Thể loại
+      {/* Movie Info */}
+      <div className="bg-gray-800 rounded-lg p-4 mb-6">
+        <div className="space-y-3">
+          <div className="flex items-center">
+            <div className="flex items-center text-gray-400 text-sm w-32 flex-shrink-0">
+              <FilmIcon className="h-4 w-4 mr-2" />
+              <span>Thể loại:</span>
+            </div>
+            <div className="text-white text-sm flex-1 min-w-0">
+              {movie.genres.slice(0, 2).map(g => g.name).join(', ')}
+            </div>
           </div>
-          <div className="text-white text-sm">
-            {movie.genres.slice(0, 2).map(g => g.name).join(', ')}
+
+          <div className="flex items-center">
+            <div className="flex items-center text-gray-400 text-sm w-32 flex-shrink-0">
+              <GlobeAltIcon className="h-4 w-4 mr-2" />
+              <span>Quốc gia:</span>
+            </div>
+            <div className="text-white text-sm flex-1 min-w-0 overflow-wrap-break-word">{movie.country || 'Đang cập nhật'}</div>
           </div>
-        </div>
 
-        <div className="bg-gray-800 rounded-lg p-3">
-          <div className="flex items-center text-gray-400 text-sm mb-1">
-            <GlobeAltIcon className="h-4 w-4 mr-1" />
-            Quốc gia
+          <div className="flex items-center">
+            <div className="flex items-center text-gray-400 text-sm w-32 flex-shrink-0">
+              <FilmIcon className="h-4 w-4 mr-2" />
+              <span>Đạo diễn:</span>
+            </div>
+            <div className="text-white text-sm flex-1 min-w-0 overflow-wrap-break-word">{movie.director || 'Đang cập nhật'}</div>
           </div>
-          <div className="text-white text-sm">{movie.country}</div>
-        </div>
 
-        <div className="bg-gray-800 rounded-lg p-3">
-          <div className="text-gray-400 text-sm mb-1">Đạo diễn</div>
-          <div className="text-white text-sm">{movie.director}</div>
-        </div>
-
-        <div className="bg-gray-800 rounded-lg p-3">
-          <div className="text-gray-400 text-sm mb-1">Lượt xem</div>
-          <div className="text-white text-sm">{(movie.views || movie.viewCount)?.toLocaleString()}</div>
+          {movie.cast && movie.cast.length > 0 && (
+            <div className="flex items-start">
+              <div className="flex items-center text-gray-400 text-sm w-32 flex-shrink-0 pt-0.5">
+                <FilmIcon className="h-4 w-4 mr-2" />
+                <span>Diễn viên:</span>
+              </div>
+              <div className="text-white text-sm flex-1 min-w-0 overflow-wrap-break-word">
+                {movie.cast.slice(0, 3).join(', ')}
+                {movie.cast.length > 3 && ` và ${movie.cast.length - 3} người khác`}
+              </div>
+            </div>
+          )}
         </div>
       </div>
 
@@ -144,28 +157,6 @@ export function MovieInfo({ movie }: MovieInfoProps) {
         </div>
       </div>
 
-      {/* Cast */}
-      {movie.cast && movie.cast.length > 0 && (
-        <div className="mb-6">
-          <h3 className="text-white font-medium mb-3">Diễn viên</h3>
-          <div className="flex flex-wrap gap-2">
-            {movie.cast.slice(0, 6).map((actor, index) => (
-              <Link
-                key={index}
-                href={`/dien-vien/${actor.toLowerCase().replace(/\s+/g, '-')}`}
-                className="bg-gray-800 hover:bg-gray-700 text-gray-300 hover:text-white px-3 py-1 rounded-full text-sm transition-colors"
-              >
-                {actor}
-              </Link>
-            ))}
-            {movie.cast.length > 6 && (
-              <span className="text-gray-400 text-sm px-3 py-1">
-                +{movie.cast.length - 6} khác
-              </span>
-            )}
-          </div>
-        </div>
-      )}
 
       {/* Description */}
       <div>
