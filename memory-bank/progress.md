@@ -38,8 +38,15 @@
 - **Real Movie Data**: Updated fallback movies to show realistic data (Spider-Man, Squid Game)
 - **Next.js 15 Compatibility**: Fixed params Promise issue using React.use() for movie detail page
 - **Backend Setup Tools**: Created start-backend.sh script and BACKEND-SETUP.md guide
+- **Video Player Implementation**: Complete video player page at /xem/[slug] with React Player integration
+- **Watch Together Feature**: Added "Xem chung" button to movie detail pages linking to /xem-chung/tao-moi
+- **Watch Together Data Integration**: Updated watch together page to use real database data
+- **Image Domain Configuration**: Fixed Next.js image domain errors by configuring external image sources
+- **Dynamic Poster Selection**: Watch together page now uses real movie posters and banners
 
 ## In Progress 🔄
+- **Video Player Testing**: Ensuring video player works correctly with all movie data
+- **Watch Together Testing**: Verifying collaborative watching features work properly
 - **Backend Integration**: Getting backend server running to show real database data
 - **Real Data Migration**: Replacing fallback data with actual database content
 - **Movie Routing Testing**: Verifying all movie detail pages work correctly

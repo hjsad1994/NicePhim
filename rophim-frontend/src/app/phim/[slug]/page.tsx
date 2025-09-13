@@ -12,7 +12,8 @@ import {
   CalendarIcon,
   ClockIcon,
   TagIcon,
-  ChevronLeftIcon
+  ChevronLeftIcon,
+  UsersIcon
 } from '@heroicons/react/24/solid';
 import { HeartIcon as HeartOutlineIcon } from '@heroicons/react/24/outline';
 import { Movie } from '@/types/movie';
@@ -313,6 +314,14 @@ export default function MovieDetailPage({ params }: MovieDetailPageProps) {
               >
                 <PlayIcon className="h-5 w-5 mr-2" />
                 Xem ngay
+              </Link>
+              
+              <Link
+                href={`/xem-chung/tao-moi?movie=${movie.slug}`}
+                className="flex items-center bg-blue-600 hover:bg-blue-700 text-white px-8 py-3 rounded-lg font-semibold transition-colors"
+              >
+                <UsersIcon className="h-5 w-5 mr-2" />
+                Xem chung
               </Link>
               
               <button

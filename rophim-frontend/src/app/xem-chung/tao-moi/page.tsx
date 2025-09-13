@@ -2,24 +2,150 @@
 
 import Link from 'next/link';
 import Image from 'next/image';
-import { useState } from 'react';
+import { useState, useEffect, use } from 'react';
+import { ApiService, MovieResponse } from '@/lib/api';
+import { Movie } from '@/types/movie';
 
-export default function TaoPhongXemChungPage() {
-  const [roomName, setRoomName] = useState<string>('Cùng xem Quái Vật Ngoài Hành Tinh: Địa Cầu nhé');
+interface TaoPhongXemChungPageProps {
+  searchParams: Promise<{
+    movie?: string;
+  }>;
+}
+
+export default function TaoPhongXemChungPage({ searchParams }: TaoPhongXemChungPageProps) {
+  const resolvedSearchParams = use(searchParams);
+  const [movie, setMovie] = useState<Movie | null>(null);
+  const [isLoading, setIsLoading] = useState(true);
+  const [roomName, setRoomName] = useState<string>('');
   const [autoStart, setAutoStart] = useState<boolean>(false);
   const [privateOnly, setPrivateOnly] = useState<boolean>(false);
+
+  // Convert MovieResponse to Movie type for compatibility
+  const convertToMovie = (movieResponse: MovieResponse): Movie => {
+    const slug = movieResponse.aliasTitle || movieResponse.title.toLowerCase().replace(/\s+/g, '-');
+    return {
+      id: movieResponse.movieId,
+      title: movieResponse.title,
+      slug: slug,
+      description: movieResponse.description || '',
+      poster: movieResponse.posterUrl || '/placeholder-movie.jpg',
+      banner: movieResponse.bannerUrl,
+      releaseYear: movieResponse.releaseYear || new Date().getFullYear(),
+      duration: 120, // Default duration in minutes
+      imdbRating: movieResponse.imdbRating,
+      genres: (movieResponse.genres || []).map(genre => ({
+        id: genre.genreId,
+        name: genre.name,
+        slug: genre.name.toLowerCase().replace(/\s+/g, '-')
+      })),
+      country: 'Vietnam', // Default country
+      status: 'completed' as const,
+      quality: 'HD', // Default quality
+      language: 'vi', // Default language
+      createdAt: movieResponse.createdAt,
+      updatedAt: movieResponse.updatedAt || movieResponse.createdAt,
+      viewCount: 0, // Default view count
+      likeCount: 0, // Default like count
+      isHot: false,
+      isFeatured: false
+    };
+  };
+
+  // Load movie data
+  useEffect(() => {
+    const loadMovie = async () => {
+      try {
+        setIsLoading(true);
+        
+        // Create realistic fallback movie
+        const createFallbackMovie = (): Movie => ({
+          id: 'watch-together-movie',
+          title: 'Spider-Man: No Way Home',
+          slug: 'spider-man-no-way-home',
+          description: 'Peter Parker được huyền thoại Doctor Strange giúp đỡ để khôi phục bí mật danh tính của anh ta. Khi một câu thần chú bị sai, những kẻ thù nguy hiểm từ các thế giới khác bắt đầu xuất hiện, buộc Peter phải khám phá ra ý nghĩa thực sự của việc trở thành Người Nhện.',
+          poster: 'https://image.tmdb.org/t/p/w500/1g0dhYtq4irTY1GPXvft6k4YLjm.jpg',
+          banner: 'https://image.tmdb.org/t/p/w1280/14QbnygCuTO0vl7CAFmPf1fgZfV.jpg',
+          releaseYear: 2021,
+          duration: 148,
+          imdbRating: 8.4,
+          genres: [
+            { id: '1', name: 'Hành Động', slug: 'hanh-dong' },
+            { id: '2', name: 'Phiêu Lưu', slug: 'phieu-luu' },
+            { id: '3', name: 'Khoa Học Viễn Tưởng', slug: 'khoa-hoc-vien-tuong' }
+          ],
+          country: 'Hoa Kỳ',
+          status: 'completed',
+          quality: 'FullHD',
+          language: 'vi',
+          createdAt: '2023-01-01T00:00:00Z',
+          updatedAt: '2023-01-01T00:00:00Z',
+          viewCount: 1250000,
+          likeCount: 45000,
+          isHot: true,
+          isFeatured: true
+        });
+
+        try {
+          // Try to get movies from database
+          const moviesResponse = await Promise.race([
+            ApiService.getMovies(0, 100),
+            new Promise((_, reject) => 
+              setTimeout(() => reject(new Error('API timeout')), 5000)
+            )
+          ]) as any;
+          
+          if (moviesResponse.success && moviesResponse.data && moviesResponse.data.length > 0) {
+            // Convert MovieResponse to Movie
+            const movies = moviesResponse.data.map(convertToMovie);
+            
+            // If movie slug is provided in search params, find that specific movie
+            if (resolvedSearchParams.movie) {
+              const foundMovie = movies.find(m => m.slug === resolvedSearchParams.movie);
+              if (foundMovie) {
+                setMovie(foundMovie);
+                setRoomName(`Cùng xem ${foundMovie.title} nhé`);
+              } else {
+                setMovie(movies[0]);
+                setRoomName(`Cùng xem ${movies[0].title} nhé`);
+              }
+            } else {
+              // Use first movie if no specific movie requested
+              setMovie(movies[0]);
+              setRoomName(`Cùng xem ${movies[0].title} nhé`);
+            }
+          } else {
+            console.log('⚠️ No movies in database, using fallback');
+            setMovie(createFallbackMovie());
+            setRoomName('Cùng xem Spider-Man: No Way Home nhé');
+          }
+        } catch (apiError) {
+          console.error('❌ API call failed:', apiError);
+          setMovie(createFallbackMovie());
+          setRoomName('Cùng xem Spider-Man: No Way Home nhé');
+        }
+        
+      } catch (error) {
+        console.error('❌ Unexpected error:', error);
+      } finally {
+        setIsLoading(false);
+      }
+    };
+
+    loadMovie();
+  }, [resolvedSearchParams.movie]);
+
   const posters = [
     {
       alt: 'poster 1',
-      src: 'https://static.nutscdn.com/vimg/150-0/d5ffac77ba80757aa2813d8471c43f00.jpg',
+      src: movie?.poster || 'https://image.tmdb.org/t/p/w500/1g0dhYtq4irTY1GPXvft6k4YLjm.jpg',
     },
     {
       alt: 'poster 2',
-      src: 'https://static.nutscdn.com/vimg/150-0/edbbf2dbb87cdb27a58f02ac45baebf3.jpg',
+      src: movie?.banner || 'https://image.tmdb.org/t/p/w1280/14QbnygCuTO0vl7CAFmPf1fgZfV.jpg',
     },
     {
       alt: 'poster 3',
-      src: 'https://static.nutscdn.com/vimg/150-0/f3b06d970f138f28cdb2e7244f5c6916.jpg',
+      src: 'https://image.tmdb.org/t/p/w500/dDlEmu3EZ0Pgg93K2SVNLCjCSvE.jpg',
     },
   ];
   const [activePoster, setActivePoster] = useState<number>(0);
@@ -29,12 +155,35 @@ export default function TaoPhongXemChungPage() {
     alert('Đã tạo phòng: ' + roomName + (privateOnly ? ' (chỉ bạn bè)' : ' (công khai)'));
   };
 
+  if (isLoading) {
+    return (
+      <div className="min-h-screen flex items-center justify-center" style={{backgroundColor: 'var(--bg-2)'}}>
+        <div className="text-center">
+          <div className="animate-spin rounded-full h-32 w-32 border-b-2 border-red-600 mx-auto mb-4"></div>
+          <div className="text-white text-xl">Đang tải thông tin phim...</div>
+        </div>
+      </div>
+    );
+  }
+
+  if (!movie) {
+    return (
+      <div className="min-h-screen flex items-center justify-center" style={{backgroundColor: 'var(--bg-2)'}}>
+        <div className="text-center">
+          <div className="text-6xl mb-4">🎬</div>
+          <h1 className="text-2xl font-bold text-white mb-4">Không thể tải thông tin phim</h1>
+          <p className="text-gray-400 mb-6">Vui lòng thử lại sau</p>
+        </div>
+      </div>
+    );
+  }
+
   return (
     <div className="min-h-screen" style={{backgroundColor: 'var(--bg-2)'}}>
       <div className="w-[90%] mx-auto px-4 sm:px-6 lg:px-8 py-8">
         {/* Header */}
         <div className="mb-4 flex items-center gap-3">
-          <Link href="/xem-phim/quai-vat-ngoai-hanh-tinh-dia-cau.2k6kr6vG" className="btn btn-circle btn-outline border-2 border-gray-400/30 text-white hover:bg-white/10" aria-label="Quay lại">
+          <Link href={`/phim/${movie.slug}`} className="btn btn-circle btn-outline border-2 border-gray-400/30 text-white hover:bg-white/10" aria-label="Quay lại">
             <span className="i-fa6-solid-angle-left" aria-hidden />
           </Link>
           <h3 className="category-name text-white text-2xl font-semibold">Tạo phòng xem chung</h3>
@@ -46,45 +195,68 @@ export default function TaoPhongXemChungPage() {
             <div className="flex gap-5">
               <div className="div-poster w-[140px] shrink-0">
                 <div className="v-thumbnail relative w-[140px] h-[200px] overflow-hidden rounded-md border border-gray-500/30">
-                  {/* eslint-disable-next-line @next/next/no-img-element */}
-                  <img
-                    alt="Xem Phim Quái Vật Ngoài Hành Tinh: Địa Cầu Vietsub HD Online - Rophim"
-                    loading="lazy"
-                    src="https://static.nutscdn.com/vimg/500-0/d5ffac77ba80757aa2813d8471c43f00.jpg"
-                    className="w-full h-full object-cover"
+                  <Image
+                    alt={movie.title}
+                    src={movie.poster}
+                    fill
+                    className="object-cover"
+                    sizes="140px"
                   />
                 </div>
               </div>
               <div className="info flex-1">
                 <h2 className="heading-sm media-name text-white text-xl font-semibold leading-snug">
                   <Link
-                    title="Quái Vật Ngoài Hành Tinh: Địa Cầu"
-                    href="/phim/quai-vat-ngoai-hanh-tinh-dia-cau.2k6kr6vG"
+                    title={movie.title}
+                    href={`/phim/${movie.slug}`}
                     className="hover:text-red-400"
                   >
-                    Quái Vật Ngoài Hành Tinh: Địa Cầu
+                    {movie.title}
                   </Link>
                 </h2>
-                <div className="alias-name mb-3 text-red-400">Alien: Earth</div>
+                {movie.releaseYear && (
+                  <div className="alias-name mb-3 text-red-400">{movie.releaseYear}</div>
+                )}
                 <div className="detail-more space-y-3 text-gray-300">
                   <div className="hl-tags flex items-center gap-2">
-                    <div className="tag-model"><span className="last inline-block px-2 py-0.5 rounded bg-gray-600/40 text-white text-xs"><strong>T18</strong></span></div>
-                    <div className="tag-classic"><span className="inline-block px-2 py-0.5 rounded bg-gray-600/40 text-white text-xs">2025</span></div>
-                    <div className="tag-classic"><span className="inline-block px-2 py-0.5 rounded bg-gray-600/40 text-white text-xs">Phần 1</span></div>
-                    <div className="tag-classic"><span className="inline-block px-2 py-0.5 rounded bg-gray-600/40 text-white text-xs">Tập 5</span></div>
+                    <div className="tag-model">
+                      <span className="last inline-block px-2 py-0.5 rounded bg-gray-600/40 text-white text-xs">
+                        <strong>{movie.quality}</strong>
+                      </span>
+                    </div>
+                    {movie.releaseYear && (
+                      <div className="tag-classic">
+                        <span className="inline-block px-2 py-0.5 rounded bg-gray-600/40 text-white text-xs">
+                          {movie.releaseYear}
+                        </span>
+                      </div>
+                    )}
+                    {movie.imdbRating && (
+                      <div className="tag-classic">
+                        <span className="inline-block px-2 py-0.5 rounded bg-gray-600/40 text-white text-xs">
+                          ⭐ {movie.imdbRating}
+                        </span>
+                      </div>
+                    )}
                   </div>
                   <div className="hl-tags flex flex-wrap items-center gap-2">
-                    {['Chính Kịch','Hành Động','Kỳ Ảo','Viễn Tưởng','Phiêu Lưu'].map((t)=> (
-                      <Link key={t} href="#" className="tag-topic inline-block text-xs px-2 py-0.5 rounded border border-gray-400/30 text-gray-200 hover:bg-white/10">{t}</Link>
+                    {movie.genres.map((genre) => (
+                      <Link 
+                        key={genre.id} 
+                        href={`/the-loai/${genre.slug}`}
+                        className="tag-topic inline-block text-xs px-2 py-0.5 rounded border border-gray-400/30 text-gray-200 hover:bg-white/10"
+                      >
+                        {genre.name}
+                      </Link>
                     ))}
                   </div>
                   <div className="description text-sm text-gray-300/90 leading-relaxed">
-                    Con tàu nghiên cứu vũ trụ USCSS Maginot bất ngờ rơi xuống Trái Đất, mang theo một bí ẩn chưa từng được biết đến. Wendy cùng nhóm lính tinh nhuệ đã phát hiện ra một bí mật định mệnh, đưa họ đối mặt với mối đe dọa khủng khiếp nhất hành tinh.
+                    {movie.description}
                   </div>
                   <div className="buttons mt-2">
                     <div className="btn btn-outline inline-flex items-center gap-2 rounded-full border-2 border-gray-400/30 text-white px-4 py-2">
                       <span className="i-fa6-solid-play" aria-hidden />
-                      <span>Phần 1 - Tập 5</span>
+                      <span>{movie.duration} phút</span>
                     </div>
                   </div>
                 </div>
@@ -124,8 +296,13 @@ export default function TaoPhongXemChungPage() {
                       onClick={() => setActivePoster(idx)}
                       className={`item ${activePoster === idx ? 'ring-2 ring-red-500/80' : ''} rounded-md overflow-hidden`}
                     >
-                      {/* eslint-disable-next-line @next/next/no-img-element */}
-                      <img alt={p.alt} loading="lazy" src={p.src} className="v-thumbnail w-[90px] h-[90px] object-cover" />
+                      <Image 
+                        alt={p.alt} 
+                        src={p.src} 
+                        width={90}
+                        height={90}
+                        className="object-cover" 
+                      />
                     </button>
                   ))}
                 </div>
@@ -178,7 +355,7 @@ export default function TaoPhongXemChungPage() {
                 </button>
                 <Link
                   className="btn btn-xl btn-light rounded-full border-2 border-gray-400/30 text-white hover:bg-white/10 py-3 px-6"
-                  href="/xem-phim/quai-vat-ngoai-hanh-tinh-dia-cau.2k6kr6vG"
+                  href={`/phim/${movie.slug}`}
                 >
                   Huỷ bỏ
                 </Link>
@@ -190,4 +367,3 @@ export default function TaoPhongXemChungPage() {
     </div>
   );
 }
-

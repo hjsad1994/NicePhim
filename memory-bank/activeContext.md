@@ -35,25 +35,32 @@
 - ✅ **Real Movie Data**: Updated fallback movies to show realistic data (Spider-Man, Squid Game)
 - ✅ **Next.js 15 Compatibility**: Fixed params Promise issue using React.use() for movie detail page
 - ✅ **Backend Setup Tools**: Created start-backend.sh script and BACKEND-SETUP.md guide
+- ✅ **Video Player Implementation**: Complete video player page at /xem/[slug] with React Player integration
+- ✅ **Watch Together Feature**: Added "Xem chung" button to movie detail pages linking to /xem-chung/tao-moi
+- ✅ **Watch Together Data Integration**: Updated watch together page to use real database data
+- ✅ **Image Domain Configuration**: Fixed Next.js image domain errors by configuring external image sources
+- ✅ **Dynamic Poster Selection**: Watch together page now uses real movie posters and banners
 
 ## Current Focus
-1. **Backend Integration**: Getting backend running to show real database data
-2. **Movie Detail Pages**: Ensuring all movie links work with proper routing
-3. **Real Data Display**: Replacing fallback data with actual database content
-4. **Admin Workflow**: End-to-end content management workflow validation
+1. **Video Player Testing**: Ensuring video player works correctly with all movie data
+2. **Watch Together Functionality**: Testing collaborative watching features
+3. **Backend Integration**: Getting backend running to show real database data
+4. **Real Data Display**: Replacing fallback data with actual database content
 5. **User Experience**: Enhanced admin interface with comprehensive CRUD operations
 
 ## Next Steps
-1. **Start Backend Server**: Use start-backend.sh script to get database data
-2. **Create Real Movies**: Add movies via admin panel with proper genres
-3. **Test Movie Routing**: Verify all movie detail pages work correctly
-4. **Replace Fallback Data**: Ensure frontend uses database data instead of fallback
-5. Test complete movie editing and genre assignment workflow
-6. Add bulk genre operations for multiple movies
-7. Enhance admin dashboard with usage statistics
-8. Add proper session management (JWT tokens or secure sessions)
-9. Create user profile management interface
-10. Implement advanced search and filtering for movies and genres
+1. **Test Video Player**: Verify video player works with real movie data
+2. **Test Watch Together**: Ensure collaborative watching features work properly
+3. **Start Backend Server**: Use start-backend.sh script to get database data
+4. **Create Real Movies**: Add movies via admin panel with proper genres
+5. **Test Movie Routing**: Verify all movie detail pages work correctly
+6. **Replace Fallback Data**: Ensure frontend uses database data instead of fallback
+7. Test complete movie editing and genre assignment workflow
+8. Add bulk genre operations for multiple movies
+9. Enhance admin dashboard with usage statistics
+10. Add proper session management (JWT tokens or secure sessions)
+11. Create user profile management interface
+12. Implement advanced search and filtering for movies and genres
 
 ## Technical Decisions
 - Using existing Spring Boot authentication structure
@@ -71,6 +78,10 @@
 - **Next.js 15 Compatibility**: Using React.use() to unwrap params Promise for movie detail pages
 - **Robust Fallback System**: Multiple fallback layers ensure movie detail pages always show content
 - **Real Data Integration**: Fallback movies use realistic data (Spider-Man, Squid Game) with proper genres
+- **Video Player Integration**: React Player with multiple quality options and full controls
+- **Watch Together Architecture**: Collaborative watching with room creation and movie context
+- **Image Domain Management**: Configured Next.js to allow external image sources (TMDB, static domains)
+- **Dynamic Content Loading**: All pages now use database data with intelligent fallbacks
 
 ## Blockers
 - None currently identified
@@ -98,3 +109,8 @@
 - **Next.js 15 compatibility ensured** - fixed params Promise issue with React.use()
 - **Real movie data integration** - fallback movies show realistic content (Spider-Man, Squid Game)
 - **Backend setup tools created** - start-backend.sh script and BACKEND-SETUP.md guide for easy deployment
+- **Video player system implemented** - complete video player at /xem/[slug] with React Player integration
+- **Watch together feature added** - "Xem chung" button on movie detail pages with collaborative room creation
+- **Watch together data integration** - real movie data integration for collaborative watching rooms
+- **Next.js image configuration** - fixed external image domain errors by configuring next.config.ts
+- **Dynamic poster selection** - watch together page uses real movie posters and banners from database
