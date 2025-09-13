@@ -5,7 +5,8 @@ import {
   UserGroupIcon,
   Cog6ToothIcon,
   ChartBarIcon,
-  PlusIcon
+  PlusIcon,
+  TagIcon
 } from '@heroicons/react/24/outline';
 
 interface AdminLayoutProps {
@@ -16,7 +17,8 @@ export default function AdminLayout({ children }: AdminLayoutProps) {
   const navigation = [
     { name: 'Dashboard', href: '/admin', icon: HomeIcon },
     { name: 'Quản lý phim', href: '/admin/movies', icon: FilmIcon },
-    { name: 'Thêm phim mới', href: '/admin/movies/new', icon: PlusIcon },
+    { name: 'Thêm phim mới', href: '/admin/movies/upload', icon: PlusIcon },
+    { name: 'Quản lý thể loại', href: '/admin/genres', icon: TagIcon },
     { name: 'Người dùng', href: '/admin/users', icon: UserGroupIcon },
     { name: 'Thống kê', href: '/admin/analytics', icon: ChartBarIcon },
     { name: 'Cài đặt', href: '/admin/settings', icon: Cog6ToothIcon },

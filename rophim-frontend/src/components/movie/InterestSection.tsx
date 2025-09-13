@@ -1,9 +1,13 @@
 'use client';
 
 import Link from 'next/link';
-import { MOVIE_GENRES } from '@/constants';
+import { GenreResponse } from '@/lib/api';
 
-export function InterestSection() {
+interface InterestSectionProps {
+  genres: GenreResponse[];
+}
+
+export function InterestSection({ genres }: InterestSectionProps) {
   return (
     <section className="py-12 border-2 border-gray-400/15 rounded-lg mt-2" style={{backgroundColor: 'var(--bg-3)'}}>
       <div className="w-[90%] mx-auto px-4 sm:px-6 lg:px-8">
@@ -19,7 +23,7 @@ export function InterestSection() {
 
         {/* Topics Horizontal Layout */}
         <div className="flex flex-wrap justify-center gap-4 mb-8">
-          {MOVIE_GENRES.slice(0, 6).map((genre, index) => {
+          {genres.slice(0, 6).map((genre, index) => {
             const modernGradients = [
               { bg: 'bg-gradient-to-r from-slate-600 to-slate-500', border: 'border-slate-500', hover: 'hover:from-slate-500 hover:to-slate-400' },
               { bg: 'bg-gradient-to-r from-zinc-600 to-zinc-500', border: 'border-zinc-500', hover: 'hover:from-zinc-500 hover:to-zinc-400' },
@@ -32,8 +36,8 @@ export function InterestSection() {
             
             return (
               <Link
-                key={genre.id}
-                href={`/the-loai/${genre.slug}`}
+                key={genre.genreId}
+                href={`/the-loai/${genre.name.toLowerCase().replace(/\s+/g, '-')}`}
                 className={`px-14 py-7 rounded-xl border-2 transition-all duration-300 text-center flex-shrink-0 text-white font-medium text-xl whitespace-nowrap hover:scale-105 hover:shadow-xl min-w-[180px] ${gradientSet.bg} ${gradientSet.border} ${gradientSet.hover}`}
               >
                 {genre.name}

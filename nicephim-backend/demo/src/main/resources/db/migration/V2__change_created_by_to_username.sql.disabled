@@ -1,0 +1,25 @@
+-- Change created_by column from UUID to username
+-- This migration changes the movies table to store username instead of user_id
+
+-- Step 1: Drop the foreign key constraint
+ALTER TABLE dbo.movies DROP CONSTRAINT FK_movies_user;
+
+-- Step 2: Add a temporary column to store usernames
+ALTER TABLE dbo.movies ADD created_by_temp NVARCHAR(100) NULL;
+
+-- Step 3: Update the temporary column with usernames from the users table
+-- Since this is a fresh database, we'll set all to 'admin' for now
+UPDATE dbo.movies 
+SET created_by_temp = 'admin';
+
+-- Step 4: Drop the old created_by column
+ALTER TABLE dbo.movies DROP COLUMN created_by;
+
+-- Step 5: Rename the temporary column to created_by
+EXEC sp_rename 'dbo.movies.created_by_temp', 'created_by', 'COLUMN';
+
+-- Step 6: Make the column NOT NULL
+ALTER TABLE dbo.movies ALTER COLUMN created_by NVARCHAR(100) NOT NULL;
+
+-- Step 7: Add a new foreign key constraint referencing the username column
+ALTER TABLE dbo.movies ADD CONSTRAINT FK_movies_username FOREIGN KEY (created_by) REFERENCES dbo.users(username);

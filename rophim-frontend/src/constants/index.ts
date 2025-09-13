@@ -86,6 +86,9 @@ export const ROUTES = {
   FAVORITES: '/yeu-thich',
   HISTORY: '/lich-su',
   PROFILE: '/ca-nhan',
+  // Auth routes
+  SIGN_UP: '/dang-ky',
+  SIGN_IN: '/dang-nhap',
   // New routes for enhanced header
   SINGLE_MOVIES: '/phim-le',
   SERIES_MOVIES: '/phim-bo',

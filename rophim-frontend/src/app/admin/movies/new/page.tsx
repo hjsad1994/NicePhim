@@ -1,6 +1,6 @@
 'use client';
 
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { useRouter } from 'next/navigation';
 import Image from 'next/image';
 import { 
@@ -10,7 +10,8 @@ import {
   XMarkIcon,
   PlusIcon
 } from '@heroicons/react/24/outline';
-import { MOVIE_GENRES, COUNTRIES } from '@/constants';
+import { COUNTRIES } from '@/constants';
+import { ApiService, GenreResponse } from '@/lib/api';
 
 interface MovieFormData {
   title: string;
@@ -53,6 +54,10 @@ export default function NewMovie() {
     type: 'movie'
   });
 
+  const [availableGenres, setAvailableGenres] = useState<GenreResponse[]>([]);
+  const [loadingGenres, setLoadingGenres] = useState(true);
+  const [isSubmitting, setIsSubmitting] = useState(false);
+
   const [files, setFiles] = useState({
     poster: null as File | null,
     banner: null as File | null,
@@ -69,7 +74,28 @@ export default function NewMovie() {
     thumbnail: ''
   });
 
-  const handleInputChange = (field: keyof MovieFormData, value: any) => {
+  // Load genres on component mount
+  useEffect(() => {
+    const loadGenres = async () => {
+      try {
+        setLoadingGenres(true);
+        const response = await ApiService.getGenres();
+        if (response.success && response.data) {
+          setAvailableGenres(response.data);
+        } else {
+          console.error('Failed to load genres:', response.error);
+        }
+      } catch (error) {
+        console.error('Error loading genres:', error);
+      } finally {
+        setLoadingGenres(false);
+      }
+    };
+
+    loadGenres();
+  }, []);
+
+  const handleInputChange = (field: keyof MovieFormData, value: string | number | boolean | string[]) => {
     setFormData(prev => ({ ...prev, [field]: value }));
   };
 
@@ -125,7 +151,7 @@ export default function NewMovie() {
     setEpisodes(prev => prev.filter(ep => ep.id !== id));
   };
 
-  const updateEpisode = (id: string, field: keyof Episode, value: any) => {
+  const updateEpisode = (id: string, field: keyof Episode, value: string | number | File | null) => {
     setEpisodes(prev => prev.map(ep => 
       ep.id === id ? { ...ep, [field]: value } : ep
     ));
@@ -155,13 +181,40 @@ export default function NewMovie() {
       return;
     }
 
-    // TODO: Submit to API
-    console.log('Form Data:', formData);
-    console.log('Files:', files);
-    console.log('Episodes:', episodes);
-    
-    alert('Phim đã được thêm thành công!');
-    router.push('/admin/movies');
+    try {
+      setIsSubmitting(true);
+      
+      // Prepare movie data
+      const movieData = {
+        title: formData.title,
+        aliasTitle: formData.title, // Use title as alias for now
+        description: formData.description,
+        releaseYear: formData.releaseYear,
+        ageRating: formData.quality, // Map quality to age rating for now
+        imdbRating: formData.imdbRating,
+        isSeries: formData.type === 'series',
+        posterUrl: '', // Will be handled by file upload
+        bannerUrl: '', // Will be handled by file upload
+        genreIds: formData.genres // Include selected genre IDs
+      };
+
+      console.log('Submitting movie data:', movieData);
+      
+      // Submit to API
+      const response = await ApiService.createMovie(movieData);
+      
+      if (response.success) {
+        alert('Phim đã được thêm thành công!');
+        router.push('/admin/movies');
+      } else {
+        alert(`Lỗi: ${response.error || 'Không thể tạo phim'}`);
+      }
+    } catch (error) {
+      console.error('Error creating movie:', error);
+      alert(`Lỗi: ${error instanceof Error ? error.message : 'Không thể tạo phim'}`);
+    } finally {
+      setIsSubmitting(false);
+    }
   };
 
   return (
@@ -311,19 +364,31 @@ export default function NewMovie() {
         {/* Genres */}
         <div className="bg-white p-6 rounded-lg shadow-sm border border-gray-200">
           <h3 className="text-lg font-medium text-gray-900 mb-4">Thể loại</h3>
-          <div className="grid grid-cols-2 md:grid-cols-4 gap-3">
-            {MOVIE_GENRES.map(genre => (
-              <label key={genre.id} className="flex items-center space-x-2 cursor-pointer">
-                <input
-                  type="checkbox"
-                  checked={formData.genres.includes(genre.id)}
-                  onChange={() => handleGenreToggle(genre.id)}
-                  className="h-4 w-4 text-red-600 focus:ring-red-500 border-gray-300 rounded"
-                />
-                <span className="text-sm text-gray-700">{genre.name}</span>
-              </label>
-            ))}
-          </div>
+          {loadingGenres ? (
+            <div className="text-center py-4">
+              <div className="inline-block animate-spin rounded-full h-6 w-6 border-b-2 border-red-600"></div>
+              <p className="mt-2 text-sm text-gray-600">Đang tải thể loại...</p>
+            </div>
+          ) : (
+            <div className="grid grid-cols-2 md:grid-cols-4 gap-3">
+              {availableGenres.map(genre => (
+                <label key={genre.genreId} className="flex items-center space-x-2 cursor-pointer">
+                  <input
+                    type="checkbox"
+                    checked={formData.genres.includes(genre.genreId)}
+                    onChange={() => handleGenreToggle(genre.genreId)}
+                    className="h-4 w-4 text-red-600 focus:ring-red-500 border-gray-300 rounded"
+                  />
+                  <span className="text-sm text-gray-700">{genre.name}</span>
+                </label>
+              ))}
+            </div>
+          )}
+          {availableGenres.length === 0 && !loadingGenres && (
+            <p className="text-sm text-gray-500 text-center py-4">
+              Không có thể loại nào. Vui lòng tạo thể loại trước.
+            </p>
+          )}
         </div>
 
         {/* Cast */}
@@ -719,9 +784,10 @@ export default function NewMovie() {
           </button>
           <button
             type="submit"
-            className="px-6 py-2 bg-red-600 text-white rounded-md hover:bg-red-700 transition-colors"
+            disabled={isSubmitting}
+            className="px-6 py-2 bg-red-600 text-white rounded-md hover:bg-red-700 transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
           >
-            Thêm phim
+            {isSubmitting ? 'Đang thêm...' : 'Thêm phim'}
           </button>
         </div>
       </form>

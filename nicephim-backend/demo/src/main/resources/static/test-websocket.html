@@ -1,0 +1,142 @@
+<!DOCTYPE html>
+<html lang="vi">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Test WebSocket</title>
+    <script src="https://cdn.jsdelivr.net/npm/sockjs-client@1/dist/sockjs.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/stompjs@2.3.3/lib/stomp.min.js"></script>
+    <style>
+        body { font-family: Arial, sans-serif; margin: 20px; }
+        .log { background: #f5f5f5; padding: 10px; margin: 10px 0; height: 300px; overflow-y: auto; }
+        button { margin: 5px; padding: 10px; }
+        .status { padding: 10px; margin: 10px 0; border-radius: 5px; }
+        .connected { background: #d4edda; color: #155724; }
+        .disconnected { background: #f8d7da; color: #721c24; }
+    </style>
+</head>
+<body>
+    <h1>Test WebSocket Connection</h1>
+    
+    <div id="status" class="status disconnected">Chưa kết nối</div>
+    
+    <div>
+        <button onclick="connect()">Kết nối</button>
+        <button onclick="disconnect()">Ngắt kết nối</button>
+        <button onclick="sendTestMessage()">Gửi test message</button>
+        <button onclick="clearLog()">Xóa log</button>
+    </div>
+    
+    <div>
+        <h3>Log:</h3>
+        <div id="log" class="log"></div>
+    </div>
+
+    <script>
+        let stompClient = null;
+        let isConnected = false;
+        const ROOM_ID = 'test-room-123';
+
+        function log(message) {
+            const logDiv = document.getElementById('log');
+            const timestamp = new Date().toLocaleTimeString();
+            logDiv.innerHTML += `[${timestamp}] ${message}<br>`;
+            logDiv.scrollTop = logDiv.scrollHeight;
+        }
+
+        function updateStatus(connected) {
+            const statusDiv = document.getElementById('status');
+            if (connected) {
+                statusDiv.textContent = 'Đã kết nối';
+                statusDiv.className = 'status connected';
+            } else {
+                statusDiv.textContent = 'Chưa kết nối';
+                statusDiv.className = 'status disconnected';
+            }
+        }
+
+        function connect() {
+            log('Đang kết nối WebSocket...');
+            
+            const socket = new SockJS('/ws');
+            stompClient = Stomp.over(socket);
+            
+            stompClient.debug = function(str) {
+                log('STOMP Debug: ' + str);
+            };
+
+            stompClient.connect({}, function(frame) {
+                log('Kết nối thành công: ' + frame);
+                isConnected = true;
+                updateStatus(true);
+                
+                // Subscribe to room messages
+                stompClient.subscribe(`/topic/room.${ROOM_ID}`, function(message) {
+                    const data = JSON.parse(message.body);
+                    log('Nhận message: ' + JSON.stringify(data, null, 2));
+                });
+                
+                // Send join message
+                sendJoin();
+                
+            }, function(error) {
+                log('Lỗi kết nối: ' + error);
+                isConnected = false;
+                updateStatus(false);
+            });
+        }
+
+        function disconnect() {
+            if (stompClient) {
+                stompClient.disconnect();
+                stompClient = null;
+            }
+            isConnected = false;
+            updateStatus(false);
+            log('Đã ngắt kết nối');
+        }
+
+        function sendJoin() {
+            if (stompClient && isConnected) {
+                const message = {
+                    username: 'TestUser',
+                    timestamp: Date.now()
+                };
+                stompClient.send(`/app/room/${ROOM_ID}/join`, {}, JSON.stringify(message));
+                log('Đã gửi join message: ' + JSON.stringify(message));
+            }
+        }
+
+        function sendTestMessage() {
+            if (stompClient && isConnected) {
+                const message = {
+                    type: 'control',
+                    action: 'play',
+                    time: 10.5,
+                    username: 'TestUser',
+                    timestamp: Date.now()
+                };
+                stompClient.send(`/app/room/${ROOM_ID}/control`, {}, JSON.stringify(message));
+                log('Đã gửi control message: ' + JSON.stringify(message));
+            } else {
+                log('Chưa kết nối WebSocket!');
+            }
+        }
+
+        function clearLog() {
+            document.getElementById('log').innerHTML = '';
+        }
+
+        // Auto connect on page load
+        window.onload = function() {
+            log('Trang đã tải, sẵn sàng test WebSocket');
+        };
+    </script>
+</body>
+</html>
+
+
+
+
+
+
