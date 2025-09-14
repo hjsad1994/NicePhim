@@ -307,4 +307,18 @@ public class MovieRepository {
     public long countMovies() {
         return jdbcTemplate.queryForObject("SELECT COUNT(*) FROM dbo.movies", Long.class);
     }
+
+    public int updateMoviePoster(UUID movieId, String posterUrl) throws DataAccessException {
+        return jdbcTemplate.update(
+            "UPDATE dbo.movies SET poster_url = ?, updated_at = SYSUTCDATETIME() WHERE movie_id = ?",
+            posterUrl, movieId
+        );
+    }
+
+    public int updateMovieBanner(UUID movieId, String bannerUrl) throws DataAccessException {
+        return jdbcTemplate.update(
+            "UPDATE dbo.movies SET banner_url = ?, updated_at = SYSUTCDATETIME() WHERE movie_id = ?",
+            bannerUrl, movieId
+        );
+    }
 }

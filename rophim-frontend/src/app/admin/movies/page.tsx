@@ -3,6 +3,7 @@
 import { useState, useEffect } from 'react';
 import { useRouter } from 'next/navigation';
 import { ApiService, MovieResponse, GenreResponse } from '@/lib/api';
+import { getImageUrl } from '@/lib/utils';
 import {
   PencilIcon,
   TrashIcon,
@@ -163,8 +164,8 @@ export default function MoviesManagement() {
       {/* Header */}
       <div className="flex justify-between items-center">
         <div>
-          <h1 className="text-2xl font-bold text-gray-900">Quản lý phim</h1>
-          <p className="text-gray-600">Tổng cộng: {totalMovies} phim</p>
+          <h1 className="text-2xl font-bold" style={{color: 'var(--color-text-primary)'}}>Quản lý phim</h1>
+          <p style={{color: 'var(--color-text-secondary)'}}>Tổng cộng: {totalMovies} phim</p>
         </div>
         <button
           onClick={() => router.push('/admin/movies/upload')}
@@ -176,22 +177,30 @@ export default function MoviesManagement() {
       </div>
 
       {/* Search */}
-      <div className="bg-white p-4 rounded-lg shadow-sm border border-gray-200">
+      <div className="p-4 rounded-lg shadow-sm" style={{backgroundColor: 'var(--bg-4)', border: '1px solid var(--bg-3)'}}>
         <form onSubmit={handleSearchSubmit} className="flex gap-4">
           <div className="flex-1 relative">
-            <MagnifyingGlassIcon className="h-5 w-5 absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400" />
+            <MagnifyingGlassIcon className="h-5 w-5 absolute left-3 top-1/2 transform -translate-y-1/2" style={{color: 'var(--color-text-muted)'}} />
             <input
               type="text"
               value={searchQuery}
               onChange={(e) => setSearchQuery(e.target.value)}
               placeholder="Tìm kiếm phim theo tên..."
-              className="w-full pl-10 pr-4 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-red-500 focus:border-transparent"
+              className="w-full pl-10 pr-4 py-2 rounded-md focus:outline-none focus:ring-2 focus:ring-red-500 focus:border-transparent"
+              style={{
+                backgroundColor: 'var(--bg-3)',
+                border: '1px solid var(--bg-3)',
+                color: 'var(--color-text-primary)'
+              }}
             />
           </div>
           <button
             type="submit"
             disabled={isSearching}
-            className="px-4 py-2 bg-gray-600 text-white rounded-md hover:bg-gray-700 transition-colors disabled:opacity-50"
+            className="px-4 py-2 text-white rounded-md transition-colors disabled:opacity-50"
+            style={{backgroundColor: 'var(--bg-2)'}}
+            onMouseEnter={(e) => e.currentTarget.style.backgroundColor = 'var(--bg-1)'}
+            onMouseLeave={(e) => e.currentTarget.style.backgroundColor = 'var(--bg-2)'}
           >
             {isSearching ? 'Đang tìm...' : 'Tìm kiếm'}
           </button>
@@ -202,7 +211,13 @@ export default function MoviesManagement() {
                 setSearchQuery('');
                 fetchMovies(0);
               }}
-              className="px-4 py-2 bg-gray-300 text-gray-700 rounded-md hover:bg-gray-400 transition-colors"
+              className="px-4 py-2 rounded-md transition-colors"
+              style={{
+                backgroundColor: 'var(--bg-3)',
+                color: 'var(--color-text-secondary)'
+              }}
+              onMouseEnter={(e) => e.currentTarget.style.backgroundColor = 'var(--bg-2)'}
+              onMouseLeave={(e) => e.currentTarget.style.backgroundColor = 'var(--bg-3)'}
             >
               Xóa bộ lọc
             </button>
@@ -212,56 +227,56 @@ export default function MoviesManagement() {
 
       {/* Error */}
       {error && (
-        <div className="bg-red-50 border border-red-200 text-red-700 px-4 py-3 rounded-md">
-          {error}
+        <div className="px-4 py-3 rounded-md" style={{backgroundColor: 'var(--bg-4)', border: '1px solid #ef4444'}}>
+          <div style={{color: '#ef4444'}}>{error}</div>
         </div>
       )}
 
       {/* Loading */}
       {isLoading && (
         <div className="flex justify-center items-center py-12">
-          <div className="text-gray-500">Đang tải...</div>
+          <div style={{color: 'var(--color-text-muted)'}}>Đang tải...</div>
         </div>
       )}
 
       {/* Movies Table */}
       {!isLoading && movies.length > 0 && (
-        <div className="bg-white rounded-lg shadow-sm border border-gray-200 overflow-hidden">
+        <div className="rounded-lg shadow-sm overflow-hidden" style={{backgroundColor: 'var(--bg-4)', border: '1px solid var(--bg-3)'}}>
           <div className="overflow-x-auto">
-            <table className="min-w-full divide-y divide-gray-200">
-              <thead className="bg-gray-50">
+            <table className="min-w-full" style={{borderColor: 'var(--bg-3)'}}>
+              <thead style={{backgroundColor: 'var(--bg-3)'}}>
                 <tr>
-                  <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                  <th className="px-6 py-3 text-left text-xs font-medium uppercase tracking-wider" style={{color: 'var(--color-text-muted)'}}>
                     Phim
                   </th>
-                  <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                  <th className="px-6 py-3 text-left text-xs font-medium uppercase tracking-wider" style={{color: 'var(--color-text-muted)'}}>
                     Năm
                   </th>
-                  <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                  <th className="px-6 py-3 text-left text-xs font-medium uppercase tracking-wider" style={{color: 'var(--color-text-muted)'}}>
                     Loại
                   </th>
-                  <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                  <th className="px-6 py-3 text-left text-xs font-medium uppercase tracking-wider" style={{color: 'var(--color-text-muted)'}}>
                     Thể loại
                   </th>
-                  <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                  <th className="px-6 py-3 text-left text-xs font-medium uppercase tracking-wider" style={{color: 'var(--color-text-muted)'}}>
                     IMDB
                   </th>
-                  <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                  <th className="px-6 py-3 text-left text-xs font-medium uppercase tracking-wider" style={{color: 'var(--color-text-muted)'}}>
                     Ngày tạo
                   </th>
-                  <th className="px-6 py-3 text-right text-xs font-medium text-gray-500 uppercase tracking-wider">
+                  <th className="px-6 py-3 text-right text-xs font-medium uppercase tracking-wider" style={{color: 'var(--color-text-muted)'}}>
                     Thao tác
                   </th>
                 </tr>
               </thead>
-              <tbody className="bg-white divide-y divide-gray-200">
+              <tbody style={{backgroundColor: 'var(--bg-4)'}}>
                 {movies.map((movie) => (
-                  <tr key={movie.movieId} className="hover:bg-gray-50">
+                  <tr key={movie.movieId} className="transition-colors" style={{backgroundColor: 'transparent'}} onMouseEnter={(e) => e.currentTarget.style.backgroundColor = 'var(--bg-3)'} onMouseLeave={(e) => e.currentTarget.style.backgroundColor = 'transparent'}>
                     <td className="px-6 py-4 whitespace-nowrap">
                       <div className="flex items-center">
                         {movie.posterUrl && (
                           <img
-                            src={movie.posterUrl}
+                            src={getImageUrl(movie.posterUrl, 'small')}
                             alt={movie.title}
                             className="h-12 w-8 object-cover rounded mr-3"
                             onError={(e) => {
@@ -270,22 +285,21 @@ export default function MoviesManagement() {
                           />
                         )}
                         <div>
-                          <div className="text-sm font-medium text-gray-900">{movie.title}</div>
+                          <div className="text-sm font-medium" style={{color: 'var(--color-text-primary)'}}>{movie.title}</div>
                           {movie.aliasTitle && (
-                            <div className="text-sm text-gray-500">{movie.aliasTitle}</div>
+                            <div className="text-sm" style={{color: 'var(--color-text-muted)'}}>{movie.aliasTitle}</div>
                           )}
                         </div>
                       </div>
                     </td>
-                    <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-900">
+                    <td className="px-6 py-4 whitespace-nowrap text-sm" style={{color: 'var(--color-text-primary)'}}>
                       {movie.releaseYear || '-'}
                     </td>
                     <td className="px-6 py-4 whitespace-nowrap">
-                      <span className={`inline-flex px-2 py-1 text-xs font-semibold rounded-full ${
-                        movie.isSeries
-                          ? 'bg-blue-100 text-blue-800'
-                          : 'bg-green-100 text-green-800'
-                      }`}>
+                      <span className="inline-flex px-2 py-1 text-xs font-semibold rounded-full" style={{
+                        backgroundColor: movie.isSeries ? '#1e40af' : '#059669',
+                        color: '#ffffff'
+                      }}>
                         {movie.isSeries ? 'Phim bộ' : 'Phim lẻ'}
                       </span>
                     </td>
@@ -295,47 +309,57 @@ export default function MoviesManagement() {
                           {movieGenres[movie.movieId].slice(0, 2).map((genre) => (
                             <span
                               key={genre.genreId}
-                              className="inline-flex items-center px-2 py-1 text-xs font-medium bg-red-100 text-red-800 rounded-full"
+                              className="inline-flex items-center px-2 py-1 text-xs font-medium rounded-full"
+                              style={{backgroundColor: '#dc2626', color: '#ffffff'}}
                             >
                               <TagIcon className="h-3 w-3 mr-1" />
                               {genre.name}
                             </span>
                           ))}
                           {movieGenres[movie.movieId].length > 2 && (
-                            <span className="text-xs text-gray-500">
+                            <span className="text-xs" style={{color: 'var(--color-text-muted)'}}>
                               +{movieGenres[movie.movieId].length - 2} khác
                             </span>
                           )}
                         </div>
                       ) : (
-                        <span className="text-xs text-gray-400">Chưa có thể loại</span>
+                        <span className="text-xs" style={{color: 'var(--color-text-muted)'}}>Chưa có thể loại</span>
                       )}
                     </td>
-                    <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-900">
+                    <td className="px-6 py-4 whitespace-nowrap text-sm" style={{color: 'var(--color-text-primary)'}}>
                       {movie.imdbRating ? `${movie.imdbRating}/10` : '-'}
                     </td>
-                    <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-900">
+                    <td className="px-6 py-4 whitespace-nowrap text-sm" style={{color: 'var(--color-text-primary)'}}>
                       {new Date(movie.createdAt).toLocaleDateString('vi-VN')}
                     </td>
                     <td className="px-6 py-4 whitespace-nowrap text-right text-sm font-medium">
                       <div className="flex justify-end space-x-2">
                         <button
                           onClick={() => router.push(`/admin/movies/${movie.movieId}`)}
-                          className="text-blue-600 hover:text-blue-900 p-1"
+                          className="p-1 transition-colors"
+                          style={{color: '#3b82f6'}}
+                          onMouseEnter={(e) => e.currentTarget.style.color = '#1d4ed8'}
+                          onMouseLeave={(e) => e.currentTarget.style.color = '#3b82f6'}
                           title="Xem chi tiết"
                         >
                           <EyeIcon className="h-4 w-4" />
                         </button>
                         <button
                           onClick={() => router.push(`/admin/movies/${movie.movieId}/edit`)}
-                          className="text-green-600 hover:text-green-900 p-1"
+                          className="p-1 transition-colors"
+                          style={{color: '#10b981'}}
+                          onMouseEnter={(e) => e.currentTarget.style.color = '#059669'}
+                          onMouseLeave={(e) => e.currentTarget.style.color = '#10b981'}
                           title="Chỉnh sửa"
                         >
                           <PencilIcon className="h-4 w-4" />
                         </button>
                         <button
                           onClick={() => handleDeleteMovie(movie.movieId, movie.title)}
-                          className="text-red-600 hover:text-red-900 p-1"
+                          className="p-1 transition-colors"
+                          style={{color: '#ef4444'}}
+                          onMouseEnter={(e) => e.currentTarget.style.color = '#dc2626'}
+                          onMouseLeave={(e) => e.currentTarget.style.color = '#ef4444'}
                           title="Xóa"
                         >
                           <TrashIcon className="h-4 w-4" />
@@ -353,7 +377,7 @@ export default function MoviesManagement() {
       {/* Empty State */}
       {!isLoading && movies.length === 0 && (
         <div className="text-center py-12">
-          <div className="text-gray-500 mb-4">
+          <div className="mb-4" style={{color: 'var(--color-text-muted)'}}>
             {searchQuery ? 'Không tìm thấy phim nào phù hợp' : 'Chưa có phim nào'}
           </div>
           {!searchQuery && (
@@ -371,14 +395,21 @@ export default function MoviesManagement() {
       {/* Pagination */}
       {!searchQuery && totalPages > 1 && (
         <div className="flex justify-between items-center">
-          <div className="text-sm text-gray-700">
+          <div className="text-sm" style={{color: 'var(--color-text-secondary)'}}>
             Trang {currentPage + 1} / {totalPages} (Tổng: {totalMovies} phim)
           </div>
           <div className="flex space-x-2">
             <button
               onClick={() => handlePageChange(currentPage - 1)}
               disabled={currentPage === 0}
-              className="px-3 py-1 text-sm border border-gray-300 rounded-md hover:bg-gray-50 disabled:opacity-50 disabled:cursor-not-allowed"
+              className="px-3 py-1 text-sm rounded-md transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
+              style={{
+                backgroundColor: 'var(--bg-3)',
+                border: '1px solid var(--bg-3)',
+                color: 'var(--color-text-secondary)'
+              }}
+              onMouseEnter={(e) => !e.currentTarget.disabled && (e.currentTarget.style.backgroundColor = 'var(--bg-2)')}
+              onMouseLeave={(e) => !e.currentTarget.disabled && (e.currentTarget.style.backgroundColor = 'var(--bg-3)')}
             >
               Trước
             </button>
@@ -388,11 +419,26 @@ export default function MoviesManagement() {
                 <button
                   key={pageNum}
                   onClick={() => handlePageChange(pageNum)}
-                  className={`px-3 py-1 text-sm border rounded-md ${
-                    pageNum === currentPage
-                      ? 'bg-red-600 text-white border-red-600'
-                      : 'border-gray-300 hover:bg-gray-50'
-                  }`}
+                  className="px-3 py-1 text-sm rounded-md transition-colors"
+                  style={pageNum === currentPage ? {
+                    backgroundColor: '#dc2626',
+                    color: '#ffffff',
+                    border: '1px solid #dc2626'
+                  } : {
+                    backgroundColor: 'var(--bg-3)',
+                    color: 'var(--color-text-secondary)',
+                    border: '1px solid var(--bg-3)'
+                  }}
+                  onMouseEnter={(e) => {
+                    if (pageNum !== currentPage) {
+                      e.currentTarget.style.backgroundColor = 'var(--bg-2)';
+                    }
+                  }}
+                  onMouseLeave={(e) => {
+                    if (pageNum !== currentPage) {
+                      e.currentTarget.style.backgroundColor = 'var(--bg-3)';
+                    }
+                  }}
                 >
                   {pageNum + 1}
                 </button>
@@ -401,7 +447,14 @@ export default function MoviesManagement() {
             <button
               onClick={() => handlePageChange(currentPage + 1)}
               disabled={currentPage === totalPages - 1}
-              className="px-3 py-1 text-sm border border-gray-300 rounded-md hover:bg-gray-50 disabled:opacity-50 disabled:cursor-not-allowed"
+              className="px-3 py-1 text-sm rounded-md transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
+              style={{
+                backgroundColor: 'var(--bg-3)',
+                border: '1px solid var(--bg-3)',
+                color: 'var(--color-text-secondary)'
+              }}
+              onMouseEnter={(e) => !e.currentTarget.disabled && (e.currentTarget.style.backgroundColor = 'var(--bg-2)')}
+              onMouseLeave={(e) => !e.currentTarget.disabled && (e.currentTarget.style.backgroundColor = 'var(--bg-3)')}
             >
               Sau
             </button>

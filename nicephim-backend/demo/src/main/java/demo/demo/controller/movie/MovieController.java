@@ -193,6 +193,58 @@ public class MovieController {
         }
     }
 
+    @PutMapping("/{movieId}/poster")
+    public ResponseEntity<Map<String, Object>> updateMoviePoster(
+            @PathVariable UUID movieId,
+            @RequestParam("posterUrl") String posterUrl) {
+        try {
+            MovieResponse movie = movieService.updateMoviePoster(movieId, posterUrl);
+
+            Map<String, Object> response = new HashMap<>();
+            response.put("success", true);
+            response.put("message", "Cập nhật poster thành công!");
+            response.put("data", movie);
+
+            return ResponseEntity.ok(response);
+        } catch (IllegalArgumentException e) {
+            Map<String, Object> response = new HashMap<>();
+            response.put("success", false);
+            response.put("error", e.getMessage());
+            return ResponseEntity.status(HttpStatus.NOT_FOUND).body(response);
+        } catch (Exception e) {
+            Map<String, Object> response = new HashMap<>();
+            response.put("success", false);
+            response.put("error", e.getMessage());
+            return ResponseEntity.badRequest().body(response);
+        }
+    }
+
+    @PutMapping("/{movieId}/banner")
+    public ResponseEntity<Map<String, Object>> updateMovieBanner(
+            @PathVariable UUID movieId,
+            @RequestParam("bannerUrl") String bannerUrl) {
+        try {
+            MovieResponse movie = movieService.updateMovieBanner(movieId, bannerUrl);
+
+            Map<String, Object> response = new HashMap<>();
+            response.put("success", true);
+            response.put("message", "Cập nhật banner thành công!");
+            response.put("data", movie);
+
+            return ResponseEntity.ok(response);
+        } catch (IllegalArgumentException e) {
+            Map<String, Object> response = new HashMap<>();
+            response.put("success", false);
+            response.put("error", e.getMessage());
+            return ResponseEntity.status(HttpStatus.NOT_FOUND).body(response);
+        } catch (Exception e) {
+            Map<String, Object> response = new HashMap<>();
+            response.put("success", false);
+            response.put("error", e.getMessage());
+            return ResponseEntity.badRequest().body(response);
+        }
+    }
+
     @ExceptionHandler(IllegalArgumentException.class)
     public ResponseEntity<Map<String, Object>> handleBadRequest(IllegalArgumentException ex) {
         Map<String, Object> response = new HashMap<>();

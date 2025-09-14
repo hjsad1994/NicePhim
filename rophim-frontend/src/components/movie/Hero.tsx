@@ -76,7 +76,7 @@ export function Hero({ movies }: HeroProps) {
       ))}
 
       {/* Content */}
-      <div className="relative h-full flex items-center">
+      <div className="relative h-full flex items-center pt-16">
         <div className="w-[90%] mx-auto px-4 sm:px-6 lg:px-8">
           <div className="max-w-xl lg:max-w-2xl">
             {/* Title */}

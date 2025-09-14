@@ -1,7 +1,7 @@
-# Project Brief: Rophim - Movie Streaming Platform
+# Project Brief: NicePhim - Movie Streaming Platform
 
 ## Project Overview
-**Rophim** is a comprehensive movie streaming platform built with modern web technologies, featuring both individual viewing and collaborative "watch together" functionality.
+**NicePhim** is a comprehensive movie streaming platform built with modern web technologies, featuring both individual viewing and collaborative "watch together" functionality.
 
 ## Core Requirements
 - **Movie Streaming**: High-quality video streaming with multiple quality options

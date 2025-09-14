@@ -16,6 +16,12 @@ const nextConfig: NextConfig = {
         pathname: '/t/p/**',
       },
       {
+        protocol: 'http',
+        hostname: 'localhost',
+        port: '8080',
+        pathname: '/**',
+      },
+      {
         protocol: 'https',
         hostname: '**',
       },

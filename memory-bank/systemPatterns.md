@@ -1,4 +1,4 @@
-# System Patterns: Rophim Architecture
+# System Patterns: NicePhim Architecture
 
 ## Overall Architecture
 ```

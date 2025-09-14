@@ -74,30 +74,30 @@ export default function AdminDashboard() {
     <div className="space-y-6">
       {/* Header */}
       <div>
-        <h1 className="text-2xl font-bold text-gray-900">Dashboard</h1>
-        <p className="text-gray-600">Tổng quan hệ thống NicePhim</p>
+        <h1 className="text-2xl font-bold" style={{color: 'var(--color-text-primary)'}}>Dashboard</h1>
+        <p style={{color: 'var(--color-text-secondary)'}}>Tổng quan hệ thống NicePhim</p>
       </div>
 
       {/* Stats */}
       <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
         {dashboardStats.map((stat) => (
-          <div key={stat.name} className="bg-white p-6 rounded-lg shadow-sm border border-gray-200">
+          <div key={stat.name} className="p-6 rounded-lg shadow-sm" style={{backgroundColor: 'var(--bg-4)', border: '1px solid var(--bg-3)'}}>
             <div className="flex items-center">
               <div className="flex-shrink-0">
-                <stat.icon className="h-8 w-8 text-red-600" />
+                <stat.icon className="h-8 w-8 text-red-400" />
               </div>
               <div className="ml-4 w-0 flex-1">
                 <dl>
-                  <dt className="text-sm font-medium text-gray-500 truncate">
+                  <dt className="text-sm font-medium truncate" style={{color: 'var(--color-text-muted)'}}>
                     {stat.name}
                   </dt>
                   <dd className="flex items-baseline">
-                    <div className="text-2xl font-semibold text-gray-900">
+                    <div className="text-2xl font-semibold" style={{color: 'var(--color-text-primary)'}}>
                       {stat.value}
                     </div>
                     {stat.value !== '-' && (
                       <div className={`ml-2 flex items-baseline text-sm font-semibold ${
-                        stat.changeType === 'increase' ? 'text-green-600' : 'text-red-600'
+                        stat.changeType === 'increase' ? 'text-green-400' : 'text-red-400'
                       }`}>
                         {stat.change}
                       </div>
@@ -113,36 +113,35 @@ export default function AdminDashboard() {
       {/* Recent Activity */}
       <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
         {/* Recent Movies */}
-        <div className="bg-white rounded-lg shadow-sm border border-gray-200">
-          <div className="px-6 py-4 border-b border-gray-200">
-            <h3 className="text-lg font-medium text-gray-900">Phim mới nhất</h3>
+        <div className="rounded-lg shadow-sm" style={{backgroundColor: 'var(--bg-4)', border: '1px solid var(--bg-3)'}}>
+          <div className="px-6 py-4 border-b" style={{borderColor: 'var(--bg-3)'}}>
+            <h3 className="text-lg font-medium" style={{color: 'var(--color-text-primary)'}}>Phim mới nhất</h3>
           </div>
           <div className="p-6">
             {isLoading ? (
-              <div className="text-center text-gray-500">Đang tải...</div>
+              <div className="text-center" style={{color: 'var(--color-text-muted)'}}>Đang tải...</div>
             ) : stats.recentMovies.length > 0 ? (
               <div className="space-y-4">
                 {stats.recentMovies.map((movie) => (
                   <div key={movie.movieId} className="flex items-center justify-between">
                     <div className="flex-1">
-                      <h4 className="text-sm font-medium text-gray-900">{movie.title}</h4>
-                      <p className="text-sm text-gray-500">
+                      <h4 className="text-sm font-medium" style={{color: 'var(--color-text-primary)'}}>{movie.title}</h4>
+                      <p className="text-sm" style={{color: 'var(--color-text-muted)'}}>
                         {movie.aliasTitle && `${movie.aliasTitle} • `}
                         {new Date(movie.createdAt).toLocaleDateString('vi-VN')}
                       </p>
                     </div>
-                    <span className={`inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium ${
-                      movie.isSeries
-                        ? 'bg-blue-100 text-blue-800'
-                        : 'bg-green-100 text-green-800'
-                    }`}>
+                    <span className="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium" style={{
+                      backgroundColor: movie.isSeries ? '#1e40af' : '#059669',
+                      color: '#ffffff'
+                    }}>
                       {movie.isSeries ? 'Phim bộ' : 'Phim lẻ'}
                     </span>
                   </div>
                 ))}
               </div>
             ) : (
-              <div className="text-center text-gray-500">
+              <div className="text-center" style={{color: 'var(--color-text-muted)'}}>
                 Chưa có phim nào
               </div>
             )}
@@ -150,9 +149,9 @@ export default function AdminDashboard() {
         </div>
 
         {/* Quick Actions */}
-        <div className="bg-white rounded-lg shadow-sm border border-gray-200">
-          <div className="px-6 py-4 border-b border-gray-200">
-            <h3 className="text-lg font-medium text-gray-900">Thao tác nhanh</h3>
+        <div className="rounded-lg shadow-sm" style={{backgroundColor: 'var(--bg-4)', border: '1px solid var(--bg-3)'}}>
+          <div className="px-6 py-4 border-b" style={{borderColor: 'var(--bg-3)'}}>
+            <h3 className="text-lg font-medium" style={{color: 'var(--color-text-primary)'}}>Thao tác nhanh</h3>
           </div>
           <div className="p-6">
             <div className="space-y-4">
@@ -165,28 +164,56 @@ export default function AdminDashboard() {
               </button>
               <button
                 onClick={() => router.push('/admin/movies')}
-                className="w-full flex items-center justify-center px-4 py-3 border border-gray-300 text-sm font-medium rounded-md text-gray-700 bg-white hover:bg-gray-50 transition-colors"
+                className="w-full flex items-center justify-center px-4 py-3 text-sm font-medium rounded-md transition-colors"
+                style={{
+                  backgroundColor: 'var(--bg-3)',
+                  border: '1px solid var(--bg-3)',
+                  color: 'var(--color-text-secondary)'
+                }}
+                onMouseEnter={(e) => e.currentTarget.style.backgroundColor = 'var(--bg-2)'}
+                onMouseLeave={(e) => e.currentTarget.style.backgroundColor = 'var(--bg-3)'}
               >
                 <FilmIcon className="mr-2 h-5 w-5" />
                 Quản lý phim
               </button>
               <button
                 onClick={() => router.push('/admin/users')}
-                className="w-full flex items-center justify-center px-4 py-3 border border-gray-300 text-sm font-medium rounded-md text-gray-700 bg-white hover:bg-gray-50 transition-colors"
+                className="w-full flex items-center justify-center px-4 py-3 text-sm font-medium rounded-md transition-colors"
+                style={{
+                  backgroundColor: 'var(--bg-3)',
+                  border: '1px solid var(--bg-3)',
+                  color: 'var(--color-text-secondary)'
+                }}
+                onMouseEnter={(e) => e.currentTarget.style.backgroundColor = 'var(--bg-2)'}
+                onMouseLeave={(e) => e.currentTarget.style.backgroundColor = 'var(--bg-3)'}
               >
                 <UserGroupIcon className="mr-2 h-5 w-5" />
                 Quản lý người dùng
               </button>
               <button
                 onClick={() => router.push('/admin/genres')}
-                className="w-full flex items-center justify-center px-4 py-3 border border-gray-300 text-sm font-medium rounded-md text-gray-700 bg-white hover:bg-gray-50 transition-colors"
+                className="w-full flex items-center justify-center px-4 py-3 text-sm font-medium rounded-md transition-colors"
+                style={{
+                  backgroundColor: 'var(--bg-3)',
+                  border: '1px solid var(--bg-3)',
+                  color: 'var(--color-text-secondary)'
+                }}
+                onMouseEnter={(e) => e.currentTarget.style.backgroundColor = 'var(--bg-2)'}
+                onMouseLeave={(e) => e.currentTarget.style.backgroundColor = 'var(--bg-3)'}
               >
                 <TagIcon className="mr-2 h-5 w-5" />
                 Quản lý thể loại
               </button>
               <button
                 onClick={() => router.push('/admin/analytics')}
-                className="w-full flex items-center justify-center px-4 py-3 border border-gray-300 text-sm font-medium rounded-md text-gray-700 bg-white hover:bg-gray-50 transition-colors"
+                className="w-full flex items-center justify-center px-4 py-3 text-sm font-medium rounded-md transition-colors"
+                style={{
+                  backgroundColor: 'var(--bg-3)',
+                  border: '1px solid var(--bg-3)',
+                  color: 'var(--color-text-secondary)'
+                }}
+                onMouseEnter={(e) => e.currentTarget.style.backgroundColor = 'var(--bg-2)'}
+                onMouseLeave={(e) => e.currentTarget.style.backgroundColor = 'var(--bg-3)'}
               >
                 <EyeIcon className="mr-2 h-5 w-5" />
                 Xem thống kê

@@ -237,132 +237,245 @@ export default function MovieDetailPage({ params }: MovieDetailPageProps) {
   }
 
   return (
-    <div className="min-h-screen" style={{backgroundColor: 'var(--bg-2)'}}>
-      {/* Header */}
-      <div className="w-[90%] mx-auto px-4 sm:px-6 lg:px-8 py-8">
-        {/* Back Button */}
-        <Link 
-          href="/"
-          className="inline-flex items-center text-gray-400 hover:text-white transition-colors mb-8"
-        >
-          <ChevronLeftIcon className="h-5 w-5 mr-2" />
-          Quay lại trang chủ
-        </Link>
+    <div className="min-h-screen bg-gray-900">
+      {/* Top Detail Wrap with Banner */}
+      <div className="relative w-full h-[80vh] min-h-[600px] overflow-hidden">
+        {/* Background Fade */}
+        <div 
+          className="absolute inset-0 bg-cover bg-center bg-no-repeat"
+          style={{
+            backgroundImage: movie.banner ? `url(${getImageUrl(movie.banner, 'large')})` : 'linear-gradient(135deg, #1f2937 0%, #111827 100%)'
+          }}
+        />
+        
+        {/* Cover Fade */}
+        <div className="absolute inset-0 bg-gradient-to-r from-black/90 via-black/70 to-transparent" />
+        <div className="absolute inset-0 bg-gradient-to-t from-black/95 via-transparent to-transparent" />
+        
+        {/* Cover Image */}
+        <div className="absolute inset-0">
+          <div 
+            className="w-full h-full bg-cover bg-center bg-no-repeat opacity-20"
+            style={{
+              backgroundImage: movie.poster ? `url(${getImageUrl(movie.poster, 'large')})` : 'none'
+            }}
+          />
+        </div>
+      </div>
 
-        {/* Main Content */}
-        <div className="flex flex-col lg:flex-row gap-8 items-start">
-          {/* Poster */}
-          <div className="flex-shrink-0">
-            <div className="w-64 h-96 lg:w-80 lg:h-[480px] relative rounded-xl overflow-hidden shadow-2xl">
-              <Image
-                src={getImageUrl(movie.poster, 'large')}
-                alt={movie.title}
-                fill
-                className="object-cover"
-              />
-            </div>
-          </div>
-
-          {/* Movie Info */}
-          <div className="flex-1 text-white space-y-6 lg:pt-8">
-            {/* Title & Quality */}
-            <div>
-              <h1 className="text-3xl lg:text-5xl font-bold mb-2">{movie.title}</h1>
-              {movie.originalTitle && (
-                <p className="text-xl text-gray-300 mb-4">{movie.originalTitle}</p>
-              )}
-              <div className="flex items-center gap-2 mb-4">
-                <span className="bg-red-600 text-white px-3 py-1 rounded-lg font-semibold">
-                  {movie.quality}
-                </span>
-                {movie.isHot && (
-                  <span className="bg-orange-500 text-white px-3 py-1 rounded-lg font-bold">
-                    HOT
-                  </span>
-                )}
-              </div>
-            </div>
-
-            {/* Stats */}
-            <div className="flex items-center gap-6 text-gray-300">
-              {movie.imdbRating && (
-                <div className="flex items-center gap-1">
-                  <StarIcon className="h-5 w-5 text-yellow-400" />
-                  <span className="font-semibold">{movie.imdbRating}</span>
+      {/* Main Content */}
+      <div className="relative -mt-32 z-10 pt-16">
+        <div className="w-[90%] mx-auto px-4 sm:px-6 lg:px-8">
+          <div className="flex flex-col lg:flex-row gap-8">
+            {/* Sidebar */}
+            <div className="lg:w-80 flex-shrink-0">
+              <div className="bg-gray-800/90 backdrop-blur-sm rounded-xl p-6 space-y-6">
+                {/* Poster */}
+                <div className="text-center">
+                  <div className="w-48 h-72 mx-auto relative rounded-xl overflow-hidden shadow-2xl">
+                    <Image
+                      src={getImageUrl(movie.poster, 'large')}
+                      alt={movie.title}
+                      fill
+                      className="object-cover"
+                    />
+                  </div>
                 </div>
-              )}
-              <div className="flex items-center gap-1">
-                <CalendarIcon className="h-5 w-5" />
-                <span>{movie.releaseYear}</span>
-              </div>
-              <div className="flex items-center gap-1">
-                <ClockIcon className="h-5 w-5" />
-                <span>{movie.duration} phút</span>
-              </div>
-            </div>
 
-            {/* Genres */}
-            {movie.genres && movie.genres.length > 0 && (
-              <div className="flex items-center gap-2 flex-wrap">
-                <TagIcon className="h-5 w-5 text-gray-400" />
-                {movie.genres.map((genre) => (
+                {/* Movie Title */}
+                <div className="text-center">
+                  <h1 className="text-2xl font-bold text-white mb-2">{movie.title}</h1>
+                  {movie.aliasTitle && (
+                    <p className="text-gray-400 text-lg">{movie.aliasTitle}</p>
+                  )}
+                </div>
+
+                {/* Action Button */}
+                <div className="text-center">
                   <Link
-                    key={genre.id}
-                    href={`/the-loai/${genre.slug}`}
-                    className="bg-gray-700 hover:bg-gray-600 text-white px-3 py-1 rounded-lg text-sm transition-colors"
+                    href={`/xem/${movie.slug}`}
+                    className="inline-flex items-center justify-center w-full bg-gradient-to-r from-white to-gray-200 hover:from-gray-100 hover:to-gray-300 text-gray-800 px-8 py-4 rounded-full font-bold text-lg transition-all duration-300 shadow-lg hover:shadow-xl"
                   >
-                    {genre.name}
+                    <PlayIcon className="h-6 w-6 mr-3" />
+                    Xem Ngay
                   </Link>
-                ))}
-              </div>
-            )}
+                </div>
 
-            {/* Description */}
-            <div>
-              <h3 className="text-xl font-semibold mb-3">Nội dung</h3>
-              <p className="text-gray-300 leading-relaxed">
-                {movie.description || 'Không có mô tả cho bộ phim này.'}
-              </p>
+                {/* Movie Details */}
+                <div className="space-y-4">
+                  <div className="flex items-center justify-between text-gray-300">
+                    <span>Năm phát hành:</span>
+                    <span className="text-white font-semibold">{movie.releaseYear}</span>
+                  </div>
+                  <div className="flex items-center justify-between text-gray-300">
+                    <span>Thời lượng:</span>
+                    <span className="text-white font-semibold">{movie.duration} phút</span>
+                  </div>
+                  <div className="flex items-center justify-between text-gray-300">
+                    <span>Chất lượng:</span>
+                    <span className="text-white font-semibold">{movie.quality}</span>
+                  </div>
+                  <div className="flex items-center justify-between text-gray-300">
+                    <span>Quốc gia:</span>
+                    <span className="text-white font-semibold">{movie.country}</span>
+                  </div>
+                  {movie.imdbRating && (
+                    <div className="flex items-center justify-between text-gray-300">
+                      <span>IMDB Rating:</span>
+                      <span className="text-white font-semibold flex items-center">
+                        <StarIcon className="h-4 w-4 text-yellow-400 mr-1" />
+                        {movie.imdbRating}
+                      </span>
+                    </div>
+                  )}
+                </div>
+
+                {/* Genres */}
+                {movie.genres && movie.genres.length > 0 && (
+                  <div>
+                    <h3 className="text-lg font-semibold text-white mb-3">Thể loại</h3>
+                    <div className="flex flex-wrap gap-2">
+                      {movie.genres.map((genre) => (
+                        <Link
+                          key={genre.id}
+                          href={`/the-loai/${genre.slug}`}
+                          className="bg-red-600 hover:bg-red-700 text-white px-3 py-1 rounded-lg text-sm transition-colors"
+                        >
+                          {genre.name}
+                        </Link>
+                      ))}
+                    </div>
+                  </div>
+                )}
+              </div>
             </div>
 
-            {/* Action Buttons */}
-            <div className="flex items-center gap-4 pt-4">
-              <Link
-                href={`/xem/${movie.slug}`}
-                className="flex items-center bg-red-600 hover:bg-red-700 text-white px-8 py-3 rounded-lg font-semibold transition-colors"
-              >
-                <PlayIcon className="h-5 w-5 mr-2" />
-                Xem ngay
-              </Link>
-              
-              <Link
-                href={`/xem-chung/tao-moi?movie=${movie.slug}`}
-                className="flex items-center bg-blue-600 hover:bg-blue-700 text-white px-8 py-3 rounded-lg font-semibold transition-colors"
-              >
-                <UsersIcon className="h-5 w-5 mr-2" />
-                Xem chung
-              </Link>
-              
-              <button
-                onClick={handleFavoriteToggle}
-                className={`flex items-center px-6 py-3 rounded-lg font-semibold transition-colors ${
-                  isFavorite 
-                    ? 'bg-red-600 text-white' 
-                    : 'bg-gray-700 hover:bg-gray-600 text-white'
-                }`}
-              >
-                {isFavorite ? (
-                  <HeartIcon className="h-5 w-5 mr-2" />
-                ) : (
-                  <HeartOutlineIcon className="h-5 w-5 mr-2" />
-                )}
-                {isFavorite ? 'Đã thích' : 'Thích'}
-              </button>
-              
-              <button className="flex items-center bg-gray-700 hover:bg-gray-600 text-white px-6 py-3 rounded-lg font-semibold transition-colors">
-                <ShareIcon className="h-5 w-5 mr-2" />
-                Chia sẻ
-              </button>
+            {/* Main Content */}
+            <div className="flex-1">
+              <div className="bg-gray-800/90 backdrop-blur-sm rounded-xl p-8">
+                {/* Movie Info */}
+                <div className="space-y-6">
+                  {/* Description */}
+                  <div>
+                    <h2 className="text-2xl font-bold text-white mb-4">Nội dung phim</h2>
+                    <p className="text-gray-300 leading-relaxed text-lg">
+                      {movie.description || 'Không có mô tả cho bộ phim này.'}
+                    </p>
+                  </div>
+
+                  {/* Action Buttons */}
+                  <div className="flex items-center gap-4 pt-6">
+                    <Link
+                      href={`/xem/${movie.slug}`}
+                      className="flex items-center bg-gradient-to-r from-white to-gray-200 hover:from-gray-100 hover:to-gray-300 text-gray-800 px-8 py-3 rounded-full font-semibold transition-all duration-300 shadow-lg hover:shadow-xl"
+                    >
+                      <PlayIcon className="h-5 w-5 mr-2" />
+                      Xem ngay
+                    </Link>
+                    
+                    <Link
+                      href={`/xem-chung/tao-moi?movie=${movie.slug}`}
+                      className="flex items-center bg-blue-600 hover:bg-blue-700 text-white px-8 py-3 rounded-full font-semibold transition-colors shadow-lg"
+                    >
+                      <UsersIcon className="h-5 w-5 mr-2" />
+                      Xem chung
+                    </Link>
+                    
+                    <button
+                      onClick={handleFavoriteToggle}
+                      className={`flex items-center px-6 py-3 rounded-full font-semibold transition-colors shadow-lg ${
+                        isFavorite 
+                          ? 'bg-red-600 text-white' 
+                          : 'bg-gray-700/80 hover:bg-gray-600 text-white backdrop-blur-sm'
+                      }`}
+                    >
+                      {isFavorite ? (
+                        <HeartIcon className="h-5 w-5 mr-2" />
+                      ) : (
+                        <HeartOutlineIcon className="h-5 w-5 mr-2" />
+                      )}
+                      {isFavorite ? 'Đã thích' : 'Thích'}
+                    </button>
+                    
+                    <button className="flex items-center bg-gray-700/80 hover:bg-gray-600 text-white px-6 py-3 rounded-full font-semibold transition-colors shadow-lg backdrop-blur-sm">
+                      <ShareIcon className="h-5 w-5 mr-2" />
+                      Chia sẻ
+                    </button>
+                  </div>
+
+                  {/* Comments Section */}
+                  <div className="mt-12">
+                    <div className="flex items-center gap-4 mb-6">
+                      <div className="flex items-center gap-2">
+                        <div className="w-8 h-8 bg-red-600 rounded-full flex items-center justify-center">
+                          <span className="text-white text-sm font-bold">144</span>
+                        </div>
+                        <h3 className="text-xl font-bold text-white">Bình luận (144)</h3>
+                      </div>
+                      <div className="flex gap-2">
+                        <button className="bg-red-600 text-white px-4 py-2 rounded-full text-sm">Bình luận</button>
+                        <button className="bg-gray-700 text-white px-4 py-2 rounded-full text-sm">Đánh giá</button>
+                      </div>
+                    </div>
+
+                    {/* Comment Form */}
+                    <div className="mb-8">
+                      <div className="flex gap-4 mb-4">
+                        <div className="w-10 h-10 bg-gray-600 rounded-full flex items-center justify-center">
+                          <span className="text-white text-sm font-bold">T</span>
+                        </div>
+                        <div className="flex-1">
+                              <textarea
+                                className="w-full bg-gray-700 text-white p-4 rounded-xl resize-none focus:outline-none focus:ring-2 focus:ring-red-600"
+                                rows={4}
+                                placeholder="Viết bình luận..."
+                              />
+                          <div className="flex items-center justify-between mt-2">
+                            <div className="flex items-center gap-4">
+                              <label className="flex items-center gap-2 text-gray-400 text-sm">
+                                <input type="checkbox" className="rounded-full" />
+                                Tiết lộ?
+                              </label>
+                            </div>
+                            <button className="bg-gradient-to-r from-white to-gray-200 hover:from-gray-100 hover:to-gray-300 text-gray-800 px-6 py-2 rounded-full font-semibold transition-all duration-300 shadow-lg hover:shadow-xl">
+                              Gửi
+                            </button>
+                          </div>
+                        </div>
+                      </div>
+                    </div>
+
+                    {/* Comments List */}
+                    <div className="space-y-6">
+                      {[1, 2, 3, 4, 5].map((comment) => (
+                        <div key={comment} className="flex gap-4">
+                          <div className="w-10 h-10 bg-gray-600 rounded-full flex items-center justify-center">
+                            <span className="text-white text-sm font-bold">U{comment}</span>
+                          </div>
+                          <div className="flex-1">
+                            <div className="flex items-center gap-2 mb-2">
+                              <span className="text-white font-semibold">User {comment}</span>
+                              <span className="text-gray-400 text-sm">{comment} giờ trước</span>
+                            </div>
+                            <p className="text-gray-300 mb-2">
+                              Đây là bình luận mẫu cho tập phim. Phim này rất hay và hấp dẫn!
+                            </p>
+                            <div className="flex items-center gap-4">
+                              <button className="flex items-center gap-1 text-gray-400 hover:text-white transition-colors px-3 py-1 rounded-full hover:bg-gray-700">
+                                <HeartOutlineIcon className="h-4 w-4" />
+                                <span className="text-sm">1</span>
+                              </button>
+                              <button className="text-gray-400 hover:text-white transition-colors text-sm px-3 py-1 rounded-full hover:bg-gray-700">
+                                Trả lời
+                              </button>
+                            </div>
+                          </div>
+                        </div>
+                      ))}
+                    </div>
+                  </div>
+                </div>
+              </div>
             </div>
           </div>
         </div>

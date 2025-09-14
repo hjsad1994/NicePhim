@@ -1,10 +1,10 @@
 import type { Metadata } from "next";
 import { Inter } from "next/font/google";
 import "./globals.css";
-import { Header } from "@/components/layout/Header";
 import { Footer } from "@/components/layout/Footer";
 import { BackToTop } from "@/components/ui/BackToTop";
 import { SITE_CONFIG } from "@/constants";
+import { ConditionalHeader } from "@/components/layout/ConditionalHeader";
 
 const inter = Inter({
   subsets: ["latin", "vietnamese"],
@@ -48,7 +48,7 @@ export default function RootLayout({
     <html lang="vi" className="dark">
       <body className={`${inter.variable} font-sans antialiased min-h-screen`} style={{backgroundColor: 'var(--bg-2)'}}>
         <div className="flex flex-col min-h-screen">
-          <Header />
+          <ConditionalHeader />
           <main className="flex-1">
             {children}
           </main>

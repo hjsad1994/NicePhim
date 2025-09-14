@@ -1,4 +1,4 @@
-# Product Context: Rophim Streaming Platform
+# Product Context: NicePhim Streaming Platform
 
 ## Problem Statement
 Users need a modern, feature-rich movie streaming platform that supports both individual viewing and social watching experiences, with high-quality video delivery and intuitive content discovery.

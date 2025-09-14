@@ -1,4 +1,4 @@
-# Technical Context: Rophim Platform
+# Technical Context: NicePhim Platform
 
 ## Architecture Overview
 - **Frontend**: Next.js 15 with App Router

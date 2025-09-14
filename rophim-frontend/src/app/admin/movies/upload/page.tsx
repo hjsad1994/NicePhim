@@ -181,12 +181,12 @@ export default function UploadMoviePage() {
   };
 
   return (
-    <div className="min-h-screen bg-gray-50 py-8">
+    <div className="min-h-screen py-8" style={{backgroundColor: 'var(--bg-2)'}}>
       <div className="max-w-4xl mx-auto px-4 sm:px-6 lg:px-8">
-        <div className="bg-white shadow rounded-lg">
-          <div className="px-6 py-4 border-b border-gray-200">
-            <h1 className="text-2xl font-bold text-gray-900">Tạo phim mới</h1>
-            <p className="mt-1 text-sm text-gray-600">
+        <div className="rounded-lg shadow" style={{backgroundColor: 'var(--bg-4)', border: '1px solid var(--bg-3)'}}>
+          <div className="px-6 py-4 border-b" style={{borderColor: 'var(--bg-3)'}}>
+            <h1 className="text-2xl font-bold" style={{color: 'var(--color-text-primary)'}}>Tạo phim mới</h1>
+            <p className="mt-1 text-sm" style={{color: 'var(--color-text-secondary)'}}>
               Thêm thông tin phim và upload video để tạo phim mới
             </p>
           </div>
@@ -194,7 +194,7 @@ export default function UploadMoviePage() {
           <form onSubmit={handleSubmit} className="px-6 py-6 space-y-6">
             {/* Error Message */}
             {error && (
-              <div className="bg-red-50 border border-red-200 rounded-md p-4">
+              <div className="rounded-md p-4" style={{backgroundColor: 'var(--bg-4)', border: '1px solid #ef4444'}}>
                 <div className="flex">
                   <div className="flex-shrink-0">
                     <svg className="h-5 w-5 text-red-400" viewBox="0 0 20 20" fill="currentColor">
@@ -202,8 +202,8 @@ export default function UploadMoviePage() {
                     </svg>
                   </div>
                   <div className="ml-3">
-                    <h3 className="text-sm font-medium text-red-800">Lỗi</h3>
-                    <div className="mt-2 text-sm text-red-700">
+                    <h3 className="text-sm font-medium text-red-400">Lỗi</h3>
+                    <div className="mt-2 text-sm text-red-400">
                       <p>{error}</p>
                     </div>
                   </div>
@@ -213,7 +213,7 @@ export default function UploadMoviePage() {
 
             {/* Success Message */}
             {success && (
-              <div className="bg-green-50 border border-green-200 rounded-md p-4">
+              <div className="rounded-md p-4" style={{backgroundColor: 'var(--bg-4)', border: '1px solid #10b981'}}>
                 <div className="flex">
                   <div className="flex-shrink-0">
                     <svg className="h-5 w-5 text-green-400" viewBox="0 0 20 20" fill="currentColor">
@@ -221,8 +221,8 @@ export default function UploadMoviePage() {
                     </svg>
                   </div>
                   <div className="ml-3">
-                    <h3 className="text-sm font-medium text-green-800">Thành công</h3>
-                    <div className="mt-2 text-sm text-green-700">
+                    <h3 className="text-sm font-medium text-green-400">Thành công</h3>
+                    <div className="mt-2 text-sm text-green-400">
                       <p>{success}</p>
                     </div>
                   </div>
@@ -233,7 +233,7 @@ export default function UploadMoviePage() {
             {/* Basic Information */}
             <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
               <div>
-                <label htmlFor="title" className="block text-sm font-medium text-gray-700 mb-2">
+                <label htmlFor="title" className="block text-sm font-medium mb-2" style={{color: 'var(--color-text-secondary)'}}>
                   Tên phim *
                 </label>
                 <input
@@ -242,14 +242,19 @@ export default function UploadMoviePage() {
                   name="title"
                   value={formData.title || ''}
                   onChange={handleInputChange}
-                  className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-red-500 focus:border-transparent text-black"
+                  className="w-full px-3 py-2 rounded-md focus:outline-none focus:ring-2 focus:ring-red-500 focus:border-transparent"
+                  style={{
+                    backgroundColor: 'var(--bg-3)',
+                    border: '1px solid var(--bg-3)',
+                    color: 'var(--color-text-primary)'
+                  }}
                   placeholder="Nhập tên phim..."
                   required
                 />
               </div>
 
               <div>
-                <label htmlFor="aliasTitle" className="block text-sm font-medium text-gray-700 mb-2">
+                <label htmlFor="aliasTitle" className="block text-sm font-medium mb-2" style={{color: 'var(--color-text-secondary)'}}>
                   Tên khác
                 </label>
                 <input
@@ -258,13 +263,18 @@ export default function UploadMoviePage() {
                   name="aliasTitle"
                   value={formData.aliasTitle || ''}
                   onChange={handleInputChange}
-                  className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-red-500 focus:border-transparent text-black"
+                  className="w-full px-3 py-2 rounded-md focus:outline-none focus:ring-2 focus:ring-red-500 focus:border-transparent"
+                  style={{
+                    backgroundColor: 'var(--bg-3)',
+                    border: '1px solid var(--bg-3)',
+                    color: 'var(--color-text-primary)'
+                  }}
                   placeholder="Tên khác của phim..."
                 />
               </div>
 
               <div>
-                <label htmlFor="releaseYear" className="block text-sm font-medium text-gray-700 mb-2">
+                <label htmlFor="releaseYear" className="block text-sm font-medium mb-2" style={{color: 'var(--color-text-secondary)'}}>
                   Năm phát hành
                 </label>
                 <input
@@ -273,7 +283,12 @@ export default function UploadMoviePage() {
                   name="releaseYear"
                   value={formData.releaseYear || ''}
                   onChange={handleInputChange}
-                  className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-red-500 focus:border-transparent text-black"
+                  className="w-full px-3 py-2 rounded-md focus:outline-none focus:ring-2 focus:ring-red-500 focus:border-transparent"
+                  style={{
+                    backgroundColor: 'var(--bg-3)',
+                    border: '1px solid var(--bg-3)',
+                    color: 'var(--color-text-primary)'
+                  }}
                   placeholder="2024"
                   min="1900"
                   max="2030"
@@ -281,7 +296,7 @@ export default function UploadMoviePage() {
               </div>
 
               <div>
-                <label htmlFor="ageRating" className="block text-sm font-medium text-gray-700 mb-2">
+                <label htmlFor="ageRating" className="block text-sm font-medium mb-2" style={{color: 'var(--color-text-secondary)'}}>
                   Độ tuổi
                 </label>
                 <select
@@ -289,7 +304,12 @@ export default function UploadMoviePage() {
                   name="ageRating"
                   value={formData.ageRating || ''}
                   onChange={handleInputChange}
-                  className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-red-500 focus:border-transparent text-black"
+                  className="w-full px-3 py-2 rounded-md focus:outline-none focus:ring-2 focus:ring-red-500 focus:border-transparent"
+                  style={{
+                    backgroundColor: 'var(--bg-3)',
+                    border: '1px solid var(--bg-3)',
+                    color: 'var(--color-text-primary)'
+                  }}
                 >
                   <option value="">Chọn độ tuổi</option>
                   <option value="G">G - Mọi lứa tuổi</option>
@@ -301,7 +321,7 @@ export default function UploadMoviePage() {
               </div>
 
               <div>
-                <label htmlFor="imdbRating" className="block text-sm font-medium text-gray-700 mb-2">
+                <label htmlFor="imdbRating" className="block text-sm font-medium mb-2" style={{color: 'var(--color-text-secondary)'}}>
                   Đánh giá IMDB
                 </label>
                 <input
@@ -310,7 +330,12 @@ export default function UploadMoviePage() {
                   name="imdbRating"
                   value={formData.imdbRating || ''}
                   onChange={handleInputChange}
-                  className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-red-500 focus:border-transparent text-black"
+                  className="w-full px-3 py-2 rounded-md focus:outline-none focus:ring-2 focus:ring-red-500 focus:border-transparent"
+                  style={{
+                    backgroundColor: 'var(--bg-3)',
+                    border: '1px solid var(--bg-3)',
+                    color: 'var(--color-text-primary)'
+                  }}
                   placeholder="8.5"
                   min="0"
                   max="10"
@@ -327,7 +352,7 @@ export default function UploadMoviePage() {
                   onChange={handleInputChange}
                   className="h-4 w-4 text-red-600 focus:ring-red-500 border-gray-300 rounded"
                 />
-                <label htmlFor="isSeries" className="ml-2 block text-sm text-gray-700">
+                <label htmlFor="isSeries" className="ml-2 block text-sm" style={{color: 'var(--color-text-secondary)'}}>
                   Là phim bộ
                 </label>
               </div>
@@ -336,7 +361,7 @@ export default function UploadMoviePage() {
             {/* URLs */}
             <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
               <div>
-                <label htmlFor="posterUrl" className="block text-sm font-medium text-gray-700 mb-2">
+                <label htmlFor="posterUrl" className="block text-sm font-medium mb-2" style={{color: 'var(--color-text-secondary)'}}>
                   URL Poster
                 </label>
                 <input
@@ -345,13 +370,18 @@ export default function UploadMoviePage() {
                   name="posterUrl"
                   value={formData.posterUrl || ''}
                   onChange={handleInputChange}
-                  className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-red-500 focus:border-transparent text-black"
+                  className="w-full px-3 py-2 rounded-md focus:outline-none focus:ring-2 focus:ring-red-500 focus:border-transparent"
+                  style={{
+                    backgroundColor: 'var(--bg-3)',
+                    border: '1px solid var(--bg-3)',
+                    color: 'var(--color-text-primary)'
+                  }}
                   placeholder="https://example.com/poster.jpg"
                 />
               </div>
 
               <div>
-                <label htmlFor="bannerUrl" className="block text-sm font-medium text-gray-700 mb-2">
+                <label htmlFor="bannerUrl" className="block text-sm font-medium mb-2" style={{color: 'var(--color-text-secondary)'}}>
                   URL Banner
                 </label>
                 <input
@@ -360,7 +390,12 @@ export default function UploadMoviePage() {
                   name="bannerUrl"
                   value={formData.bannerUrl || ''}
                   onChange={handleInputChange}
-                  className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-red-500 focus:border-transparent text-black"
+                  className="w-full px-3 py-2 rounded-md focus:outline-none focus:ring-2 focus:ring-red-500 focus:border-transparent"
+                  style={{
+                    backgroundColor: 'var(--bg-3)',
+                    border: '1px solid var(--bg-3)',
+                    color: 'var(--color-text-primary)'
+                  }}
                   placeholder="https://example.com/banner.jpg"
                 />
               </div>
@@ -368,7 +403,7 @@ export default function UploadMoviePage() {
 
             {/* Description */}
             <div>
-              <label htmlFor="description" className="block text-sm font-medium text-gray-700 mb-2">
+              <label htmlFor="description" className="block text-sm font-medium mb-2" style={{color: 'var(--color-text-secondary)'}}>
                 Mô tả phim
               </label>
               <textarea
@@ -377,15 +412,20 @@ export default function UploadMoviePage() {
                 rows={4}
                 value={formData.description || ''}
                 onChange={handleInputChange}
-                className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-red-500 focus:border-transparent text-black"
+                  className="w-full px-3 py-2 rounded-md focus:outline-none focus:ring-2 focus:ring-red-500 focus:border-transparent"
+                  style={{
+                    backgroundColor: 'var(--bg-3)',
+                    border: '1px solid var(--bg-3)',
+                    color: 'var(--color-text-primary)'
+                  }}
                 placeholder="Mô tả nội dung phim..."
               />
             </div>
 
             {/* Video Upload Section */}
-            <div className="border-t border-gray-200 pt-6">
-              <h3 className="text-lg font-medium text-gray-900 mb-4">Upload Video</h3>
-              <div className="bg-gray-50 p-4 rounded-lg">
+            <div className="border-t pt-6" style={{borderColor: 'var(--bg-3)'}}>
+              <h3 className="text-lg font-medium mb-4" style={{color: 'var(--color-text-primary)'}}>Upload Video</h3>
+              <div className="p-4 rounded-lg" style={{backgroundColor: 'var(--bg-3)'}}>
                 <VideoUpload
                   onVideoUploaded={handleVideoUploaded}
                   onError={handleVideoUploadError}
@@ -394,7 +434,7 @@ export default function UploadMoviePage() {
               
               {/* Video Upload Status */}
               {videoUpload.isUploaded && (
-                <div className="mt-4 p-4 bg-green-50 border border-green-200 rounded-lg">
+                <div className="mt-4 p-4 rounded-lg" style={{backgroundColor: 'var(--bg-4)', border: '1px solid #10b981'}}>
                   <div className="flex items-center">
                     <div className="flex-shrink-0">
                       <svg className="h-5 w-5 text-green-400" viewBox="0 0 20 20" fill="currentColor">
@@ -402,8 +442,8 @@ export default function UploadMoviePage() {
                       </svg>
                     </div>
                     <div className="ml-3">
-                      <h4 className="text-sm font-medium text-green-800">Video đã upload thành công!</h4>
-                      <div className="mt-1 text-sm text-green-700">
+                      <h4 className="text-sm font-medium text-green-400">Video đã upload thành công!</h4>
+                      <div className="mt-1 text-sm text-green-400">
                         <p>Video ID: {videoUpload.videoId}</p>
                         <p>HLS URL: {videoUpload.hlsUrl}</p>
                       </div>
@@ -414,12 +454,12 @@ export default function UploadMoviePage() {
             </div>
 
             {/* Genres Selection */}
-            <div className="border-t border-gray-200 pt-6">
-              <h3 className="text-lg font-medium text-gray-900 mb-4">Thể loại phim</h3>
+            <div className="border-t pt-6" style={{borderColor: 'var(--bg-3)'}}>
+              <h3 className="text-lg font-medium mb-4" style={{color: 'var(--color-text-primary)'}}>Thể loại phim</h3>
               {loadingGenres ? (
                 <div className="text-center py-4">
-                  <div className="inline-block animate-spin rounded-full h-6 w-6 border-b-2 border-red-600"></div>
-                  <p className="mt-2 text-sm text-gray-600">Đang tải thể loại...</p>
+                  <div className="inline-block animate-spin rounded-full h-6 w-6 border-b-2 border-red-400"></div>
+                  <p className="mt-2 text-sm" style={{color: 'var(--color-text-muted)'}}>Đang tải thể loại...</p>
                 </div>
               ) : (
                 <div className="grid grid-cols-2 md:grid-cols-4 gap-3">
@@ -431,23 +471,30 @@ export default function UploadMoviePage() {
                         onChange={() => handleGenreToggle(genre.genreId)}
                         className="h-4 w-4 text-red-600 focus:ring-red-500 border-gray-300 rounded"
                       />
-                      <span className="text-sm text-gray-700">{genre.name}</span>
+                      <span className="text-sm" style={{color: 'var(--color-text-primary)'}}>{genre.name}</span>
                     </label>
                   ))}
                 </div>
               )}
               {availableGenres.length === 0 && !loadingGenres && (
-                <p className="text-sm text-gray-500 text-center py-4">
+                <p className="text-sm text-center py-4" style={{color: 'var(--color-text-muted)'}}>
                   Không có thể loại nào. Vui lòng tạo thể loại trước.
                 </p>
               )}
             </div>
 
-            <div className="flex justify-end space-x-4 pt-6 border-t border-gray-200">
+            <div className="flex justify-end space-x-4 pt-6 border-t" style={{borderColor: 'var(--bg-3)'}}>
               <button
                 type="button"
                 onClick={() => router.push('/admin/movies')}
-                className="px-4 py-2 text-sm font-medium text-gray-700 bg-white border border-gray-300 rounded-md hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-red-500 focus:ring-offset-2"
+                className="px-4 py-2 text-sm font-medium rounded-md focus:outline-none focus:ring-2 focus:ring-red-500 focus:ring-offset-2 transition-colors"
+                style={{
+                  backgroundColor: 'var(--bg-3)',
+                  border: '1px solid var(--bg-3)',
+                  color: 'var(--color-text-secondary)'
+                }}
+                onMouseEnter={(e) => e.currentTarget.style.backgroundColor = 'var(--bg-2)'}
+                onMouseLeave={(e) => e.currentTarget.style.backgroundColor = 'var(--bg-3)'}
               >
                 Hủy
               </button>

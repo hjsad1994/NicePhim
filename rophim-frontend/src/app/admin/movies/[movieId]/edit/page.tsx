@@ -1,8 +1,9 @@
 'use client';
 
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useCallback } from 'react';
 import { useRouter, useParams } from 'next/navigation';
 import { ApiService, MovieResponse, UpdateMovieRequest, GenreResponse } from '@/lib/api';
+import { ImageUpload } from '@/components/admin/ImageUpload';
 import {
   ArrowLeftIcon,
   TagIcon,
@@ -40,13 +41,7 @@ export default function EditMoviePage() {
   const [showGenreModal, setShowGenreModal] = useState(false);
   const [selectedGenres, setSelectedGenres] = useState<string[]>([]);
 
-  useEffect(() => {
-    if (movieId) {
-      fetchMovieData();
-    }
-  }, [movieId]);
-
-  const fetchMovieData = async () => {
+  const fetchMovieData = useCallback(async () => {
     try {
       setIsLoading(true);
       setError(null);
@@ -90,7 +85,13 @@ export default function EditMoviePage() {
     } finally {
       setIsLoading(false);
     }
-  };
+  }, [movieId]);
+
+  useEffect(() => {
+    if (movieId) {
+      fetchMovieData();
+    }
+  }, [movieId, fetchMovieData]);
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -158,7 +159,7 @@ export default function EditMoviePage() {
     }
   };
 
-  const handleInputChange = (field: keyof UpdateMovieRequest, value: any) => {
+  const handleInputChange = (field: keyof UpdateMovieRequest, value: string | number | boolean | undefined) => {
     setFormData(prev => ({
       ...prev,
       [field]: value
@@ -170,7 +171,7 @@ export default function EditMoviePage() {
   if (isLoading) {
     return (
       <div className="flex justify-center items-center min-h-64">
-        <div className="text-gray-500">Đang tải...</div>
+        <div style={{color: 'var(--color-text-muted)'}}>Đang tải...</div>
       </div>
     );
   }
@@ -178,10 +179,10 @@ export default function EditMoviePage() {
   if (!movie) {
     return (
       <div className="text-center py-12">
-        <div className="text-gray-500 mb-4">Không tìm thấy phim</div>
+        <div className="mb-4" style={{color: 'var(--color-text-muted)'}}>Không tìm thấy phim</div>
         <button
           onClick={() => router.push('/admin/movies')}
-          className="text-red-600 hover:text-red-700"
+          className="text-red-400 hover:text-red-300 transition-colors"
         >
           Quay lại danh sách phim
         </button>
@@ -190,30 +191,43 @@ export default function EditMoviePage() {
   }
 
   return (
-    <div className="max-w-4xl mx-auto space-y-6">
-      {/* Header */}
-      <div className="flex items-center justify-between">
-        <div className="flex items-center space-x-4">
-          <button
-            onClick={() => router.push('/admin/movies')}
-            className="p-2 text-gray-600 hover:text-gray-900 hover:bg-gray-100 rounded-md"
-          >
-            <ArrowLeftIcon className="h-5 w-5" />
-          </button>
-          <div>
-            <h1 className="text-2xl font-bold text-gray-900">Chỉnh sửa phim</h1>
-            <p className="text-gray-600">{movie.title}</p>
+    <div className="min-h-screen py-8" style={{backgroundColor: 'var(--bg-2)'}}>
+      <div className="max-w-4xl mx-auto px-4 sm:px-6 lg:px-8">
+        <div className="rounded-lg shadow" style={{backgroundColor: 'var(--bg-4)', border: '1px solid var(--bg-3)'}}>
+          <div className="px-6 py-4 border-b" style={{borderColor: 'var(--bg-3)'}}>
+            <div className="flex items-center space-x-4">
+              <button
+                onClick={() => router.push('/admin/movies')}
+                className="p-2 rounded-md transition-colors"
+                style={{
+                  color: 'var(--color-text-muted)',
+                  backgroundColor: 'transparent'
+                }}
+                onMouseEnter={(e) => {
+                  e.currentTarget.style.backgroundColor = 'var(--bg-3)';
+                  e.currentTarget.style.color = 'var(--color-text-primary)';
+                }}
+                onMouseLeave={(e) => {
+                  e.currentTarget.style.backgroundColor = 'transparent';
+                  e.currentTarget.style.color = 'var(--color-text-muted)';
+                }}
+              >
+                <ArrowLeftIcon className="h-5 w-5" />
+              </button>
+              <div>
+                <h1 className="text-2xl font-bold" style={{color: 'var(--color-text-primary)'}}>Chỉnh sửa phim</h1>
+                <p className="mt-1 text-sm" style={{color: 'var(--color-text-secondary)'}}>{movie.title}</p>
+              </div>
+            </div>
           </div>
-        </div>
-      </div>
 
       {/* Success Message */}
       {success && (
-        <div className="bg-green-50 border border-green-200 rounded-md p-4">
+        <div className="rounded-md p-4" style={{backgroundColor: 'var(--bg-4)', border: '1px solid #10b981'}}>
           <div className="flex">
             <CheckIcon className="h-5 w-5 text-green-400" />
             <div className="ml-3">
-              <p className="text-sm font-medium text-green-800">{success}</p>
+              <p className="text-sm font-medium text-green-400">{success}</p>
             </div>
           </div>
         </div>
@@ -221,27 +235,19 @@ export default function EditMoviePage() {
 
       {/* Error Message */}
       {error && (
-        <div className="bg-red-50 border border-red-200 rounded-md p-4">
+        <div className="rounded-md p-4" style={{backgroundColor: 'var(--bg-4)', border: '1px solid #ef4444'}}>
           <div className="flex">
             <div className="ml-3">
-              <p className="text-sm font-medium text-red-800">{error}</p>
+              <p className="text-sm font-medium text-red-400">{error}</p>
             </div>
           </div>
         </div>
       )}
 
-      <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
-        {/* Main Form */}
-        <div className="lg:col-span-2">
-          <div className="bg-white shadow-sm rounded-lg border border-gray-200">
-            <div className="px-6 py-4 border-b border-gray-200">
-              <h3 className="text-lg font-medium text-gray-900">Thông tin phim</h3>
-            </div>
-            <div className="p-6">
-              <form onSubmit={handleSubmit} className="space-y-6">
+          <form onSubmit={handleSubmit} className="px-6 py-6 space-y-6">
                 {/* Title */}
                 <div>
-                  <label htmlFor="title" className="block text-sm font-medium text-gray-700 mb-2">
+                  <label htmlFor="title" className="block text-sm font-medium mb-2" style={{color: 'var(--color-text-secondary)'}}>
                     Tên phim *
                   </label>
                   <input
@@ -249,14 +255,19 @@ export default function EditMoviePage() {
                     id="title"
                     value={formData.title}
                     onChange={(e) => handleInputChange('title', e.target.value)}
-                    className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-1 focus:ring-red-500 focus:border-red-500"
+                    className="w-full px-3 py-2 rounded-md focus:outline-none focus:ring-1 focus:ring-red-500 focus:border-red-500 text-gray-900"
+                    style={{
+                      backgroundColor: 'var(--bg-3)',
+                      border: '1px solid var(--bg-3)',
+                      color: 'var(--color-text-primary)'
+                    }}
                     required
                   />
                 </div>
 
                 {/* Alias Title */}
                 <div>
-                  <label htmlFor="aliasTitle" className="block text-sm font-medium text-gray-700 mb-2">
+                  <label htmlFor="aliasTitle" className="block text-sm font-medium mb-2" style={{color: 'var(--color-text-secondary)'}}>
                     Tên khác
                   </label>
                   <input
@@ -264,13 +275,18 @@ export default function EditMoviePage() {
                     id="aliasTitle"
                     value={formData.aliasTitle}
                     onChange={(e) => handleInputChange('aliasTitle', e.target.value)}
-                    className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-1 focus:ring-red-500 focus:border-red-500"
+                    className="w-full px-3 py-2 rounded-md focus:outline-none focus:ring-1 focus:ring-red-500 focus:border-red-500 text-gray-900"
+                    style={{
+                      backgroundColor: 'var(--bg-3)',
+                      border: '1px solid var(--bg-3)',
+                      color: 'var(--color-text-primary)'
+                    }}
                   />
                 </div>
 
                 {/* Description */}
                 <div>
-                  <label htmlFor="description" className="block text-sm font-medium text-gray-700 mb-2">
+                  <label htmlFor="description" className="block text-sm font-medium mb-2" style={{color: 'var(--color-text-secondary)'}}>
                     Mô tả
                   </label>
                   <textarea
@@ -278,28 +294,37 @@ export default function EditMoviePage() {
                     value={formData.description}
                     onChange={(e) => handleInputChange('description', e.target.value)}
                     rows={4}
-                    className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-1 focus:ring-red-500 focus:border-red-500"
+                    className="w-full px-3 py-2 rounded-md focus:outline-none focus:ring-1 focus:ring-red-500 focus:border-red-500 text-gray-900"
+                    style={{
+                      backgroundColor: 'var(--bg-3)',
+                      border: '1px solid var(--bg-3)',
+                      color: 'var(--color-text-primary)'
+                    }}
                   />
                 </div>
 
                 {/* Release Year and Age Rating */}
                 <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                   <div>
-                    <label htmlFor="releaseYear" className="block text-sm font-medium text-gray-700 mb-2">
+                    <label htmlFor="releaseYear" className="block text-sm font-medium mb-2" style={{color: 'var(--color-text-secondary)'}}>
                       Năm phát hành
                     </label>
                     <input
                       type="number"
                       id="releaseYear"
                       value={formData.releaseYear || ''}
-                      onChange={(e) => handleInputChange('releaseYear', e.target.value ? parseInt(e.target.value) : undefined)}
-                      min="1900"
-                      max="2030"
-                      className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-1 focus:ring-red-500 focus:border-red-500"
+                      onChange={(e) => handleInputChange('releaseYear', parseInt(e.target.value) || 0)}
+                      className="w-full px-3 py-2 rounded-md focus:outline-none focus:ring-1 focus:ring-red-500 focus:border-red-500 text-gray-900"
+                    style={{
+                      backgroundColor: 'var(--bg-3)',
+                      border: '1px solid var(--bg-3)',
+                      color: 'var(--color-text-primary)'
+                    }}
                     />
                   </div>
-                  <div>
-                    <label htmlFor="ageRating" className="block text-sm font-medium text-gray-700 mb-2">
+                  
+                  <div className="mb-4">
+                    <label htmlFor="ageRating" className="block text-sm font-medium mb-1" style={{color: 'var(--color-text-secondary)'}}>
                       Độ tuổi
                     </label>
                     <input
@@ -308,7 +333,12 @@ export default function EditMoviePage() {
                       value={formData.ageRating}
                       onChange={(e) => handleInputChange('ageRating', e.target.value)}
                       placeholder="PG-13, R, 18+"
-                      className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-1 focus:ring-red-500 focus:border-red-500"
+                      className="w-full px-3 py-2 rounded-md focus:outline-none focus:ring-1 focus:ring-red-500 focus:border-red-500 text-gray-900"
+                    style={{
+                      backgroundColor: 'var(--bg-3)',
+                      border: '1px solid var(--bg-3)',
+                      color: 'var(--color-text-primary)'
+                    }}
                     />
                   </div>
                 </div>
@@ -316,28 +346,37 @@ export default function EditMoviePage() {
                 {/* IMDB Rating and Series */}
                 <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                   <div>
-                    <label htmlFor="imdbRating" className="block text-sm font-medium text-gray-700 mb-2">
-                      Điểm IMDB
+                    <label htmlFor="imdbRating" className="block text-sm font-medium mb-1" style={{color: 'var(--color-text-secondary)'}}>
+                      IMDB Rating
                     </label>
                     <input
                       type="number"
+                      step="0.1"
+                      min="0"
+                      max="10"
                       id="imdbRating"
                       value={formData.imdbRating || ''}
                       onChange={(e) => handleInputChange('imdbRating', e.target.value ? parseFloat(e.target.value) : undefined)}
-                      min="0"
-                      max="10"
-                      step="0.1"
-                      className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-1 focus:ring-red-500 focus:border-red-500"
+                      placeholder="8.5"
+                      className="w-full px-3 py-2 rounded-md focus:outline-none focus:ring-1 focus:ring-red-500 focus:border-red-500 text-gray-900"
+                    style={{
+                      backgroundColor: 'var(--bg-3)',
+                      border: '1px solid var(--bg-3)',
+                      color: 'var(--color-text-primary)'
+                    }}
                     />
                   </div>
+                  
                   <div>
-                    <label className="block text-sm font-medium text-gray-700 mb-2">
+                    <label className="block text-sm font-medium mb-2" style={{color: 'var(--color-text-secondary)'}}>
                       Loại phim
                     </label>
-                    <div className="flex items-center space-x-4">
+                    <div className="space-y-2">
                       <label className="flex items-center">
                         <input
                           type="radio"
+                          name="isSeries"
+                          value="false"
                           checked={!formData.isSeries}
                           onChange={() => handleInputChange('isSeries', false)}
                           className="mr-2"
@@ -347,6 +386,8 @@ export default function EditMoviePage() {
                       <label className="flex items-center">
                         <input
                           type="radio"
+                          name="isSeries"
+                          value="true"
                           checked={formData.isSeries}
                           onChange={() => handleInputChange('isSeries', true)}
                           className="mr-2"
@@ -357,129 +398,93 @@ export default function EditMoviePage() {
                   </div>
                 </div>
 
-                {/* Poster URL */}
-                <div>
-                  <label htmlFor="posterUrl" className="block text-sm font-medium text-gray-700 mb-2">
-                    URL Poster
-                  </label>
-                  <input
-                    type="url"
-                    id="posterUrl"
-                    value={formData.posterUrl}
-                    onChange={(e) => handleInputChange('posterUrl', e.target.value)}
-                    className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-1 focus:ring-red-500 focus:border-red-500"
+                {/* Image Uploads */}
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                  <ImageUpload
+                    label="Poster"
+                    type="poster"
+                    currentUrl={formData.posterUrl}
+                    onUpload={(url) => handleInputChange('posterUrl', url)}
+                    onRemove={() => handleInputChange('posterUrl', '')}
+                    required={false}
+                  />
+
+                  <ImageUpload
+                    label="Banner"
+                    type="banner"
+                    currentUrl={formData.bannerUrl}
+                    onUpload={(url) => handleInputChange('bannerUrl', url)}
+                    onRemove={() => handleInputChange('bannerUrl', '')}
+                    required={false}
                   />
                 </div>
 
-                {/* Banner URL */}
-                <div>
-                  <label htmlFor="bannerUrl" className="block text-sm font-medium text-gray-700 mb-2">
-                    URL Banner
-                  </label>
-                  <input
-                    type="url"
-                    id="bannerUrl"
-                    value={formData.bannerUrl}
-                    onChange={(e) => handleInputChange('bannerUrl', e.target.value)}
-                    className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-1 focus:ring-red-500 focus:border-red-500"
-                  />
+            {/* Genres Selection */}
+            <div className="border-t pt-6" style={{borderColor: 'var(--bg-3)'}}>
+              <h3 className="text-lg font-medium mb-4" style={{color: 'var(--color-text-primary)'}}>Thể loại phim</h3>
+              <div className="flex items-center justify-between mb-4">
+                <div className="flex flex-wrap gap-2">
+                  {movieGenres.length > 0 ? (
+                    movieGenres.map((genre) => (
+                      <span
+                        key={genre.genreId}
+                        className="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium"
+                        style={{backgroundColor: '#dc2626', color: '#ffffff'}}
+                      >
+                        <TagIcon className="h-3 w-3 mr-1" />
+                        {genre.name}
+                      </span>
+                    ))
+                  ) : (
+                    <p className="text-sm" style={{color: 'var(--color-text-muted)'}}>Chưa có thể loại nào</p>
+                  )}
                 </div>
-
-                {/* Submit Button */}
-                <div className="flex justify-end space-x-3">
-                  <button
-                    type="button"
-                    onClick={() => router.push('/admin/movies')}
-                    className="px-4 py-2 text-sm font-medium text-gray-700 bg-gray-100 rounded-md hover:bg-gray-200"
-                  >
-                    Hủy
-                  </button>
-                  <button
-                    type="submit"
-                    disabled={isSaving}
-                    className="px-4 py-2 text-sm font-medium text-white bg-red-600 rounded-md hover:bg-red-700 disabled:opacity-50 disabled:cursor-not-allowed"
-                  >
-                    {isSaving ? 'Đang lưu...' : 'Lưu thay đổi'}
-                  </button>
-                </div>
-              </form>
-            </div>
-          </div>
-        </div>
-
-        {/* Sidebar */}
-        <div className="space-y-6">
-          {/* Genres */}
-          <div className="bg-white shadow-sm rounded-lg border border-gray-200">
-            <div className="px-6 py-4 border-b border-gray-200">
-              <div className="flex items-center justify-between">
-                <h3 className="text-lg font-medium text-gray-900">Thể loại</h3>
                 <button
                   onClick={() => setShowGenreModal(true)}
-                  className="text-sm text-red-600 hover:text-red-700"
+                  className="text-sm text-red-400 hover:text-red-300 transition-colors"
                 >
                   Chỉnh sửa
                 </button>
               </div>
             </div>
-            <div className="p-6">
-              {movieGenres.length > 0 ? (
-                <div className="flex flex-wrap gap-2">
-                  {movieGenres.map((genre) => (
-                    <span
-                      key={genre.genreId}
-                      className="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-red-100 text-red-800"
-                    >
-                      <TagIcon className="h-3 w-3 mr-1" />
-                      {genre.name}
-                    </span>
-                  ))}
-                </div>
-              ) : (
-                <p className="text-sm text-gray-500">Chưa có thể loại nào</p>
-              )}
-            </div>
-          </div>
 
-          {/* Movie Info */}
-          <div className="bg-white shadow-sm rounded-lg border border-gray-200">
-            <div className="px-6 py-4 border-b border-gray-200">
-              <h3 className="text-lg font-medium text-gray-900">Thông tin</h3>
+            <div className="flex justify-end space-x-4 pt-6 border-t" style={{borderColor: 'var(--bg-3)'}}>
+              <button
+                type="button"
+                onClick={() => router.push('/admin/movies')}
+                className="px-4 py-2 text-sm font-medium rounded-md focus:outline-none focus:ring-2 focus:ring-red-500 focus:ring-offset-2 transition-colors"
+                style={{
+                  backgroundColor: 'var(--bg-3)',
+                  border: '1px solid var(--bg-3)',
+                  color: 'var(--color-text-secondary)'
+                }}
+                onMouseEnter={(e) => e.currentTarget.style.backgroundColor = 'var(--bg-2)'}
+                onMouseLeave={(e) => e.currentTarget.style.backgroundColor = 'var(--bg-3)'}
+              >
+                Hủy
+              </button>
+              <button
+                type="submit"
+                disabled={isSaving}
+                className="px-4 py-2 text-sm font-medium text-white bg-red-600 rounded-md hover:bg-red-700 disabled:opacity-50 disabled:cursor-not-allowed"
+              >
+                {isSaving ? 'Đang lưu...' : 'Lưu thay đổi'}
+              </button>
             </div>
-            <div className="p-6 space-y-3">
-              <div>
-                <span className="text-sm font-medium text-gray-500">ID:</span>
-                <span className="text-sm text-gray-900 ml-2">{movie.movieId}</span>
-              </div>
-              <div>
-                <span className="text-sm font-medium text-gray-500">Ngày tạo:</span>
-                <span className="text-sm text-gray-900 ml-2">
-                  {new Date(movie.createdAt).toLocaleDateString('vi-VN')}
-                </span>
-              </div>
-              {movie.updatedAt && (
-                <div>
-                  <span className="text-sm font-medium text-gray-500">Cập nhật lần cuối:</span>
-                  <span className="text-sm text-gray-900 ml-2">
-                    {new Date(movie.updatedAt).toLocaleDateString('vi-VN')}
-                  </span>
-                </div>
-              )}
-            </div>
-          </div>
+          </form>
         </div>
       </div>
 
       {/* Genre Selection Modal */}
       {showGenreModal && (
-        <div className="fixed inset-0 bg-gray-600 bg-opacity-50 overflow-y-auto h-full w-full z-50">
-          <div className="relative top-20 mx-auto p-5 border w-96 shadow-lg rounded-md bg-white">
+        <div className="fixed inset-0 bg-black bg-opacity-50 overflow-y-auto h-full w-full z-50">
+          <div className="relative top-20 mx-auto p-5 w-96 shadow-lg rounded-md" style={{backgroundColor: 'var(--bg-4)', border: '1px solid var(--bg-3)'}}>
             <div className="mt-3">
               <div className="flex items-center justify-between mb-4">
-                <h3 className="text-lg font-medium text-gray-900">Chọn thể loại</h3>
+                <h3 className="text-lg font-medium" style={{color: 'var(--color-text-primary)'}}>Chọn thể loại</h3>
                 <button
                   onClick={() => setShowGenreModal(false)}
-                  className="text-gray-400 hover:text-gray-600"
+                  className="text-gray-400 hover:text-gray-300 transition-colors"
                 >
                   <XMarkIcon className="h-6 w-6" />
                 </button>
@@ -487,14 +492,14 @@ export default function EditMoviePage() {
               
               <div className="space-y-2 max-h-60 overflow-y-auto">
                 {genres.map((genre) => (
-                  <label key={genre.genreId} className="flex items-center p-2 hover:bg-gray-50 rounded-md">
+                  <label key={genre.genreId} className="flex items-center p-2 rounded-md transition-colors" style={{backgroundColor: 'transparent'}} onMouseEnter={(e) => e.currentTarget.style.backgroundColor = 'var(--bg-3)'} onMouseLeave={(e) => e.currentTarget.style.backgroundColor = 'transparent'}>
                     <input
                       type="checkbox"
                       checked={selectedGenres.includes(genre.genreId)}
                       onChange={() => handleGenreToggle(genre.genreId)}
                       className="mr-3"
                     />
-                    <span className="text-sm text-gray-900">{genre.name}</span>
+                    <span className="text-sm" style={{color: 'var(--color-text-primary)'}}>{genre.name}</span>
                   </label>
                 ))}
               </div>
@@ -502,7 +507,13 @@ export default function EditMoviePage() {
               <div className="flex justify-end space-x-3 mt-6">
                 <button
                   onClick={() => setShowGenreModal(false)}
-                  className="px-4 py-2 text-sm font-medium text-gray-700 bg-gray-100 rounded-md hover:bg-gray-200"
+                  className="px-4 py-2 text-sm font-medium rounded-md transition-colors"
+                  style={{
+                    color: 'var(--color-text-secondary)',
+                    backgroundColor: 'var(--bg-3)'
+                  }}
+                  onMouseEnter={(e) => e.currentTarget.style.backgroundColor = 'var(--bg-2)'}
+                  onMouseLeave={(e) => e.currentTarget.style.backgroundColor = 'var(--bg-3)'}
                 >
                   Hủy
                 </button>

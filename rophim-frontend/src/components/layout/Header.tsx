@@ -1,308 +1,152 @@
 'use client';
 
-import { useState, useEffect } from 'react';
 import Link from 'next/link';
-import { useRouter } from 'next/navigation';
-import { Menu, MenuButton, MenuItem, MenuItems, Transition } from '@headlessui/react';
-import {
-  UserIcon,
-  BellIcon,
-  ChevronDownIcon
-} from '@heroicons/react/24/outline';
-import { ROUTES, MOVIE_GENRES, COUNTRIES } from '@/constants';
+import { HeartIcon, ShareIcon, BellIcon, UserIcon, ChevronDownIcon, Cog6ToothIcon, ArrowRightOnRectangleIcon } from '@heroicons/react/24/outline';
+import { useState, useEffect } from 'react';
 
-export function Header() {
-  const [searchQuery, setSearchQuery] = useState('');
-  const [user, setUser] = useState<any>(null);
-  const [isLoading, setIsLoading] = useState(true);
-  const router = useRouter();
+export default function Header() {
+  const [isScrolled, setIsScrolled] = useState(false);
+  const [isUserMenuOpen, setIsUserMenuOpen] = useState(false);
 
-  // Check for logged in user on component mount
   useEffect(() => {
-    const userData = localStorage.getItem('user');
-    if (userData) {
-      try {
-        setUser(JSON.parse(userData));
-      } catch (error) {
-        console.error('Error parsing user data:', error);
-        localStorage.removeItem('user');
-      }
-    }
-    setIsLoading(false);
-
-    // Listen for user login events
-    const handleUserLogin = (event: CustomEvent) => {
-      setUser(event.detail);
+    const handleScroll = () => {
+      const scrollTop = window.scrollY;
+      setIsScrolled(scrollTop > 50);
     };
 
-    // Listen for user logout events
-    const handleUserLogout = () => {
-      setUser(null);
-    };
-
-    window.addEventListener('userLogin', handleUserLogin as EventListener);
-    window.addEventListener('userLogout', handleUserLogout);
-
-    // Cleanup event listeners
-    return () => {
-      window.removeEventListener('userLogin', handleUserLogin as EventListener);
-      window.removeEventListener('userLogout', handleUserLogout);
-    };
+    window.addEventListener('scroll', handleScroll);
+    return () => window.removeEventListener('scroll', handleScroll);
   }, []);
 
-  const handleLogout = () => {
-    localStorage.removeItem('user');
-    setUser(null);
-    // Dispatch custom event to notify other components of logout
-    window.dispatchEvent(new CustomEvent('userLogout'));
-    router.push('/');
-  };
+  // Close user menu when clicking outside
+  useEffect(() => {
+    const handleClickOutside = (event: MouseEvent) => {
+      const target = event.target as Element;
+      if (!target.closest('.user-menu-container')) {
+        setIsUserMenuOpen(false);
+      }
+    };
 
-  const handleSearch = (e: React.FormEvent) => {
-    e.preventDefault();
-    if (searchQuery.trim()) {
-      window.location.href = `/tim-kiem?q=${encodeURIComponent(searchQuery.trim())}`;
+    if (isUserMenuOpen) {
+      document.addEventListener('mousedown', handleClickOutside);
     }
-  };
+
+    return () => {
+      document.removeEventListener('mousedown', handleClickOutside);
+    };
+  }, [isUserMenuOpen]);
 
   return (
-    <header className="sticky top-0 z-50" style={{backgroundColor: 'var(--bg-4)'}}>
-      <div className="w-[90%] mx-auto px-4 sm:px-6 lg:px-8">
-        <div className="flex items-center justify-between h-16">
-          {/* Left Section: Logo + Search */}
-          <div className="flex items-center space-x-6">
-            {/* Logo */}
-            <Link href={ROUTES.HOME} className="flex items-center space-x-2 flex-shrink-0">
-              <div className="w-8 h-8 bg-red-600 rounded-lg flex items-center justify-center">
-                <span className="text-white font-bold text-lg">N</span>
-              </div>
-              <span className="text-white font-bold text-xl">NicePhim</span>
+    <header className={`fixed top-0 left-0 right-0 z-50 transition-all duration-300 ${
+      isScrolled 
+        ? 'bg-black/90 backdrop-blur-md border-b border-gray-800 shadow-lg' 
+        : 'bg-transparent backdrop-blur-none border-b border-transparent'
+    }`}>
+      <div className="w-[90%] mx-auto px-4 sm:px-6 lg:px-8 py-4">
+        <div className="flex items-center justify-between">
+          {/* Logo */}
+          <Link href="/" className="flex items-center">
+            <div className="text-2xl font-bold text-white">
+              <span className="text-red-600">Nice</span>Phim
+            </div>
+          </Link>
+
+          {/* Navigation */}
+          <nav className="hidden md:flex items-center space-x-6">
+            <Link href="/chu-de" className="text-gray-300 hover:text-white transition-colors">
+              Chủ Đề
             </Link>
-
-            {/* Search Bar */}
-            <form onSubmit={handleSearch} className="hidden md:flex">
-              <div className="relative">
-                <input
-                  type="text"
-                  value={searchQuery}
-                  onChange={(e) => setSearchQuery(e.target.value)}
-                  placeholder="Tìm kiếm phim..."
-                  className="px-4 py-2 w-64 lg:w-80 bg-gray-800 border border-gray-700 rounded-lg text-white placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-red-500 focus:border-transparent"
-                />
-              </div>
-            </form>
-          </div>
-
-          {/* Center Section: Navigation Menu */}
-          <nav className="hidden lg:flex items-center space-x-6">
-            {/* Chủ đề Dropdown */}
-            <Menu as="div" className="relative">
-              <MenuButton className="flex items-center text-gray-300 hover:text-white transition-colors">
-                Chủ đề
-                <ChevronDownIcon className="ml-1 h-4 w-4" />
-              </MenuButton>
-              <Transition
-                enter="transition ease-out duration-100"
-                enterFrom="transform opacity-0 scale-95"
-                enterTo="transform opacity-100 scale-100"
-                leave="transition ease-in duration-75"
-                leaveFrom="transform opacity-100 scale-100"
-                leaveTo="transform opacity-0 scale-95"
-              >
-                <MenuItems className="absolute left-0 mt-2 w-56 origin-top-left rounded-md bg-gray-800 shadow-lg ring-1 ring-black ring-opacity-5 focus:outline-none z-50">
-                  <div className="py-1">
-                    {MOVIE_GENRES.map((genre) => (
-                      <MenuItem key={genre.id}>
-                        <Link
-                          href={`/the-loai/${genre.slug}`}
-                          className="block px-4 py-2 text-sm text-gray-300 hover:bg-gray-700 hover:text-white"
-                        >
-                          {genre.name}
-                        </Link>
-                      </MenuItem>
-                    ))}
-                  </div>
-                </MenuItems>
-              </Transition>
-            </Menu>
-
-            {/* Thể loại Dropdown */}
-            <Menu as="div" className="relative">
-              <MenuButton className="flex items-center text-gray-300 hover:text-white transition-colors">
-                Thể loại
-                <ChevronDownIcon className="ml-1 h-4 w-4" />
-              </MenuButton>
-              <Transition
-                enter="transition ease-out duration-100"
-                enterFrom="transform opacity-0 scale-95"
-                enterTo="transform opacity-100 scale-100"
-                leave="transition ease-in duration-75"
-                leaveFrom="transform opacity-100 scale-100"
-                leaveTo="transform opacity-0 scale-95"
-              >
-                <MenuItems className="absolute left-0 mt-2 w-56 origin-top-left rounded-md bg-gray-800 shadow-lg ring-1 ring-black ring-opacity-5 focus:outline-none z-50">
-                  <div className="py-1">
-                    {MOVIE_GENRES.map((genre) => (
-                      <MenuItem key={genre.id}>
-                        <Link
-                          href={`/the-loai/${genre.slug}`}
-                          className="block px-4 py-2 text-sm text-gray-300 hover:bg-gray-700 hover:text-white"
-                        >
-                          {genre.name}
-                        </Link>
-                      </MenuItem>
-                    ))}
-                  </div>
-                </MenuItems>
-              </Transition>
-            </Menu>
-
-            {/* Phim lẻ */}
+            <Link href="/the-loai" className="text-gray-300 hover:text-white transition-colors">
+              Thể loại
+            </Link>
             <Link href="/phim-le" className="text-gray-300 hover:text-white transition-colors">
-              Phim lẻ
+              Phim Lẻ
             </Link>
-
-            {/* Phim bộ */}
             <Link href="/phim-bo" className="text-gray-300 hover:text-white transition-colors">
-              Phim bộ
+              Phim Bộ
             </Link>
-
-            {/* Quốc gia Dropdown */}
-            <Menu as="div" className="relative">
-              <MenuButton className="flex items-center text-gray-300 hover:text-white transition-colors">
-                Quốc gia
-                <ChevronDownIcon className="ml-1 h-4 w-4" />
-              </MenuButton>
-              <Transition
-                enter="transition ease-out duration-100"
-                enterFrom="transform opacity-0 scale-95"
-                enterTo="transform opacity-100 scale-100"
-                leave="transition ease-in duration-75"
-                leaveFrom="transform opacity-100 scale-100"
-                leaveTo="transform opacity-0 scale-95"
-              >
-                <MenuItems className="absolute left-0 mt-2 w-48 origin-top-left rounded-md bg-gray-800 shadow-lg ring-1 ring-black ring-opacity-5 focus:outline-none z-50">
-                  <div className="py-1">
-                    {COUNTRIES.map((country) => (
-                      <MenuItem key={country.id}>
-                        <Link
-                          href={`/quoc-gia/${country.id}`}
-                          className="block px-4 py-2 text-sm text-gray-300 hover:bg-gray-700 hover:text-white"
-                        >
-                          {country.name}
-                        </Link>
-                      </MenuItem>
-                    ))}
-                  </div>
-                </MenuItems>
-              </Transition>
-            </Menu>
-
-            {/* Diễn viên */}
-            <Link href="/dien-vien" className="text-gray-300 hover:text-white transition-colors">
-              Diễn viên
-            </Link>
-
-            {/* Lịch chiếu */}
-            <Link href="/lich-chieu" className="text-gray-300 hover:text-white transition-colors">
-              Lịch chiếu
+            <Link href="/xem-chung" className="text-gray-300 hover:text-white transition-colors">
+              Xem Chung
             </Link>
           </nav>
 
-          {/* Right Section: Auth Links */}
+          {/* User Actions */}
           <div className="flex items-center space-x-4">
-            {!isLoading && (
-              <>
-                {user ? (
-                  // Logged in user menu
-                  <Menu as="div" className="relative">
-                    <MenuButton className="flex items-center text-white hover:text-gray-300 transition-colors">
-                      <UserIcon className="h-6 w-6 mr-2" />
-                      <span className="text-sm font-medium">
-                        Chào {user.display_name || user.username}
-                      </span>
-                      <ChevronDownIcon className="ml-1 h-4 w-4" />
-                    </MenuButton>
-                    <Transition
-                      enter="transition ease-out duration-100"
-                      enterFrom="transform opacity-0 scale-95"
-                      enterTo="transform opacity-100 scale-100"
-                      leave="transition ease-in duration-75"
-                      leaveFrom="transform opacity-100 scale-100"
-                      leaveTo="transform opacity-0 scale-95"
-                    >
-                      <MenuItems className="absolute right-0 mt-2 w-48 origin-top-right rounded-md bg-gray-800 shadow-lg ring-1 ring-black ring-opacity-5 focus:outline-none z-50">
-                        <div className="py-1">
-                          <MenuItem>
-                            <Link
-                              href={ROUTES.PROFILE}
-                              className="block px-4 py-2 text-sm text-gray-300 hover:bg-gray-700 hover:text-white"
-                            >
-                              Tài khoản của tôi
-                            </Link>
-                          </MenuItem>
-                          <MenuItem>
-                            <Link
-                              href="/admin"
-                              className="block px-4 py-2 text-sm text-gray-300 hover:bg-gray-700 hover:text-white"
-                            >
-                              Quản trị hệ thống
-                            </Link>
-                          </MenuItem>
-                          <MenuItem>
-                            <Link
-                              href="/thong-bao"
-                              className="block px-4 py-2 text-sm text-gray-300 hover:bg-gray-700 hover:text-white"
-                            >
-                              Thông báo
-                            </Link>
-                          </MenuItem>
-                          <MenuItem>
-                            <button
-                              onClick={handleLogout}
-                              className="block w-full text-left px-4 py-2 text-sm text-gray-300 hover:bg-gray-700 hover:text-white"
-                            >
-                              Đăng xuất
-                            </button>
-                          </MenuItem>
-                        </div>
-                      </MenuItems>
-                    </Transition>
-                  </Menu>
-                ) : (
-                  // Not logged in - show auth links
-                  <>
-                    <Link
-                      href={ROUTES.SIGN_UP}
-                      className="text-gray-300 hover:text-white transition-colors text-sm font-medium"
-                    >
-                      Đăng ký
-                    </Link>
-                    <Link
-                      href={ROUTES.SIGN_IN}
-                      className="bg-red-600 hover:bg-red-700 text-white px-4 py-2 rounded-lg transition-colors text-sm font-medium"
-                    >
-                      Đăng nhập
-                    </Link>
-                  </>
-                )}
-              </>
-            )}
+            {/* Notifications */}
+            <button className="relative text-gray-300 hover:text-white transition-colors">
+              <BellIcon className="h-6 w-6" />
+              <span className="absolute -top-1 -right-1 bg-red-600 text-white text-xs rounded-full h-5 w-5 flex items-center justify-center">
+                3
+              </span>
+            </button>
 
-            {/* Notification Icon - only show when logged in */}
-            {user && (
-              <Link
-                href="/thong-bao"
-                className="text-gray-300 hover:text-white p-2 rounded-md transition-colors relative"
-                aria-label="Thông báo"
+            {/* Favorites */}
+            <button className="text-gray-300 hover:text-white transition-colors">
+              <HeartIcon className="h-6 w-6" />
+            </button>
+
+            {/* Share */}
+            <button className="text-gray-300 hover:text-white transition-colors">
+              <ShareIcon className="h-6 w-6" />
+            </button>
+
+            {/* User Profile */}
+            <div className="relative user-menu-container">
+              <button 
+                onClick={() => setIsUserMenuOpen(!isUserMenuOpen)}
+                className="flex items-center space-x-2 text-gray-300 hover:text-white transition-colors"
               >
-                <BellIcon className="h-6 w-6" />
-                {/* Notification Badge */}
-                <span className="absolute -top-1 -right-1 bg-red-500 text-white text-xs rounded-full h-5 w-5 flex items-center justify-center">
-                  3
-                </span>
-              </Link>
-            )}
+                <div className="w-8 h-8 bg-gray-600 rounded-full flex items-center justify-center">
+                  <UserIcon className="h-5 w-5" />
+                </div>
+                <span className="hidden sm:block text-sm">Tài khoản</span>
+                <ChevronDownIcon className={`h-4 w-4 transition-transform ${isUserMenuOpen ? 'rotate-180' : ''}`} />
+              </button>
+
+              {/* Dropdown Menu */}
+              {isUserMenuOpen && (
+                <div className="absolute right-0 mt-2 w-48 bg-gray-800 rounded-lg shadow-xl border border-gray-700 py-2 z-50">
+                  <div className="px-4 py-2 border-b border-gray-700">
+                    <p className="text-sm text-gray-300">Xin chào!</p>
+                    <p className="text-sm font-medium text-white">Người dùng</p>
+                  </div>
+                  
+                  <Link 
+                    href="/admin" 
+                    className="flex items-center px-4 py-2 text-sm text-gray-300 hover:bg-gray-700 hover:text-white transition-colors"
+                    onClick={() => setIsUserMenuOpen(false)}
+                  >
+                    <Cog6ToothIcon className="h-4 w-4 mr-3" />
+                    Quản trị viên
+                  </Link>
+                  
+                  <Link 
+                    href="/admin/movies" 
+                    className="flex items-center px-4 py-2 text-sm text-gray-300 hover:bg-gray-700 hover:text-white transition-colors"
+                    onClick={() => setIsUserMenuOpen(false)}
+                  >
+                    <Cog6ToothIcon className="h-4 w-4 mr-3" />
+                    Quản lý phim
+                  </Link>
+                  
+                  <Link 
+                    href="/admin/movies/new" 
+                    className="flex items-center px-4 py-2 text-sm text-gray-300 hover:bg-gray-700 hover:text-white transition-colors"
+                    onClick={() => setIsUserMenuOpen(false)}
+                  >
+                    <Cog6ToothIcon className="h-4 w-4 mr-3" />
+                    Thêm phim mới
+                  </Link>
+                  
+                  <div className="border-t border-gray-700 mt-2 pt-2">
+                    <button className="flex items-center w-full px-4 py-2 text-sm text-gray-300 hover:bg-gray-700 hover:text-white transition-colors">
+                      <ArrowRightOnRectangleIcon className="h-4 w-4 mr-3" />
+                      Đăng xuất
+                    </button>
+                  </div>
+                </div>
+              )}
+            </div>
           </div>
         </div>
       </div>

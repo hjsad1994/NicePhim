@@ -181,6 +181,44 @@ public class MovieService {
         return movieRepository.countMovies();
     }
 
+    public MovieResponse updateMoviePoster(UUID movieId, String posterUrl) {
+        Movie existingMovie = movieRepository.findMovieById(movieId);
+        if (existingMovie == null) {
+            throw new IllegalArgumentException("Phim không tồn tại");
+        }
+
+        try {
+            int updatedRows = movieRepository.updateMoviePoster(movieId, posterUrl);
+            if (updatedRows == 0) {
+                throw new RuntimeException("Không thể cập nhật poster");
+            }
+
+            Movie updatedMovie = movieRepository.findMovieById(movieId);
+            return convertToResponse(updatedMovie);
+        } catch (DataAccessException e) {
+            throw new RuntimeException("Lỗi khi cập nhật poster: " + e.getMessage());
+        }
+    }
+
+    public MovieResponse updateMovieBanner(UUID movieId, String bannerUrl) {
+        Movie existingMovie = movieRepository.findMovieById(movieId);
+        if (existingMovie == null) {
+            throw new IllegalArgumentException("Phim không tồn tại");
+        }
+
+        try {
+            int updatedRows = movieRepository.updateMovieBanner(movieId, bannerUrl);
+            if (updatedRows == 0) {
+                throw new RuntimeException("Không thể cập nhật banner");
+            }
+
+            Movie updatedMovie = movieRepository.findMovieById(movieId);
+            return convertToResponse(updatedMovie);
+        } catch (DataAccessException e) {
+            throw new RuntimeException("Lỗi khi cập nhật banner: " + e.getMessage());
+        }
+    }
+
     private MovieResponse convertToResponse(Movie movie) {
         MovieResponse response = new MovieResponse();
         response.movieId = movie.getMovieId();

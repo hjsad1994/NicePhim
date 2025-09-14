@@ -13,6 +13,7 @@ import {
 import { COUNTRIES } from '@/constants';
 import { ApiService, GenreResponse } from '@/lib/api';
 import { VideoUpload } from '@/components/admin/VideoUpload';
+import { ImageUpload } from '@/components/admin/ImageUpload';
 
 interface MovieFormData {
   title: string;
@@ -27,6 +28,8 @@ interface MovieFormData {
   cast: string[];
   isHot: boolean;
   type: 'movie' | 'series';
+  posterUrl: string;
+  bannerUrl: string;
 }
 
 interface Episode {
@@ -39,7 +42,6 @@ interface Episode {
 }
 
 export default function NewMovie() {
-  const router = useRouter();
   const [formData, setFormData] = useState<MovieFormData>({
     title: '',
     description: '',
@@ -50,7 +52,9 @@ export default function NewMovie() {
     genres: [],
     cast: [],
     isHot: false,
-    type: 'movie'
+    type: 'movie',
+    posterUrl: '',
+    bannerUrl: ''
   });
 
   const [availableGenres, setAvailableGenres] = useState<GenreResponse[]>([]);
@@ -184,15 +188,7 @@ export default function NewMovie() {
       return;
     }
 
-    if (formData.type === 'series' && episodes.length === 0) {
-      alert('Vui lòng thêm ít nhất một tập phim');
-      return;
-    }
-
-    try {
-      setIsSubmitting(true);
-      
-      // Prepare movie data
+    if (formData.type === 'series' && episodes.length ===      // Prepare movie data
       const movieData = {
         title: formData.title,
         aliasTitle: formData.title, // Use title as alias for now
@@ -201,7 +197,10 @@ export default function NewMovie() {
         ageRating: formData.quality, // Map quality to age rating for now
         imdbRating: formData.imdbRating,
         isSeries: formData.type === 'series',
-        posterUrl: '', // Will be handled by file upload
+        posterUrl: formData.posterUrl,
+        bannerUrl: formData.bannerUrl,
+        genreIds: formData.genres // Include selected genre IDs
+      };file upload
         bannerUrl: '', // Will be handled by file upload
         genreIds: formData.genres // Include selected genre IDs
       };
@@ -229,35 +228,45 @@ export default function NewMovie() {
     <div className="max-w-4xl mx-auto space-y-6">
       {/* Header */}
       <div>
-        <h1 className="text-2xl font-bold text-gray-900">Thêm phim mới</h1>
-        <p className="text-gray-600">Điền thông tin để thêm phim vào hệ thống</p>
+        <h1 className="text-2xl font-bold" style={{color: 'var(--color-text-primary)'}}>Thêm phim mới</h1>
+        <p style={{color: 'var(--color-text-secondary)'}}>Điền thông tin để thêm phim vào hệ thống</p>
       </div>
 
       <form onSubmit={handleSubmit} className="space-y-6">
         {/* Basic Information */}
-        <div className="bg-white p-6 rounded-lg shadow-sm border border-gray-200">
-          <h3 className="text-lg font-medium text-gray-900 mb-4">Thông tin cơ bản</h3>
+        <div className="p-6 rounded-lg shadow-sm" style={{backgroundColor: 'var(--bg-4)', border: '1px solid var(--bg-3)'}}>
+          <h3 className="text-lg font-medium mb-4" style={{color: 'var(--color-text-primary)'}}>Thông tin cơ bản</h3>
           
           <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
             <div>
-              <label className="block text-sm font-medium text-gray-700 mb-2">
+              <label className="block text-sm font-medium mb-2" style={{color: 'var(--color-text-secondary)'}}>
                 Tên phim <span className="text-red-500">*</span>
               </label>
               <input
                 type="text"
                 value={formData.title}
                 onChange={(e) => handleInputChange('title', e.target.value)}
-                className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-red-500"
+                className="w-full px-3 py-2 rounded-md focus:outline-none focus:ring-2 focus:ring-red-500"
+                style={{
+                  backgroundColor: 'var(--bg-3)',
+                  border: '1px solid var(--bg-3)',
+                  color: 'var(--color-text-primary)'
+                }}
                 required
               />
             </div>
 
             <div>
-              <label className="block text-sm font-medium text-gray-700 mb-2">Loại phim</label>
+              <label className="block text-sm font-medium mb-2" style={{color: 'var(--color-text-secondary)'}}>Loại phim</label>
               <select
                 value={formData.type}
                 onChange={(e) => handleInputChange('type', e.target.value as 'movie' | 'series')}
-                className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-red-500"
+                className="w-full px-3 py-2 rounded-md focus:outline-none focus:ring-2 focus:ring-red-500"
+                style={{
+                  backgroundColor: 'var(--bg-3)',
+                  border: '1px solid var(--bg-3)',
+                  color: 'var(--color-text-primary)'
+                }}
               >
                 <option value="movie">Phim lẻ</option>
                 <option value="series">Phim bộ</option>
@@ -265,34 +274,49 @@ export default function NewMovie() {
             </div>
 
             <div>
-              <label className="block text-sm font-medium text-gray-700 mb-2">Năm phát hành</label>
+              <label className="block text-sm font-medium mb-2" style={{color: 'var(--color-text-secondary)'}}>Năm phát hành</label>
               <input
                 type="number"
                 value={formData.releaseYear}
                 onChange={(e) => handleInputChange('releaseYear', parseInt(e.target.value))}
-                className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-red-500"
+                className="w-full px-3 py-2 rounded-md focus:outline-none focus:ring-2 focus:ring-red-500"
+                style={{
+                  backgroundColor: 'var(--bg-3)',
+                  border: '1px solid var(--bg-3)',
+                  color: 'var(--color-text-primary)'
+                }}
                 min="1900"
                 max={new Date().getFullYear() + 5}
               />
             </div>
 
             <div>
-              <label className="block text-sm font-medium text-gray-700 mb-2">Thời lượng (phút)</label>
+              <label className="block text-sm font-medium mb-2" style={{color: 'var(--color-text-secondary)'}}>Thời lượng (phút)</label>
               <input
                 type="number"
                 value={formData.duration}
                 onChange={(e) => handleInputChange('duration', parseInt(e.target.value))}
-                className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-red-500"
+                className="w-full px-3 py-2 rounded-md focus:outline-none focus:ring-2 focus:ring-red-500"
+                style={{
+                  backgroundColor: 'var(--bg-3)',
+                  border: '1px solid var(--bg-3)',
+                  color: 'var(--color-text-primary)'
+                }}
                 min="1"
               />
             </div>
 
             <div>
-              <label className="block text-sm font-medium text-gray-700 mb-2">Chất lượng</label>
+              <label className="block text-sm font-medium mb-2" style={{color: 'var(--color-text-secondary)'}}>Chất lượng</label>
               <select
                 value={formData.quality}
                 onChange={(e) => handleInputChange('quality', e.target.value)}
-                className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-red-500"
+                className="w-full px-3 py-2 rounded-md focus:outline-none focus:ring-2 focus:ring-red-500"
+                style={{
+                  backgroundColor: 'var(--bg-3)',
+                  border: '1px solid var(--bg-3)',
+                  color: 'var(--color-text-primary)'
+                }}
               >
                 <option value="CAM">CAM</option>
                 <option value="SD">SD</option>
@@ -303,7 +327,7 @@ export default function NewMovie() {
             </div>
 
             <div>
-              <label className="block text-sm font-medium text-gray-700 mb-2">Điểm IMDb</label>
+              <label className="block text-sm font-medium mb-2" style={{color: 'var(--color-text-secondary)'}}>Điểm IMDb</label>
               <input
                 type="number"
                 step="0.1"
@@ -311,16 +335,26 @@ export default function NewMovie() {
                 max="10"
                 value={formData.imdbRating}
                 onChange={(e) => handleInputChange('imdbRating', parseFloat(e.target.value))}
-                className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-red-500"
+                className="w-full px-3 py-2 rounded-md focus:outline-none focus:ring-2 focus:ring-red-500"
+                style={{
+                  backgroundColor: 'var(--bg-3)',
+                  border: '1px solid var(--bg-3)',
+                  color: 'var(--color-text-primary)'
+                }}
               />
             </div>
 
             <div>
-              <label className="block text-sm font-medium text-gray-700 mb-2">Quốc gia</label>
+              <label className="block text-sm font-medium mb-2" style={{color: 'var(--color-text-secondary)'}}>Quốc gia</label>
               <select
                 value={formData.country}
                 onChange={(e) => handleInputChange('country', e.target.value)}
-                className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-red-500"
+                className="w-full px-3 py-2 rounded-md focus:outline-none focus:ring-2 focus:ring-red-500"
+                style={{
+                  backgroundColor: 'var(--bg-3)',
+                  border: '1px solid var(--bg-3)',
+                  color: 'var(--color-text-primary)'
+                }}
               >
                 <option value="">Chọn quốc gia</option>
                 {COUNTRIES.map(country => (
@@ -330,12 +364,17 @@ export default function NewMovie() {
             </div>
 
             <div>
-              <label className="block text-sm font-medium text-gray-700 mb-2">Đạo diễn</label>
+              <label className="block text-sm font-medium mb-2" style={{color: 'var(--color-text-secondary)'}}>Đạo diễn</label>
               <input
                 type="text"
                 value={formData.director}
                 onChange={(e) => handleInputChange('director', e.target.value)}
-                className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-red-500"
+                className="w-full px-3 py-2 rounded-md focus:outline-none focus:ring-2 focus:ring-red-500"
+                style={{
+                  backgroundColor: 'var(--bg-3)',
+                  border: '1px solid var(--bg-3)',
+                  color: 'var(--color-text-primary)'
+                }}
               />
             </div>
           </div>
@@ -370,12 +409,12 @@ export default function NewMovie() {
         </div>
 
         {/* Genres */}
-        <div className="bg-white p-6 rounded-lg shadow-sm border border-gray-200">
-          <h3 className="text-lg font-medium text-gray-900 mb-4">Thể loại</h3>
+        <div className="p-6 rounded-lg shadow-sm" style={{backgroundColor: 'var(--bg-4)', border: '1px solid var(--bg-3)'}}>
+          <h3 className="text-lg font-medium mb-4" style={{color: 'var(--color-text-primary)'}}>Thể loại</h3>
           {loadingGenres ? (
             <div className="text-center py-4">
-              <div className="inline-block animate-spin rounded-full h-6 w-6 border-b-2 border-red-600"></div>
-              <p className="mt-2 text-sm text-gray-600">Đang tải thể loại...</p>
+              <div className="inline-block animate-spin rounded-full h-6 w-6 border-b-2 border-red-400"></div>
+              <p className="mt-2 text-sm" style={{color: 'var(--color-text-muted)'}}>Đang tải thể loại...</p>
             </div>
           ) : (
             <div className="grid grid-cols-2 md:grid-cols-4 gap-3">
@@ -387,21 +426,21 @@ export default function NewMovie() {
                     onChange={() => handleGenreToggle(genre.genreId)}
                     className="h-4 w-4 text-red-600 focus:ring-red-500 border-gray-300 rounded"
                   />
-                  <span className="text-sm text-gray-700">{genre.name}</span>
+                  <span className="text-sm" style={{color: 'var(--color-text-primary)'}}>{genre.name}</span>
                 </label>
               ))}
             </div>
           )}
           {availableGenres.length === 0 && !loadingGenres && (
-            <p className="text-sm text-gray-500 text-center py-4">
+            <p className="text-sm text-center py-4" style={{color: 'var(--color-text-muted)'}}>
               Không có thể loại nào. Vui lòng tạo thể loại trước.
             </p>
           )}
         </div>
 
         {/* Cast */}
-        <div className="bg-white p-6 rounded-lg shadow-sm border border-gray-200">
-          <h3 className="text-lg font-medium text-gray-900 mb-4">Diễn viên</h3>
+        <div className="p-6 rounded-lg shadow-sm" style={{backgroundColor: 'var(--bg-4)', border: '1px solid var(--bg-3)'}}>
+          <h3 className="text-lg font-medium mb-4" style={{color: 'var(--color-text-primary)'}}>Diễn viên</h3>
           
           <div className="flex gap-2 mb-4">
             <input
@@ -409,7 +448,12 @@ export default function NewMovie() {
               value={castInput}
               onChange={(e) => setCastInput(e.target.value)}
               placeholder="Tên diễn viên"
-              className="flex-1 px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-red-500"
+              className="flex-1 px-3 py-2 rounded-md focus:outline-none focus:ring-2 focus:ring-red-500"
+              style={{
+                backgroundColor: 'var(--bg-3)',
+                border: '1px solid var(--bg-3)',
+                color: 'var(--color-text-primary)'
+              }}
               onKeyPress={(e) => e.key === 'Enter' && (e.preventDefault(), addCastMember())}
             />
             <button
@@ -425,98 +469,38 @@ export default function NewMovie() {
             {formData.cast.map((actor, index) => (
               <span
                 key={index}
-                className="inline-flex items-center px-3 py-1 rounded-full text-sm bg-gray-100 text-gray-800"
+                className="inline-flex items-center px-3 py-1 rounded-full text-sm"
+                style={{backgroundColor: 'var(--bg-3)', color: 'var(--color-text-primary)'}}
               >
                 {actor}
                 <button
                   type="button"
                   onClick={() => removeCastMember(index)}
-                  className="ml-2 text-gray-400 hover:text-gray-600"
+                  className="ml-2 transition-colors"
+                  style={{color: 'var(--color-text-muted)'}}
+                  onMouseEnter={(e) => e.currentTarget.style.color = 'var(--color-text-primary)'}
+                  onMouseLeave={(e) => e.currentTarget.style.color = 'var(--color-text-muted)'}
                 >
-                  <XMarkIcon className="h-3 w-3" />
-                </button>
-              </span>
-            ))}
-          </div>
-        </div>
-
-        {/* File Uploads */}
-        <div className="bg-white p-6 rounded-lg shadow-sm border border-gray-200">
-          <h3 className="text-lg font-medium text-gray-900 mb-4">Hình ảnh & Video</h3>
-          
-          <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
+             <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
             {/* Poster */}
-            <div>
-              <label className="block text-sm font-medium text-gray-700 mb-2">
-                Poster <span className="text-red-500">*</span>
-              </label>
-              <div className="border-2 border-dashed border-gray-300 rounded-lg p-4 text-center hover:border-red-400 transition-colors">
-                {previewUrls.poster ? (
-                  <div className="relative">
-                    <Image
-                      src={previewUrls.poster}
-                      alt="Poster preview"
-                      width={200}
-                      height={300}
-                      className="mx-auto rounded object-cover"
-                    />
-                    <button
-                      type="button"
-                      onClick={() => handleFileChange('poster', null)}
-                      className="absolute top-2 right-2 bg-red-600 text-white rounded-full p-1"
-                    >
-                      <XMarkIcon className="h-4 w-4" />
-                    </button>
-                  </div>
-                ) : (
-                  <div>
-                    <PhotoIcon className="mx-auto h-12 w-12 text-gray-400" />
-                    <div className="mt-2">
-                      <label htmlFor="poster-upload" className="cursor-pointer">
-                        <span className="text-red-600 hover:text-red-500">Upload poster</span>
-                        <input
-                          id="poster-upload"
-                          type="file"
-                          accept="image/*"
-                          className="hidden"
-                          onChange={(e) => e.target.files && handleFileChange('poster', e.target.files[0])}
-                        />
-                      </label>
-                    </div>
-                  </div>
-                )}
-              </div>
-            </div>
+            <ImageUpload
+              label="Poster"
+              type="poster"
+              currentUrl={formData.posterUrl}
+              onUpload={(url) => handleInputChange('posterUrl', url)}
+              onRemove={() => handleInputChange('posterUrl', '')}
+              required={true}
+            />
 
             {/* Banner */}
-            <div>
-              <label className="block text-sm font-medium text-gray-700 mb-2">Banner</label>
-              <div className="border-2 border-dashed border-gray-300 rounded-lg p-4 text-center hover:border-red-400 transition-colors">
-                {previewUrls.banner ? (
-                  <div className="relative">
-                    <Image
-                      src={previewUrls.banner}
-                      alt="Banner preview"
-                      width={300}
-                      height={150}
-                      className="mx-auto rounded object-cover"
-                    />
-                    <button
-                      type="button"
-                      onClick={() => handleFileChange('banner', null)}
-                      className="absolute top-2 right-2 bg-red-600 text-white rounded-full p-1"
-                    >
-                      <XMarkIcon className="h-4 w-4" />
-                    </button>
-                  </div>
-                ) : (
-                  <div>
-                    <PhotoIcon className="mx-auto h-12 w-12 text-gray-400" />
-                    <div className="mt-2">
-                      <label htmlFor="banner-upload" className="cursor-pointer">
-                        <span className="text-red-600 hover:text-red-500">Upload banner</span>
-                        <input
-                          id="banner-upload"
+            <ImageUpload
+              label="Banner"
+              type="banner"
+              currentUrl={formData.bannerUrl}
+              onUpload={(url) => handleInputChange('bannerUrl', url)}
+              onRemove={() => handleInputChange('bannerUrl', '')}
+              required={false}
+            />                  id="banner-upload"
                           type="file"
                           accept="image/*"
                           className="hidden"
@@ -531,7 +515,7 @@ export default function NewMovie() {
 
             {/* Thumbnail */}
             <div>
-              <label className="block text-sm font-medium text-gray-700 mb-2">Thumbnail</label>
+              <label className="block text-sm font-medium mb-2" style={{color: 'var(--color-text-secondary)'}}>Thumbnail</label>
               <div className="border-2 border-dashed border-gray-300 rounded-lg p-4 text-center hover:border-red-400 transition-colors">
                 {previewUrls.thumbnail ? (
                   <div className="relative">
@@ -575,7 +559,7 @@ export default function NewMovie() {
           <div className="grid grid-cols-1 md:grid-cols-2 gap-6 mt-6">
             {/* Trailer */}
             <div>
-              <label className="block text-sm font-medium text-gray-700 mb-2">Trailer (Optional)</label>
+              <label className="block text-sm font-medium mb-2" style={{color: 'var(--color-text-secondary)'}}>Trailer (Optional)</label>
               <div className="border-2 border-dashed border-gray-300 rounded-lg p-4 text-center hover:border-red-400 transition-colors">
                 {files.trailer ? (
                   <div className="flex items-center justify-between">
@@ -611,7 +595,7 @@ export default function NewMovie() {
             {/* Video for single movie */}
             {formData.type === 'movie' && (
               <div>
-                <label className="block text-sm font-medium text-gray-700 mb-2">
+                <label className="block text-sm font-medium mb-2" style={{color: 'var(--color-text-secondary)'}}>
                   Video phim <span className="text-red-500">*</span>
                 </label>
                 <div className="border-2 border-dashed border-gray-300 rounded-lg p-4 text-center hover:border-red-400 transition-colors">
@@ -672,7 +656,7 @@ export default function NewMovie() {
                       type="text"
                       value={episode.title}
                       onChange={(e) => updateEpisode(episode.id, 'title', e.target.value)}
-                      className="flex-1 px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-red-500 mr-4"
+                      className="flex-1 px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-red-500 mr-4 text-gray-900"
                       placeholder="Tên tập phim"
                     />
                     <button
@@ -687,7 +671,7 @@ export default function NewMovie() {
                   <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
                     {/* Video */}
                     <div>
-                      <label className="block text-sm font-medium text-gray-700 mb-2">Video</label>
+                      <label className="block text-sm font-medium mb-2" style={{color: 'var(--color-text-secondary)'}}>Video</label>
                       <div className="border border-gray-300 rounded-lg p-3 text-center">
                         {episode.video ? (
                           <div className="flex items-center justify-between">
@@ -717,7 +701,7 @@ export default function NewMovie() {
 
                     {/* Subtitle */}
                     <div>
-                      <label className="block text-sm font-medium text-gray-700 mb-2">Phụ đề</label>
+                      <label className="block text-sm font-medium mb-2" style={{color: 'var(--color-text-secondary)'}}>Phụ đề</label>
                       <div className="border border-gray-300 rounded-lg p-3 text-center">
                         {episode.subtitle ? (
                           <div className="flex items-center justify-between">
@@ -747,7 +731,7 @@ export default function NewMovie() {
 
                     {/* Dubbed */}
                     <div>
-                      <label className="block text-sm font-medium text-gray-700 mb-2">Thuyết minh</label>
+                      <label className="block text-sm font-medium mb-2" style={{color: 'var(--color-text-secondary)'}}>Thuyết minh</label>
                       <div className="border border-gray-300 rounded-lg p-3 text-center">
                         {episode.dubbed ? (
                           <div className="flex items-center justify-between">

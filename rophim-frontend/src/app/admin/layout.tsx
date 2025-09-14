@@ -1,3 +1,5 @@
+'use client';
+
 import Link from 'next/link';
 import { 
   HomeIcon,
@@ -25,12 +27,12 @@ export default function AdminLayout({ children }: AdminLayoutProps) {
   ];
 
   return (
-    <div className="min-h-screen bg-gray-100">
+    <div className="min-h-screen" style={{backgroundColor: 'var(--bg-2)'}}>
       {/* Sidebar */}
-      <div className="fixed inset-y-0 left-0 z-50 w-64 bg-white shadow-lg">
+      <div className="fixed inset-y-0 left-0 z-50 w-64 shadow-lg" style={{backgroundColor: 'var(--bg-4)'}}>
         {/* Logo */}
-        <div className="flex items-center justify-center h-16 border-b border-gray-200">
-          <h1 className="text-xl font-bold text-red-600">NicePhim Admin</h1>
+        <div className="flex items-center justify-center h-16 border-b" style={{borderColor: 'var(--bg-3)'}}>
+          <h1 className="text-xl font-bold text-red-400">NicePhim Admin</h1>
         </div>
 
         {/* Navigation */}
@@ -40,9 +42,13 @@ export default function AdminLayout({ children }: AdminLayoutProps) {
               <Link
                 key={item.name}
                 href={item.href}
-                className="group flex items-center px-3 py-2 text-sm font-medium text-gray-700 rounded-md hover:bg-red-50 hover:text-red-600 transition-colors"
+                className="group flex items-center px-3 py-2 text-sm font-medium rounded-md transition-colors hover:bg-opacity-20 hover:bg-white"
+                style={{
+                  color: 'var(--color-text-secondary)',
+                  backgroundColor: 'transparent'
+                }}
               >
-                <item.icon className="mr-3 h-5 w-5 text-gray-400 group-hover:text-red-500" />
+                <item.icon className="mr-3 h-5 w-5 group-hover:text-red-400" style={{color: 'var(--color-text-muted)'}} />
                 {item.name}
               </Link>
             ))}
@@ -53,13 +59,13 @@ export default function AdminLayout({ children }: AdminLayoutProps) {
       {/* Main content */}
       <div className="ml-64">
         {/* Top bar */}
-        <header className="bg-white shadow-sm border-b border-gray-200">
+        <header className="shadow-sm border-b" style={{backgroundColor: 'var(--bg-5)', borderColor: 'var(--bg-3)'}}>
           <div className="px-6 py-4">
             <div className="flex items-center justify-between">
-              <h2 className="text-lg font-semibold text-gray-800">Admin Panel</h2>
+              <h2 className="text-lg font-semibold" style={{color: 'var(--color-text-primary)'}}>Admin Panel</h2>
               <div className="flex items-center space-x-4">
-                <span className="text-sm text-gray-600">Xin chào, Admin</span>
-                <div className="w-8 h-8 bg-red-600 rounded-full flex items-center justify-center">
+                <span className="text-sm" style={{color: 'var(--color-text-secondary)'}}>Xin chào, Admin</span>
+                <div className="w-8 h-8 bg-red-500 rounded-full flex items-center justify-center">
                   <span className="text-white font-medium text-sm">A</span>
                 </div>
               </div>

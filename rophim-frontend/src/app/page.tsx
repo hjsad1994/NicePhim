@@ -18,6 +18,7 @@ export default function Home() {
   const [favoriteMovies, setFavoriteMovies] = useState<string[]>([]);
   const [genres, setGenres] = useState<GenreResponse[]>([]);
   const [moviesByGenre, setMoviesByGenre] = useState<{ [genreId: string]: MovieResponse[] }>({});
+  const [heroMovies, setHeroMovies] = useState<Movie[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
 
@@ -57,6 +58,16 @@ export default function Home() {
             genresResponse.data.forEach(genre => {
               moviesData[genre.genreId] = [];
             });
+
+            // Filter movies with banners for Hero section
+            const moviesWithBanners = allMoviesResponse.data.filter(movie => 
+              movie.bannerUrl && movie.bannerUrl.trim() !== ''
+            );
+            
+            // Convert to Movie type and set as hero movies
+            const heroMoviesData = moviesWithBanners.slice(0, 4).map(convertToMovie);
+            setHeroMovies(heroMoviesData);
+            console.log('🎭 Hero movies loaded:', heroMoviesData);
             
             // For each movie, use its embedded genres to assign to appropriate genre groups
             for (const movie of allMoviesResponse.data) {
@@ -151,8 +162,8 @@ export default function Home() {
 
   return (
     <div className="min-h-screen" style={{backgroundColor: 'var(--bg-2)'}}>
-      {/* 1. Hero Section - Giữ nguyên */}
-      <Hero movies={featuredMovies} />
+      {/* 1. Hero Section - Sử dụng phim từ database */}
+      <Hero movies={heroMovies.length > 0 ? heroMovies : featuredMovies} />
 
       {/* Movie Sections - Hiển thị phim theo thể loại từ database */}
       <div style={{backgroundColor: 'var(--bg-3)'}} className="border-2 border-gray-400/15 rounded-lg">

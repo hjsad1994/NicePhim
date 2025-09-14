@@ -127,8 +127,8 @@ export default function GenreManagement() {
       {/* Header */}
       <div className="flex items-center justify-between">
         <div>
-          <h1 className="text-2xl font-bold text-gray-900">Quản lý thể loại</h1>
-          <p className="text-gray-600">Quản lý các thể loại phim trong hệ thống</p>
+          <h1 className="text-2xl font-bold" style={{color: 'var(--color-text-primary)'}}>Quản lý thể loại</h1>
+          <p style={{color: 'var(--color-text-secondary)'}}>Quản lý các thể loại phim trong hệ thống</p>
         </div>
         <button
           onClick={() => setShowCreateModal(true)}
@@ -141,21 +141,20 @@ export default function GenreManagement() {
 
       {/* Error/Warning Message */}
       {error && (
-        <div className={`border rounded-md p-4 ${
-          error.includes('⚠️') 
-            ? 'bg-yellow-50 border-yellow-200' 
-            : 'bg-red-50 border-red-200'
-        }`}>
+        <div className="rounded-md p-4" style={{
+          backgroundColor: 'var(--bg-4)',
+          border: error.includes('⚠️') ? '1px solid #f59e0b' : '1px solid #ef4444'
+        }}>
           <div className="flex">
             <div className="ml-3">
-              <h3 className={`text-sm font-medium ${
-                error.includes('⚠️') ? 'text-yellow-800' : 'text-red-800'
-              }`}>
+              <h3 className="text-sm font-medium" style={{
+                color: error.includes('⚠️') ? '#f59e0b' : '#ef4444'
+              }}>
                 {error.includes('⚠️') ? 'Cảnh báo' : 'Lỗi'}
               </h3>
-              <div className={`mt-2 text-sm ${
-                error.includes('⚠️') ? 'text-yellow-700' : 'text-red-700'
-              }`}>
+              <div className="mt-2 text-sm" style={{
+                color: error.includes('⚠️') ? '#f59e0b' : '#ef4444'
+              }}>
                 {error.replace('⚠️ ', '').replace('❌ ', '')}
               </div>
             </div>
@@ -166,33 +165,38 @@ export default function GenreManagement() {
       {/* Search */}
       <div className="relative">
         <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
-          <MagnifyingGlassIcon className="h-5 w-5 text-gray-400" />
+          <MagnifyingGlassIcon className="h-5 w-5" style={{color: 'var(--color-text-muted)'}} />
         </div>
         <input
           type="text"
           placeholder="Tìm kiếm thể loại..."
           value={searchTerm}
           onChange={(e) => setSearchTerm(e.target.value)}
-          className="block w-full pl-10 pr-3 py-2 border border-gray-300 rounded-md leading-5 bg-white placeholder-gray-500 focus:outline-none focus:placeholder-gray-400 focus:ring-1 focus:ring-red-500 focus:border-red-500"
+          className="block w-full pl-10 pr-3 py-2 rounded-md leading-5 focus:outline-none focus:ring-1 focus:ring-red-500 focus:border-red-500"
+          style={{
+            backgroundColor: 'var(--bg-3)',
+            border: '1px solid var(--bg-3)',
+            color: 'var(--color-text-primary)'
+          }}
         />
       </div>
 
       {/* Genres Table */}
-      <div className="bg-white shadow-sm rounded-lg border border-gray-200">
-        <div className="px-6 py-4 border-b border-gray-200">
-          <h3 className="text-lg font-medium text-gray-900">
+      <div className="rounded-lg shadow-sm" style={{backgroundColor: 'var(--bg-4)', border: '1px solid var(--bg-3)'}}>
+        <div className="px-6 py-4 border-b" style={{borderColor: 'var(--bg-3)'}}>
+          <h3 className="text-lg font-medium" style={{color: 'var(--color-text-primary)'}}>
             Danh sách thể loại ({filteredGenres.length})
           </h3>
         </div>
         
         {isLoading ? (
-          <div className="p-6 text-center text-gray-500">
-            <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-red-600 mx-auto"></div>
+          <div className="p-6 text-center" style={{color: 'var(--color-text-muted)'}}>
+            <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-red-400 mx-auto"></div>
             <p className="mt-2">Đang tải...</p>
           </div>
         ) : filteredGenres.length === 0 ? (
-          <div className="p-6 text-center text-gray-500">
-            <TagIcon className="h-12 w-12 mx-auto text-gray-300 mb-4" />
+          <div className="p-6 text-center" style={{color: 'var(--color-text-muted)'}}>
+            <TagIcon className="h-12 w-12 mx-auto mb-4" style={{color: 'var(--color-text-muted)'}} />
             <p>Không có thể loại nào</p>
             {searchTerm && (
               <p className="text-sm mt-1">Thử tìm kiếm với từ khóa khác</p>
@@ -200,46 +204,52 @@ export default function GenreManagement() {
           </div>
         ) : (
           <div className="overflow-x-auto">
-            <table className="min-w-full divide-y divide-gray-200">
-              <thead className="bg-gray-50">
+            <table className="min-w-full" style={{borderColor: 'var(--bg-3)'}}>
+              <thead style={{backgroundColor: 'var(--bg-3)'}}>
                 <tr>
-                  <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                  <th className="px-6 py-3 text-left text-xs font-medium uppercase tracking-wider" style={{color: 'var(--color-text-muted)'}}>
                     Tên thể loại
                   </th>
-                  <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                  <th className="px-6 py-3 text-left text-xs font-medium uppercase tracking-wider" style={{color: 'var(--color-text-muted)'}}>
                     ID
                   </th>
-                  <th className="px-6 py-3 text-right text-xs font-medium text-gray-500 uppercase tracking-wider">
+                  <th className="px-6 py-3 text-right text-xs font-medium uppercase tracking-wider" style={{color: 'var(--color-text-muted)'}}>
                     Thao tác
                   </th>
                 </tr>
               </thead>
-              <tbody className="bg-white divide-y divide-gray-200">
+              <tbody style={{backgroundColor: 'var(--bg-4)'}}>
                 {filteredGenres.map((genre) => (
-                  <tr key={genre.genreId} className="hover:bg-gray-50">
+                  <tr key={genre.genreId} className="transition-colors" style={{backgroundColor: 'transparent'}} onMouseEnter={(e) => e.currentTarget.style.backgroundColor = 'var(--bg-3)'} onMouseLeave={(e) => e.currentTarget.style.backgroundColor = 'transparent'}>
                     <td className="px-6 py-4 whitespace-nowrap">
                       <div className="flex items-center">
-                        <TagIcon className="h-5 w-5 text-gray-400 mr-3" />
-                        <div className="text-sm font-medium text-gray-900">
+                        <TagIcon className="h-5 w-5 mr-3" style={{color: 'var(--color-text-muted)'}} />
+                        <div className="text-sm font-medium" style={{color: 'var(--color-text-primary)'}}>
                           {genre.name}
                         </div>
                       </div>
                     </td>
-                    <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
+                    <td className="px-6 py-4 whitespace-nowrap text-sm" style={{color: 'var(--color-text-muted)'}}>
                       {genre.genreId}
                     </td>
                     <td className="px-6 py-4 whitespace-nowrap text-right text-sm font-medium">
                       <div className="flex items-center justify-end space-x-2">
                         <button
                           onClick={() => openEditModal(genre)}
-                          className="text-indigo-600 hover:text-indigo-900 p-1 rounded hover:bg-indigo-50"
+                          className="p-1 rounded transition-colors"
+                          style={{color: '#3b82f6'}}
+                          onMouseEnter={(e) => e.currentTarget.style.color = '#1d4ed8'}
+                          onMouseLeave={(e) => e.currentTarget.style.color = '#3b82f6'}
                           title="Chỉnh sửa"
                         >
                           <PencilIcon className="h-4 w-4" />
                         </button>
                         <button
                           onClick={() => handleDeleteGenre(genre.genreId)}
-                          className="text-red-600 hover:text-red-900 p-1 rounded hover:bg-red-50"
+                          className="p-1 rounded transition-colors"
+                          style={{color: '#ef4444'}}
+                          onMouseEnter={(e) => e.currentTarget.style.color = '#dc2626'}
+                          onMouseLeave={(e) => e.currentTarget.style.color = '#ef4444'}
                           title="Xóa"
                         >
                           <TrashIcon className="h-4 w-4" />
@@ -256,13 +266,13 @@ export default function GenreManagement() {
 
       {/* Create Modal */}
       {showCreateModal && (
-        <div className="fixed inset-0 bg-gray-600 bg-opacity-50 overflow-y-auto h-full w-full z-50">
-          <div className="relative top-20 mx-auto p-5 border w-96 shadow-lg rounded-md bg-white">
+        <div className="fixed inset-0 bg-black bg-opacity-50 overflow-y-auto h-full w-full z-50">
+          <div className="relative top-20 mx-auto p-5 w-96 shadow-lg rounded-md" style={{backgroundColor: 'var(--bg-4)', border: '1px solid var(--bg-3)'}}>
             <div className="mt-3">
-              <h3 className="text-lg font-medium text-gray-900 mb-4">Thêm thể loại mới</h3>
+              <h3 className="text-lg font-medium mb-4" style={{color: 'var(--color-text-primary)'}}>Thêm thể loại mới</h3>
               <form onSubmit={handleCreateGenre}>
                 <div className="mb-4">
-                  <label htmlFor="create-name" className="block text-sm font-medium text-gray-700 mb-2">
+                  <label htmlFor="create-name" className="block text-sm font-medium mb-2" style={{color: 'var(--color-text-secondary)'}}>
                     Tên thể loại
                   </label>
                   <input
@@ -274,7 +284,12 @@ export default function GenreManagement() {
                       // Clear error when user starts typing
                       if (error) setError(null);
                     }}
-                    className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-1 focus:ring-red-500 focus:border-red-500"
+                    className="w-full px-3 py-2 rounded-md focus:outline-none focus:ring-1 focus:ring-red-500 focus:border-red-500"
+                    style={{
+                      backgroundColor: 'var(--bg-3)',
+                      border: '1px solid var(--bg-3)',
+                      color: 'var(--color-text-primary)'
+                    }}
                     placeholder="Nhập tên thể loại..."
                     required
                     maxLength={80}
@@ -288,7 +303,13 @@ export default function GenreManagement() {
                       setCreateForm({ name: '' });
                       setError(null);
                     }}
-                    className="px-4 py-2 text-sm font-medium text-gray-700 bg-gray-100 rounded-md hover:bg-gray-200"
+                    className="px-4 py-2 text-sm font-medium rounded-md transition-colors"
+                    style={{
+                      backgroundColor: 'var(--bg-3)',
+                      color: 'var(--color-text-secondary)'
+                    }}
+                    onMouseEnter={(e) => e.currentTarget.style.backgroundColor = 'var(--bg-2)'}
+                    onMouseLeave={(e) => e.currentTarget.style.backgroundColor = 'var(--bg-3)'}
                   >
                     Hủy
                   </button>
@@ -308,13 +329,13 @@ export default function GenreManagement() {
 
       {/* Edit Modal */}
       {showEditModal && editingGenre && (
-        <div className="fixed inset-0 bg-gray-600 bg-opacity-50 overflow-y-auto h-full w-full z-50">
-          <div className="relative top-20 mx-auto p-5 border w-96 shadow-lg rounded-md bg-white">
+        <div className="fixed inset-0 bg-black bg-opacity-50 overflow-y-auto h-full w-full z-50">
+          <div className="relative top-20 mx-auto p-5 w-96 shadow-lg rounded-md" style={{backgroundColor: 'var(--bg-4)', border: '1px solid var(--bg-3)'}}>
             <div className="mt-3">
-              <h3 className="text-lg font-medium text-gray-900 mb-4">Chỉnh sửa thể loại</h3>
+              <h3 className="text-lg font-medium mb-4" style={{color: 'var(--color-text-primary)'}}>Chỉnh sửa thể loại</h3>
               <form onSubmit={handleUpdateGenre}>
                 <div className="mb-4">
-                  <label htmlFor="edit-name" className="block text-sm font-medium text-gray-700 mb-2">
+                  <label htmlFor="edit-name" className="block text-sm font-medium mb-2" style={{color: 'var(--color-text-secondary)'}}>
                     Tên thể loại
                   </label>
                   <input
@@ -326,7 +347,12 @@ export default function GenreManagement() {
                       // Clear error when user starts typing
                       if (error) setError(null);
                     }}
-                    className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-1 focus:ring-red-500 focus:border-red-500"
+                    className="w-full px-3 py-2 rounded-md focus:outline-none focus:ring-1 focus:ring-red-500 focus:border-red-500"
+                    style={{
+                      backgroundColor: 'var(--bg-3)',
+                      border: '1px solid var(--bg-3)',
+                      color: 'var(--color-text-primary)'
+                    }}
                     placeholder="Nhập tên thể loại..."
                     required
                     maxLength={80}
@@ -341,7 +367,13 @@ export default function GenreManagement() {
                       setEditForm({ name: '' });
                       setError(null);
                     }}
-                    className="px-4 py-2 text-sm font-medium text-gray-700 bg-gray-100 rounded-md hover:bg-gray-200"
+                    className="px-4 py-2 text-sm font-medium rounded-md transition-colors"
+                    style={{
+                      backgroundColor: 'var(--bg-3)',
+                      color: 'var(--color-text-secondary)'
+                    }}
+                    onMouseEnter={(e) => e.currentTarget.style.backgroundColor = 'var(--bg-2)'}
+                    onMouseLeave={(e) => e.currentTarget.style.backgroundColor = 'var(--bg-3)'}
                   >
                     Hủy
                   </button>

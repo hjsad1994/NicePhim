@@ -1,4 +1,4 @@
-# Active Context: Current Development Focus
+# Active Context: NicePhim Development Focus
 
 ## Current Sprint: Video Player Enhancement & User Experience
 **Goal**: Complete video player functionality with intuitive controls and smooth user interaction
@@ -77,35 +77,46 @@
 - ✅ **Movie Detail Page Database Integration**: Fixed movie detail page to pull real data from database instead of showing mock data - resolved slug matching issue between frontend and backend
 - ✅ **Movie Slug API Implementation**: Added getMovieBySlug endpoint to backend and updated frontend to use real database data instead of mock data for movie watching pages
 - ✅ **SimpleHLSPlayer TypeScript Fixes**: Resolved all TypeScript and ESLint errors in video player component - proper type definitions for HLS levels and fullscreen APIs
+- ✅ **Image Upload System Implementation**: Complete image upload functionality for movie posters and banners
+- ✅ **Backend Image Upload API**: Created ImageController with endpoints for uploading posters and banners to D:/poster_img and D:/banner_img
+- ✅ **Spring Boot Static Resource Configuration**: Configured static resource serving for uploaded images
+- ✅ **Frontend Image Upload Component**: Created reusable ImageUpload component with drag-and-drop functionality
+- ✅ **Movie Form Integration**: Updated movie creation and editing forms to use image upload functionality
+- ✅ **Database Integration**: Movie model already includes posterUrl and bannerUrl fields, no migration needed
+- ✅ **Movie Edit Page JSX Fix**: Fixed parsing error by moving genre selection modal inside return statement
+- ✅ **Header Branding Update**: Changed header logo from "Rophim" to "NicePhim" for consistent branding
 
 ## Current Focus
 1. ✅ **Video Player State Update Issue**: RESOLVED - Quality and speed selection buttons now display selected values correctly
 2. ✅ **HLS Adaptive Quality Switching**: RESOLVED - Quality selection now changes actual video quality (360p, 480p, 720p, 1080p)
 3. ✅ **Movie Slug API Implementation**: RESOLVED - Movie watching pages now fetch real data from database instead of using mock data
-4. **Video Player Optimization**: Complete video player with smooth controls and user interaction
-4. **HLS Streaming Integration**: Adaptive video streaming with multiple quality options (360p, 720p, 1080p)
-5. **Video Player Event Handling**: Proper click and double-click functionality for play/pause and fullscreen
-6. **Content Population**: Continue creating movies with real videos and assigning them to genres
-7. **End-to-End Testing**: Complete video workflow from upload to playback
+4. ✅ **Image Upload System**: RESOLVED - Complete image upload functionality for movie posters and banners
+5. **Video Player Optimization**: Complete video player with smooth controls and user interaction
+6. **HLS Streaming Integration**: Adaptive video streaming with multiple quality options (360p, 720p, 1080p)
+7. **Video Player Event Handling**: Proper click and double-click functionality for play/pause and fullscreen
+8. **Content Population**: Continue creating movies with real videos and assigning them to genres
+9. **End-to-End Testing**: Complete video workflow from upload to playback
 
 ## Next Steps
 1. ✅ **Video Player State Update Issue**: RESOLVED - Quality and speed selection buttons now display selected values correctly
 2. ✅ **HLS Adaptive Quality Switching**: RESOLVED - Quality selection now changes actual video quality
-3. **Test Video Player Functionality**: Verify click (play/pause) and double-click (fullscreen) work correctly
-4. **Test HLS Streaming**: Verify adaptive quality streaming works properly with real videos
-4. **Test Complete Video Workflow**: Upload MP4 → Create movie → Watch from homepage
-5. **Test Watch Together with Real Videos**: Ensure collaborative watching works with uploaded videos
-6. **Create Movies with Videos**: Use /admin/movies/upload to create movies with real video content
-7. **Assign Genres to Movies**: Use movie edit interface to assign movies to genres
-8. **Test Genre Pages**: Verify genre pages show movies with videos after assignment
-9. **Test Movie Routing**: Verify all movie detail pages work correctly with video data
-10. **Frontend Upload Connection**: Fix frontend "Failed to fetch" error when connecting to video upload API
-11. **Video Field Restoration**: Uncomment video field access in MovieRepository RowMapper
-12. Add bulk genre operations for multiple movies
-13. Enhance admin dashboard with video upload statistics
-14. Add proper session management (JWT tokens or secure sessions)
-15. Create user profile management interface
-16. Implement advanced search and filtering for movies and genres
+3. ✅ **Movie Edit Page JSX Fix**: RESOLVED - Fixed parsing error by moving genre selection modal inside return statement
+4. ✅ **Header Branding Update**: RESOLVED - Changed header logo from "Rophim" to "NicePhim" for consistent branding
+5. **Test Video Player Functionality**: Verify click (play/pause) and double-click (fullscreen) work correctly
+6. **Test HLS Streaming**: Verify adaptive quality streaming works properly with real videos
+7. **Test Complete Video Workflow**: Upload MP4 → Create movie → Watch from homepage
+8. **Test Watch Together with Real Videos**: Ensure collaborative watching works with uploaded videos
+9. **Create Movies with Videos**: Use /admin/movies/upload to create movies with real video content
+10. **Assign Genres to Movies**: Use movie edit interface to assign movies to genres
+11. **Test Genre Pages**: Verify genre pages show movies with videos after assignment
+12. **Test Movie Routing**: Verify all movie detail pages work correctly with video data
+13. **Frontend Upload Connection**: Fix frontend "Failed to fetch" error when connecting to video upload API
+14. **Video Field Restoration**: Uncomment video field access in MovieRepository RowMapper
+15. Add bulk genre operations for multiple movies
+16. Enhance admin dashboard with video upload statistics
+17. Add proper session management (JWT tokens or secure sessions)
+18. Create user profile management interface
+19. Implement advanced search and filtering for movies and genres
 
 ## Technical Decisions
 - **Video Upload Configuration**: Increased Spring Boot upload limits to 500MB for large video files
@@ -194,3 +205,5 @@
 - **Video Player Quality/Speed Selection Issue** - Added separate dropdown menus for quality and speed selection, but state update not working properly
 - ✅ **Video Player State Management Problem** - RESOLVED: Quality and speed selection buttons now display selected values correctly after fixing click outside handler and state management
 - ✅ **HLS Adaptive Quality Switching** - RESOLVED: Implemented actual HLS quality switching - selecting 360p now plays at 360p quality, not just displays "360p" while playing 1080p
+- ✅ **Movie Edit Page JSX Parsing Error** - RESOLVED: Fixed parsing error by moving genre selection modal inside return statement, resolving build error
+- ✅ **Header Branding Consistency** - RESOLVED: Updated header logo from "Rophim" to "NicePhim" for consistent branding across the platform

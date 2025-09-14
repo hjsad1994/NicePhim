@@ -48,10 +48,18 @@ export function generateSlug(text: string): string {
 export function getImageUrl(path: string, size: 'small' | 'medium' | 'large' = 'medium'): string {
   if (!path) return '/placeholder-movie.jpg';
   
-  // If it's already a full URL, return as is
+  // If it's already a full URL (from database), return as is
   if (path.startsWith('http')) return path;
   
-  // Add size prefix for optimization
+  // If it's a localhost URL (from our backend), return as is
+  if (path.startsWith('http://localhost:8080/')) return path;
+  
+  // For relative paths, assume they're from our backend
+  if (path.startsWith('/')) {
+    return `http://localhost:8080${path}`;
+  }
+  
+  // Add size prefix for optimization (fallback for other cases)
   const sizePrefix = size === 'small' ? 'w300' : size === 'medium' ? 'w500' : 'w780';
   return `/api/images/${sizePrefix}${path}`;
 }

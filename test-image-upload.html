@@ -1,0 +1,111 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Test Image Upload</title>
+    <style>
+        body { font-family: Arial, sans-serif; margin: 20px; }
+        .upload-section { margin: 20px 0; padding: 20px; border: 1px solid #ccc; border-radius: 8px; }
+        .result { margin-top: 10px; padding: 10px; border-radius: 4px; }
+        .success { background-color: #d4edda; color: #155724; }
+        .error { background-color: #f8d7da; color: #721c24; }
+        img { max-width: 200px; margin-top: 10px; }
+    </style>
+</head>
+<body>
+    <h1>Test Image Upload API</h1>
+    
+    <div class="upload-section">
+        <h3>Upload Poster</h3>
+        <input type="file" id="posterFile" accept="image/*">
+        <button onclick="uploadPoster()">Upload Poster</button>
+        <div id="posterResult"></div>
+    </div>
+    
+    <div class="upload-section">
+        <h3>Upload Banner</h3>
+        <input type="file" id="bannerFile" accept="image/*">
+        <button onclick="uploadBanner()">Upload Banner</button>
+        <div id="bannerResult"></div>
+    </div>
+
+    <script>
+        async function uploadPoster() {
+            const fileInput = document.getElementById('posterFile');
+            const resultDiv = document.getElementById('posterResult');
+            
+            if (!fileInput.files[0]) {
+                resultDiv.innerHTML = '<div class="error">Please select a file</div>';
+                return;
+            }
+            
+            const formData = new FormData();
+            formData.append('file', fileInput.files[0]);
+            
+            try {
+                const response = await fetch('http://localhost:8080/api/images/upload/poster', {
+                    method: 'POST',
+                    body: formData
+                });
+                
+                const result = await response.json();
+                
+                if (result.success) {
+                    resultDiv.innerHTML = `
+                        <div class="success">
+                            <strong>Success!</strong><br>
+                            Filename: ${result.data.filename}<br>
+                            URL: ${result.data.url}<br>
+                            Size: ${result.data.size} bytes<br>
+                            <img src="http://localhost:8080${result.data.url}" alt="Uploaded poster">
+                        </div>
+                    `;
+                } else {
+                    resultDiv.innerHTML = `<div class="error">Error: ${result.error}</div>`;
+                }
+            } catch (error) {
+                resultDiv.innerHTML = `<div class="error">Network error: ${error.message}</div>`;
+            }
+        }
+        
+        async function uploadBanner() {
+            const fileInput = document.getElementById('bannerFile');
+            const resultDiv = document.getElementById('bannerResult');
+            
+            if (!fileInput.files[0]) {
+                resultDiv.innerHTML = '<div class="error">Please select a file</div>';
+                return;
+            }
+            
+            const formData = new FormData();
+            formData.append('file', fileInput.files[0]);
+            
+            try {
+                const response = await fetch('http://localhost:8080/api/images/upload/banner', {
+                    method: 'POST',
+                    body: formData
+                });
+                
+                const result = await response.json();
+                
+                if (result.success) {
+                    resultDiv.innerHTML = `
+                        <div class="success">
+                            <strong>Success!</strong><br>
+                            Filename: ${result.data.filename}<br>
+                            URL: ${result.data.url}<br>
+                            Size: ${result.data.size} bytes<br>
+                            <img src="http://localhost:8080${result.data.url}" alt="Uploaded banner">
+                        </div>
+                    `;
+                } else {
+                    resultDiv.innerHTML = `<div class="error">Error: ${result.error}</div>`;
+                }
+            } catch (error) {
+                resultDiv.innerHTML = `<div class="error">Network error: ${error.message}</div>`;
+            }
+        }
+    </script>
+</body>
+</html>
