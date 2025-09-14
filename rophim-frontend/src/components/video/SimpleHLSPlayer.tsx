@@ -23,6 +23,10 @@ const SimpleHLSPlayer: React.FC<SimpleHLSPlayerProps> = ({
   const [isMuted, setIsMuted] = useState(false);
   const [showControls, setShowControls] = useState(true);
   const [controlsTimeout, setControlsTimeout] = useState<NodeJS.Timeout | null>(null);
+  const [showQualityMenu, setShowQualityMenu] = useState(false);
+  const [showSpeedMenu, setShowSpeedMenu] = useState(false);
+  const [currentQuality, setCurrentQuality] = useState('1080p');
+  const [playbackRate, setPlaybackRate] = useState(1);
 
   // Initialize HLS
   useEffect(() => {
@@ -148,6 +152,29 @@ const SimpleHLSPlayer: React.FC<SimpleHLSPlayerProps> = ({
     }
   };
 
+  const handleQualityChange = (quality: string) => {
+    console.log('Before quality change:', currentQuality);
+    setCurrentQuality(quality);
+    setShowQualityMenu(false);
+    console.log('After quality change:', quality);
+    // Force re-render by updating state
+    setTimeout(() => {
+      console.log('Quality after timeout:', quality);
+    }, 100);
+    // TODO: Implement actual quality switching with HLS.js
+  };
+
+  const handlePlaybackRateChange = (rate: number) => {
+    const video = videoRef.current;
+    if (!video) return;
+    
+    console.log('Before speed change:', playbackRate);
+    video.playbackRate = rate;
+    setPlaybackRate(rate);
+    setShowSpeedMenu(false);
+    console.log('After speed change:', rate);
+  };
+
   const formatTime = (time: number) => {
     const minutes = Math.floor(time / 60);
     const seconds = Math.floor(time % 60);
@@ -193,6 +220,35 @@ const SimpleHLSPlayer: React.FC<SimpleHLSPlayerProps> = ({
       }
     };
   }, [controlsTimeout]);
+
+  // Debug state changes
+  useEffect(() => {
+    console.log('Current quality state:', currentQuality);
+  }, [currentQuality]);
+
+  useEffect(() => {
+    console.log('Current playback rate state:', playbackRate);
+  }, [playbackRate]);
+
+  // Close menus when clicking outside
+  useEffect(() => {
+    const handleClickOutside = (event: MouseEvent) => {
+      if (showQualityMenu) {
+        setShowQualityMenu(false);
+      }
+      if (showSpeedMenu) {
+        setShowSpeedMenu(false);
+      }
+    };
+
+    if (showQualityMenu || showSpeedMenu) {
+      document.addEventListener('mousedown', handleClickOutside);
+    }
+
+    return () => {
+      document.removeEventListener('mousedown', handleClickOutside);
+    };
+  }, [showQualityMenu, showSpeedMenu]);
 
   return (
     <div 
@@ -324,9 +380,72 @@ const SimpleHLSPlayer: React.FC<SimpleHLSPlayerProps> = ({
               {/* Right Controls */}
               <div className="flex items-center space-x-3">
                 {/* Quality Selector */}
-                <button className="w-10 h-10 bg-white/20 rounded-full flex items-center justify-center text-white hover:bg-white/30 transition-colors relative z-10">
-                  <span className="text-xs font-medium">FHD</span>
-                </button>
+                <div className="relative">
+                  <button 
+                    onClick={() => {
+                      setShowQualityMenu(!showQualityMenu);
+                      setShowSpeedMenu(false);
+                    }}
+                    className="px-3 py-2 bg-white/20 rounded-full flex items-center justify-center text-white hover:bg-white/30 transition-colors relative z-10"
+                  >
+                    <span key={currentQuality} className="text-xs font-medium">{currentQuality}</span>
+                  </button>
+                  
+                  {/* Quality Menu */}
+                  {showQualityMenu && (
+                    <div className="absolute bottom-12 right-0 bg-black/90 rounded-lg p-2 min-w-[120px] z-20">
+                      <div className="text-white text-xs font-medium mb-2 px-2">Chất lượng video</div>
+                      {['360p', '480p', '720p', '1080p'].map((quality) => (
+                        <button
+                          key={quality}
+                          onClick={(e) => {
+                            e.stopPropagation();
+                            handleQualityChange(quality);
+                          }}
+                          className={`w-full text-left px-2 py-1 text-sm rounded hover:bg-white/20 transition-colors ${
+                            currentQuality === quality ? 'text-blue-400' : 'text-white'
+                          }`}
+                        >
+                          {quality}
+                        </button>
+                      ))}
+                    </div>
+                  )}
+                </div>
+
+                {/* Speed Selector */}
+                <div className="relative">
+                  <button 
+                    onClick={() => {
+                      setShowSpeedMenu(!showSpeedMenu);
+                      setShowQualityMenu(false);
+                    }}
+                    className="px-3 py-2 bg-white/20 rounded-full flex items-center justify-center text-white hover:bg-white/30 transition-colors relative z-10"
+                  >
+                    <span key={playbackRate} className="text-xs font-medium">{playbackRate}x</span>
+                  </button>
+                  
+                  {/* Speed Menu */}
+                  {showSpeedMenu && (
+                    <div className="absolute bottom-12 right-0 bg-black/90 rounded-lg p-2 min-w-[100px] z-20">
+                      <div className="text-white text-xs font-medium mb-2 px-2">Tốc độ phát</div>
+                      {[0.5, 0.75, 1, 1.25, 1.5, 2].map((rate) => (
+                        <button
+                          key={rate}
+                          onClick={(e) => {
+                            e.stopPropagation();
+                            handlePlaybackRateChange(rate);
+                          }}
+                          className={`w-full text-left px-2 py-1 text-sm rounded hover:bg-white/20 transition-colors ${
+                            playbackRate === rate ? 'text-blue-400' : 'text-white'
+                          }`}
+                        >
+                          {rate}x
+                        </button>
+                      ))}
+                    </div>
+                  )}
+                </div>
 
                 {/* Fullscreen Button */}
                 <button 

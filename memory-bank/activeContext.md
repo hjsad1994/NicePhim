@@ -70,32 +70,35 @@
 - ✅ **Video Player Volume Control**: Added working volume slider and mute functionality
 - ✅ **Video Player Fullscreen Fix**: Fixed fullscreen icon visibility and implemented proper fullscreen functionality
 - ✅ **Video Player Event Handling**: Resolved click event conflicts between video element and controls overlay
+- 🔄 **Video Player Quality/Speed Selection**: Added separate quality and speed selection buttons with dropdown menus
+- ❌ **Video Player State Update Issue**: Quality and speed selection buttons not updating display text when options are selected
 
 ## Current Focus
-1. **Video Player Optimization**: Complete video player with smooth controls and user interaction
-2. **HLS Streaming Integration**: Adaptive video streaming with multiple quality options (360p, 720p, 1080p)
-3. **Video Player Event Handling**: Proper click and double-click functionality for play/pause and fullscreen
-4. **Video Player Layout**: User-requested control layout with timeline, seek buttons, volume, and quality controls
-5. **Video Player Stability**: Resolved flickering, z-index, and event conflict issues
+1. **Video Player State Update Fix**: Resolve issue where quality and speed selection buttons don't update display text
+2. **Video Player Quality/Speed Selection**: Debug and fix dropdown menu state management
+3. **Video Player Optimization**: Complete video player with smooth controls and user interaction
+4. **HLS Streaming Integration**: Adaptive video streaming with multiple quality options (360p, 720p, 1080p)
+5. **Video Player Event Handling**: Proper click and double-click functionality for play/pause and fullscreen
 6. **Content Population**: Continue creating movies with real videos and assigning them to genres
 7. **End-to-End Testing**: Complete video workflow from upload to playback
 
 ## Next Steps
-1. **Test Video Player Functionality**: Verify click (play/pause) and double-click (fullscreen) work correctly
-2. **Test HLS Streaming**: Verify adaptive quality streaming works properly with real videos
-3. **Test Complete Video Workflow**: Upload MP4 → Create movie → Watch from homepage
-4. **Test Watch Together with Real Videos**: Ensure collaborative watching works with uploaded videos
-5. **Create Movies with Videos**: Use /admin/movies/upload to create movies with real video content
-6. **Assign Genres to Movies**: Use movie edit interface to assign movies to genres
-7. **Test Genre Pages**: Verify genre pages show movies with videos after assignment
-8. **Test Movie Routing**: Verify all movie detail pages work correctly with video data
-9. **Frontend Upload Connection**: Fix frontend "Failed to fetch" error when connecting to video upload API
-10. **Video Field Restoration**: Uncomment video field access in MovieRepository RowMapper
-11. Add bulk genre operations for multiple movies
-12. Enhance admin dashboard with video upload statistics
-13. Add proper session management (JWT tokens or secure sessions)
-14. Create user profile management interface
-15. Implement advanced search and filtering for movies and genres
+1. **Fix Video Player State Update**: Debug and resolve quality/speed selection button text not updating
+2. **Test Video Player Functionality**: Verify click (play/pause) and double-click (fullscreen) work correctly
+3. **Test HLS Streaming**: Verify adaptive quality streaming works properly with real videos
+4. **Test Complete Video Workflow**: Upload MP4 → Create movie → Watch from homepage
+5. **Test Watch Together with Real Videos**: Ensure collaborative watching works with uploaded videos
+6. **Create Movies with Videos**: Use /admin/movies/upload to create movies with real video content
+7. **Assign Genres to Movies**: Use movie edit interface to assign movies to genres
+8. **Test Genre Pages**: Verify genre pages show movies with videos after assignment
+9. **Test Movie Routing**: Verify all movie detail pages work correctly with video data
+10. **Frontend Upload Connection**: Fix frontend "Failed to fetch" error when connecting to video upload API
+11. **Video Field Restoration**: Uncomment video field access in MovieRepository RowMapper
+12. Add bulk genre operations for multiple movies
+13. Enhance admin dashboard with video upload statistics
+14. Add proper session management (JWT tokens or secure sessions)
+15. Create user profile management interface
+16. Implement advanced search and filtering for movies and genres
 
 ## Technical Decisions
 - **Video Upload Configuration**: Increased Spring Boot upload limits to 500MB for large video files
@@ -181,3 +184,5 @@
 - **Video Player Event Handling Resolved** - Click events properly handled with stopPropagation to prevent conflicts between video element and controls
 - **Video Player Layout Optimized** - User-requested control layout implemented with timeline, seek buttons, volume, quality, and fullscreen controls
 - **Video Player Stability Achieved** - Resolved flickering, z-index issues, and event conflicts for smooth user experience
+- **Video Player Quality/Speed Selection Issue** - Added separate dropdown menus for quality and speed selection, but state update not working properly
+- **Video Player State Management Problem** - Quality and speed selection buttons display text not updating when options are selected
