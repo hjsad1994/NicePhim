@@ -1,7 +1,20 @@
 'use client';
 
 import React, { useRef, useEffect, useState } from 'react';
-import Hls from 'hls.js';
+import Hls, { Level } from 'hls.js';
+
+// Define proper types for fullscreen API
+interface FullscreenElement extends Element {
+  webkitRequestFullscreen?: () => Promise<void>;
+  webkitExitFullscreen?: () => Promise<void>;
+  msRequestFullscreen?: () => Promise<void>;
+  msExitFullscreen?: () => Promise<void>;
+}
+
+interface FullscreenDocument extends Document {
+  webkitExitFullscreen?: () => Promise<void>;
+  msExitFullscreen?: () => Promise<void>;
+}
 
 interface SimpleHLSPlayerProps {
   hlsUrl: string;
@@ -27,11 +40,11 @@ const SimpleHLSPlayer: React.FC<SimpleHLSPlayerProps> = ({
   const [showSpeedMenu, setShowSpeedMenu] = useState(false);
   const [currentQuality, setCurrentQuality] = useState('1080p');
   const [playbackRate, setPlaybackRate] = useState(1);
-  const [availableLevels, setAvailableLevels] = useState<any[]>([]);
+  const [availableLevels, setAvailableLevels] = useState<Level[]>([]);
   const [currentLevel, setCurrentLevel] = useState(-1);
 
   // Helper function to convert HLS level to quality text
-  const getQualityTextFromLevel = (level: any) => {
+  const getQualityTextFromLevel = (level: Level) => {
     if (!level || !level.height) return 'Unknown';
     
     const height = level.height;
@@ -66,9 +79,7 @@ const SimpleHLSPlayer: React.FC<SimpleHLSPlayerProps> = ({
         maxBufferLength: 30,
         maxMaxBufferLength: 600,
         liveSyncDurationCount: 3,
-        liveMaxLatencyDurationCount: 5,
-        seekHole: true,
-        seekDurationLimit: 0.5
+        liveMaxLatencyDurationCount: 5
       });
       
       hlsRef.current = hls;
@@ -97,8 +108,10 @@ const SimpleHLSPlayer: React.FC<SimpleHLSPlayerProps> = ({
         console.log('🎯 Level switched to:', data.level);
         setCurrentLevel(data.level);
         
-        if (data.level >= 0 && availableLevels[data.level]) {
-          const level = availableLevels[data.level];
+        // Get current levels from HLS instance
+        const currentLevels = hls.levels;
+        if (data.level >= 0 && currentLevels && currentLevels[data.level]) {
+          const level = currentLevels[data.level];
           const qualityText = getQualityTextFromLevel(level);
           setCurrentQuality(qualityText);
           console.log('🎯 Updated quality display to:', qualityText);
@@ -203,19 +216,25 @@ const SimpleHLSPlayer: React.FC<SimpleHLSPlayerProps> = ({
       // Enter fullscreen
       if (video.requestFullscreen) {
         video.requestFullscreen();
-      } else if ((video as any).webkitRequestFullscreen) {
-        (video as any).webkitRequestFullscreen();
-      } else if ((video as any).msRequestFullscreen) {
-        (video as any).msRequestFullscreen();
+      } else {
+        const fullscreenVideo = video as FullscreenElement;
+        if (fullscreenVideo.webkitRequestFullscreen) {
+          fullscreenVideo.webkitRequestFullscreen();
+        } else if (fullscreenVideo.msRequestFullscreen) {
+          fullscreenVideo.msRequestFullscreen();
+        }
       }
     } else {
       // Exit fullscreen
       if (document.exitFullscreen) {
         document.exitFullscreen();
-      } else if ((document as any).webkitExitFullscreen) {
-        (document as any).webkitExitFullscreen();
-      } else if ((document as any).msExitFullscreen) {
-        (document as any).msExitFullscreen();
+      } else {
+        const fullscreenDoc = document as FullscreenDocument;
+        if (fullscreenDoc.webkitExitFullscreen) {
+          fullscreenDoc.webkitExitFullscreen();
+        } else if (fullscreenDoc.msExitFullscreen) {
+          fullscreenDoc.msExitFullscreen();
+        }
       }
     }
   };
