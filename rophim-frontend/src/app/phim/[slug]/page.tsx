@@ -28,6 +28,8 @@ interface MovieDetailPageProps {
 
 export default function MovieDetailPage({ params }: MovieDetailPageProps) {
   const resolvedParams = use(params);
+  // Decode URL-encoded slug and convert spaces to hyphens (e.g., "cai%20gi" -> "cai-gi")
+  const decodedSlug = decodeURIComponent(resolvedParams.slug).replace(/\s+/g, '-');
   const [movie, setMovie] = useState<Movie | null>(null);
   const [isFavorite, setIsFavorite] = useState(false);
   const [isLoading, setIsLoading] = useState(true);
@@ -72,13 +74,13 @@ export default function MovieDetailPage({ params }: MovieDetailPageProps) {
     const loadMovie = async () => {
       try {
         setIsLoading(true);
-        console.log('🔍 Looking for movie with slug:', resolvedParams.slug);
+        console.log('🔍 Looking for movie with slug:', decodedSlug);
         
         // Create realistic fallback movie
         const createFallbackMovie = (): Movie => ({
           id: 'real-movie-1',
           title: 'Spider-Man: No Way Home',
-          slug: resolvedParams.slug,
+          slug: decodedSlug,
           description: 'Peter Parker được huyền thoại Doctor Strange giúp đỡ để khôi phục bí mật danh tính của anh ta. Khi một câu thần chú bị sai, những kẻ thù nguy hiểm từ các thế giới khác bắt đầu xuất hiện, buộc Peter phải khám phá ra ý nghĩa thực sự của việc trở thành Người Nhện. Đây là một bộ phim siêu anh hùng đầy kịch tính với những cảnh hành động mãn nhãn và cốt truyện cảm động.',
           poster: 'https://image.tmdb.org/t/p/w500/1g0dhYtq4irTY1GPXvft6k4YLjm.jpg',
           banner: 'https://image.tmdb.org/t/p/w1280/14QbnygCuTO0vl7CAFmPf1fgZfV.jpg',
@@ -103,40 +105,53 @@ export default function MovieDetailPage({ params }: MovieDetailPageProps) {
         });
 
         try {
-          // Try to get movies from database with timeout
-          const moviesResponse = await Promise.race([
-            ApiService.getMovies(0, 100),
+          // Try to get specific movie by slug from database
+          console.log('🔄 Attempting to fetch movie by slug from database:', decodedSlug);
+          const movieResponse = await Promise.race([
+            ApiService.getMovieBySlug(decodedSlug),
             new Promise((_, reject) => 
               setTimeout(() => reject(new Error('API timeout')), 5000)
             )
           ]) as any;
           
-          if (moviesResponse.success && moviesResponse.data && moviesResponse.data.length > 0) {
-            // Convert MovieResponse to Movie and find by slug
-            const movies = moviesResponse.data.map(convertToMovie);
-            console.log('🔍 All movies from database:', movies.map(m => ({ 
-              id: m.id, 
-              title: m.title, 
-              slug: m.slug
-            })));
+          console.log('🎬 API Response:', movieResponse);
+          
+          if (movieResponse.success && movieResponse.data) {
+            console.log('✅ Found movie by slug:', movieResponse.data);
+            const foundMovie = convertToMovie(movieResponse.data);
+            setMovie(foundMovie);
             
-            const foundMovie = movies.find(m => m.slug === resolvedParams.slug);
-            
-            if (foundMovie) {
-              console.log('✅ Found movie in database:', foundMovie);
-              setMovie(foundMovie);
-              // Check if movie is in favorites (from localStorage or API)
-              const favorites = JSON.parse(localStorage.getItem('favorites') || '[]');
-              setIsFavorite(favorites.includes(foundMovie.id));
-            } else {
-              console.log('❌ Movie not found in database, slug:', resolvedParams.slug);
-              console.log('Available slugs:', movies.map(m => m.slug));
-              // Use the first available movie
-              console.log('⚠️ Using first available movie');
-              setMovie(movies[0]);
-            }
+            // Check if movie is in favorites (from localStorage or API)
+            const favorites = JSON.parse(localStorage.getItem('favorites') || '[]');
+            setIsFavorite(favorites.includes(foundMovie.id));
           } else {
-            console.log('⚠️ No movies in database or API failed, using fallback');
+            console.log('⚠️ Movie not found in database, trying fallback approach');
+            console.log('🎬 Movie response details:', movieResponse);
+            
+            // Try fallback: fetch all movies and find by slug
+            try {
+              console.log('🔄 Fallback: Fetching all movies to find by slug');
+              const allMoviesResponse = await ApiService.getMovies(0, 100);
+              if (allMoviesResponse.success && allMoviesResponse.data) {
+                const allMovies = allMoviesResponse.data.map(convertToMovie);
+                console.log('🎬 All movies from fallback:', allMovies.map(m => ({ title: m.title, slug: m.slug })));
+                
+                const foundMovie = allMovies.find(m => m.slug === decodedSlug);
+                if (foundMovie) {
+                  console.log('✅ Found movie via fallback:', foundMovie);
+                  setMovie(foundMovie);
+                  
+                  // Check if movie is in favorites
+                  const favorites = JSON.parse(localStorage.getItem('favorites') || '[]');
+                  setIsFavorite(favorites.includes(foundMovie.id));
+                  return;
+                }
+              }
+            } catch (fallbackError) {
+              console.error('❌ Fallback also failed:', fallbackError);
+            }
+            
+            console.log('⚠️ No movie found, using fallback movie');
             setMovie(createFallbackMovie());
           }
         } catch (apiError) {
@@ -151,7 +166,7 @@ export default function MovieDetailPage({ params }: MovieDetailPageProps) {
         const fallbackMovie: Movie = {
           id: 'real-movie-2',
           title: 'Squid Game',
-          slug: resolvedParams.slug,
+          slug: decodedSlug,
           description: 'Một nhóm người tuyệt vọng tham gia một trò chơi sinh tồn bí mật với giải thưởng tiền mặt khổng lồ. Nhưng khi họ nhận ra rằng thất bại có nghĩa là cái chết, họ phải đấu tranh để sống sót trong một thế giới nơi mọi thứ đều có thể xảy ra. Bộ phim Hàn Quốc này đã trở thành hiện tượng toàn cầu với cốt truyện hấp dẫn và những bài học sâu sắc về xã hội.',
           poster: 'https://image.tmdb.org/t/p/w500/dDlEmu3EZ0Pgg93K2SVNLCjCSvE.jpg',
           banner: 'https://image.tmdb.org/t/p/w1280/7WsyChQLEftFiDOVTGkv3hFpyyt.jpg',

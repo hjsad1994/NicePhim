@@ -92,6 +92,19 @@ public class MovieService {
         return convertToResponse(movie);
     }
 
+    public MovieResponse getMovieBySlug(String slug) {
+        if (slug == null || slug.trim().isEmpty()) {
+            throw new IllegalArgumentException("Slug không được để trống");
+        }
+
+        Movie movie = movieRepository.findMovieBySlug(slug.trim());
+        if (movie == null) {
+            throw new IllegalArgumentException("Không tìm thấy phim với slug: " + slug);
+        }
+
+        return convertToResponse(movie);
+    }
+
     public List<MovieResponse> getAllMovies(int page, int size) {
         if (page < 0 || size <= 0 || size > 100) {
             throw new IllegalArgumentException("Tham số phân trang không hợp lệ");

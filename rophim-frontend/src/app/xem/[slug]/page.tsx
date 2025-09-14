@@ -16,6 +16,8 @@ interface WatchPageProps {
 
 export default function WatchPage({ params }: WatchPageProps) {
   const resolvedParams = use(params);
+  // Decode URL-encoded slug and convert spaces to hyphens (e.g., "cai%20gi" -> "cai-gi")
+  const decodedSlug = decodeURIComponent(resolvedParams.slug).replace(/\s+/g, '-');
   const [movie, setMovie] = useState<Movie | null>(null);
   const [relatedMovies, setRelatedMovies] = useState<Movie[]>([]);
   const [isLoading, setIsLoading] = useState(true);
@@ -60,13 +62,13 @@ export default function WatchPage({ params }: WatchPageProps) {
     const loadMovie = async () => {
       try {
         setIsLoading(true);
-        console.log('🎬 Loading movie for video player:', resolvedParams.slug);
+        console.log('🎬 Loading movie for video player:', decodedSlug);
         
         // Create realistic fallback movie for video player
         const createFallbackMovie = (): Movie => ({
           id: 'video-movie-1',
           title: 'Spider-Man: No Way Home',
-          slug: resolvedParams.slug,
+          slug: decodedSlug,
           description: 'Peter Parker được huyền thoại Doctor Strange giúp đỡ để khôi phục bí mật danh tính của anh ta. Khi một câu thần chú bị sai, những kẻ thù nguy hiểm từ các thế giới khác bắt đầu xuất hiện, buộc Peter phải khám phá ra ý nghĩa thực sự của việc trở thành Người Nhện.',
           poster: 'https://image.tmdb.org/t/p/w500/1g0dhYtq4irTY1GPXvft6k4YLjm.jpg',
           banner: 'https://image.tmdb.org/t/p/w1280/14QbnygCuTO0vl7CAFmPf1fgZfV.jpg',
@@ -91,47 +93,78 @@ export default function WatchPage({ params }: WatchPageProps) {
         });
 
         try {
-          // Try to get movies from database
-          const moviesResponse = await Promise.race([
-            ApiService.getMovies(0, 100),
+          // Try to get specific movie by slug from database
+          console.log('🔄 Attempting to fetch movie by slug from database:', decodedSlug);
+          const movieResponse = await Promise.race([
+            ApiService.getMovieBySlug(decodedSlug),
             new Promise((_, reject) => 
               setTimeout(() => reject(new Error('API timeout')), 5000)
             )
           ]) as any;
           
-          if (moviesResponse.success && moviesResponse.data && moviesResponse.data.length > 0) {
-            // Convert MovieResponse to Movie and find by slug
-            const movies = moviesResponse.data.map(convertToMovie);
-            console.log('🎬 All movies from API:', movies);
-            console.log('🎬 Looking for slug:', resolvedParams.slug);
+          console.log('🎬 API Response:', movieResponse);
+          
+          if (movieResponse.success && movieResponse.data) {
+            console.log('✅ Found movie by slug:', movieResponse.data);
+            const foundMovie = convertToMovie(movieResponse.data);
+            setMovie(foundMovie);
             
-            const foundMovie = movies.find(m => m.slug === resolvedParams.slug);
-            
-            if (foundMovie) {
-              console.log('✅ Found movie for video player:', foundMovie);
-              setMovie(foundMovie);
-              
-              // Get related movies (same genres)
-              const related = movies
-                .filter(m => m.id !== foundMovie.id && 
-                  m.genres.some(g => foundMovie.genres.some(mg => mg.id === g.id)))
-                .slice(0, 8);
-              setRelatedMovies(related);
-            } else {
-              console.log('⚠️ Movie not found, using fallback');
-              setMovie(createFallbackMovie());
+            // Get related movies by fetching all movies and filtering by genres
+            try {
+              const allMoviesResponse = await ApiService.getMovies(0, 100);
+              if (allMoviesResponse.success && allMoviesResponse.data) {
+                const allMovies = allMoviesResponse.data.map(convertToMovie);
+                const related = allMovies
+                  .filter(m => m.id !== foundMovie.id && 
+                    m.genres.some(g => foundMovie.genres.some(mg => mg.id === g.id)))
+                  .slice(0, 8);
+                setRelatedMovies(related);
+              }
+            } catch (relatedError) {
+              console.log('⚠️ Could not fetch related movies:', relatedError);
               setRelatedMovies([]);
             }
           } else {
-            console.log('⚠️ No movies in database, using fallback');
-            setMovie(createFallbackMovie());
-            setRelatedMovies([]);
+            console.log('⚠️ Movie not found in database, trying fallback approach');
+            console.log('🎬 Movie response details:', movieResponse);
+            
+            // Try fallback: fetch all movies and find by slug
+            try {
+              console.log('🔄 Fallback: Fetching all movies to find by slug');
+              const allMoviesResponse = await ApiService.getMovies(0, 100);
+              if (allMoviesResponse.success && allMoviesResponse.data) {
+                const allMovies = allMoviesResponse.data.map(convertToMovie);
+                console.log('🎬 All movies from fallback:', allMovies.map(m => ({ title: m.title, slug: m.slug })));
+                
+                const foundMovie = allMovies.find(m => m.slug === decodedSlug);
+                if (foundMovie) {
+                  console.log('✅ Found movie via fallback:', foundMovie);
+                  setMovie(foundMovie);
+                  
+                  // Get related movies
+                  const related = allMovies
+                    .filter(m => m.id !== foundMovie.id && 
+                      m.genres.some(g => foundMovie.genres.some(mg => mg.id === g.id)))
+                    .slice(0, 8);
+                  setRelatedMovies(related);
+                  return;
+                }
+              }
+            } catch (fallbackError) {
+              console.error('❌ Fallback also failed:', fallbackError);
+            }
+            
+            setError(`Không tìm thấy phim với slug: ${decodedSlug}. Vui lòng kiểm tra lại URL hoặc đảm bảo backend đang chạy.`);
+            return;
           }
         } catch (apiError) {
           console.error('❌ API call failed:', apiError);
-          console.log('⚠️ Using fallback movie for video player');
-          setMovie(createFallbackMovie());
-          setRelatedMovies([]);
+          if (apiError instanceof Error && apiError.message.includes('Failed to fetch')) {
+            setError('Không thể kết nối đến server. Vui lòng đảm bảo backend đang chạy tại http://localhost:8080');
+          } else {
+            setError(`Lỗi khi tải dữ liệu phim: ${apiError instanceof Error ? apiError.message : 'Lỗi không xác định'}`);
+          }
+          return;
         }
         
       } catch (error) {
@@ -143,7 +176,7 @@ export default function WatchPage({ params }: WatchPageProps) {
     };
 
     loadMovie();
-  }, [resolvedParams.slug]);
+  }, [decodedSlug]);
 
   if (isLoading) {
     return (
@@ -159,10 +192,34 @@ export default function WatchPage({ params }: WatchPageProps) {
   if (error || !movie) {
     return (
       <div className="min-h-screen flex items-center justify-center" style={{backgroundColor: 'var(--bg-2)'}}>
-        <div className="text-center">
+        <div className="text-center max-w-2xl mx-auto px-4">
           <div className="text-6xl mb-4">🎬</div>
           <h1 className="text-2xl font-bold text-white mb-4">Không thể tải video</h1>
           <p className="text-gray-400 mb-6">{error || 'Phim không tồn tại'}</p>
+          
+          {error && error.includes('backend') && (
+            <div className="bg-red-900/20 border border-red-500/30 rounded-lg p-4 mb-6">
+              <h3 className="text-red-400 font-semibold mb-2">Hướng dẫn khắc phục:</h3>
+              <ul className="text-red-300 text-sm text-left space-y-1">
+                <li>• Đảm bảo backend đang chạy tại http://localhost:8080</li>
+                <li>• Kiểm tra kết nối mạng</li>
+                <li>• Thử tải lại trang sau vài giây</li>
+                <li>• Liên hệ quản trị viên nếu vấn đề vẫn tiếp diễn</li>
+              </ul>
+            </div>
+          )}
+          
+          <div className="space-y-2">
+            <a 
+              href="/" 
+              className="inline-block bg-red-600 hover:bg-red-700 text-white px-6 py-2 rounded-lg transition-colors"
+            >
+              Về trang chủ
+            </a>
+            <div className="text-gray-500 text-sm">
+              URL hiện tại: /xem/{decodedSlug}
+            </div>
+          </div>
         </div>
       </div>
     );

@@ -208,6 +208,10 @@ export class ApiService {
     return this.request<MovieActionResponse>(`/api/admin/movies/${movieId}`);
   }
 
+  static async getMovieBySlug(slug: string): Promise<MovieActionResponse> {
+    return this.request<MovieActionResponse>(`/api/admin/movies/slug/${slug}`);
+  }
+
   static async updateMovie(movieId: string, data: UpdateMovieRequest): Promise<MovieActionResponse> {
     return this.request<MovieActionResponse>(`/api/admin/movies/${movieId}`, {
       method: 'PUT',

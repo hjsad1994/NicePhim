@@ -71,6 +71,8 @@
 - **Video Player State Update Fix**: Resolved quality and speed selection button display text update issue by fixing click outside handler and simplifying state management
 - **HLS Adaptive Quality Switching**: Implemented actual HLS quality switching functionality - quality selection now changes actual video quality, not just display text
 - **HLSVideoPlayer Cleanup**: Removed legacy HLSVideoPlayer component and updated all references to use SimpleHLSPlayer
+- **Movie Detail Page Database Integration**: Fixed movie detail page to pull real data from database instead of showing mock data - resolved slug matching issue between frontend and backend
+- **Movie Slug API Implementation**: Added getMovieBySlug endpoint to backend and updated frontend to use real database data instead of mock data for movie watching pages
 
 ## In Progress 🔄
 - ✅ **Video Player Testing**: RESOLVED - Quality and speed selection button display updates now work correctly
@@ -102,6 +104,7 @@
 ## Known Issues 🐛
 - ✅ **Video Player State Update Issue**: **RESOLVED** - Fixed by correcting click outside handler (mousedown → click event) and simplifying state management
 - ✅ **HLS Adaptive Quality Switching Issue**: **RESOLVED** - Implemented actual HLS quality switching using hls.currentLevel API
+- ✅ **Movie Detail Page Mock Data Issue**: **RESOLVED** - Fixed slug matching between frontend and backend to properly fetch real movie data from database
 - **Frontend Upload Connection**: "Failed to fetch" error when frontend tries to connect to video upload API - **INVESTIGATING**: Backend is running and accessible, need to check CORS and endpoint configuration
 - **Video Fields Temporarily Disabled**: MovieRepository video field access is commented out until migration is confirmed - **SOLUTION**: Re-enable after testing V2 migration
 - **Empty Genre Pages**: Genre pages show "Chưa có phim nào trong thể loại này" when no movies are assigned to genres - **SOLUTION PROVIDED**: Use admin interface to create movies and assign genres

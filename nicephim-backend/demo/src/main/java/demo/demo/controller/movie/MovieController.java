@@ -102,6 +102,29 @@ public class MovieController {
         }
     }
 
+    @GetMapping("/slug/{slug}")
+    public ResponseEntity<Map<String, Object>> getMovieBySlug(@PathVariable String slug) {
+        try {
+            MovieResponse movie = movieService.getMovieBySlug(slug);
+
+            Map<String, Object> response = new HashMap<>();
+            response.put("success", true);
+            response.put("data", movie);
+
+            return ResponseEntity.ok(response);
+        } catch (IllegalArgumentException e) {
+            Map<String, Object> response = new HashMap<>();
+            response.put("success", false);
+            response.put("error", e.getMessage());
+            return ResponseEntity.status(HttpStatus.NOT_FOUND).body(response);
+        } catch (Exception e) {
+            Map<String, Object> response = new HashMap<>();
+            response.put("success", false);
+            response.put("error", "Lỗi hệ thống: " + e.getMessage());
+            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body(response);
+        }
+    }
+
     @PutMapping("/{movieId}")
     public ResponseEntity<Map<String, Object>> updateMovie(
             @PathVariable UUID movieId,

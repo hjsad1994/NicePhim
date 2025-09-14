@@ -225,6 +225,72 @@ public class MovieRepository {
         );
     }
 
+    public Movie findMovieBySlug(String slug) {
+        System.out.println("🔍 Searching for movie with slug: " + slug);
+        
+        // First try exact match with the provided slug
+        List<Movie> movies = jdbcTemplate.query(
+            "SELECT movie_id, title, alias_title, description, release_year, age_rating, imdb_rating, is_series, poster_url, banner_url, created_by, video_id, hls_url, video_status, created_at, updated_at FROM dbo.movies WHERE LOWER(REPLACE(REPLACE(title, ' ', '-'), '--', '-')) = ? OR LOWER(REPLACE(REPLACE(alias_title, ' ', '-'), '--', '-')) = ?",
+            movieRowMapper,
+            slug.toLowerCase(), slug.toLowerCase()
+        );
+        
+        System.out.println("🔍 Exact match found " + movies.size() + " movies");
+        
+        // If no exact match found, try more flexible matching
+        if (movies.isEmpty()) {
+            System.out.println("🔍 No exact match found, trying normalized slug");
+            
+            // Try matching with URL decoding and normalization
+            String normalizedSlug = slug.toLowerCase()
+                .replace("%C3%A9", "é")  // URL encoded é
+                .replace("%C3%A0", "à")  // URL encoded à
+                .replace("%C3%A1", "á")  // URL encoded á
+                .replace("%C3%A2", "â")  // URL encoded â
+                .replace("%C3%A3", "ã")  // URL encoded ã
+                .replace("%C3%A4", "ä")  // URL encoded ä
+                .replace("%C3%A5", "å")  // URL encoded å
+                .replace("%C3%A6", "æ")  // URL encoded æ
+                .replace("%C3%A7", "ç")  // URL encoded ç
+                .replace("%C3%A8", "è")  // URL encoded è
+                .replace("%C3%A9", "é")  // URL encoded é
+                .replace("%C3%AA", "ê")  // URL encoded ê
+                .replace("%C3%AB", "ë")  // URL encoded ë
+                .replace("%C3%AC", "ì")  // URL encoded ì
+                .replace("%C3%AD", "í")  // URL encoded í
+                .replace("%C3%AE", "î")  // URL encoded î
+                .replace("%C3%AF", "ï")  // URL encoded ï
+                .replace("%C3%B0", "ð")  // URL encoded ð
+                .replace("%C3%B1", "ñ")  // URL encoded ñ
+                .replace("%C3%B2", "ò")  // URL encoded ò
+                .replace("%C3%B3", "ó")  // URL encoded ó
+                .replace("%C3%B4", "ô")  // URL encoded ô
+                .replace("%C3%B5", "õ")  // URL encoded õ
+                .replace("%C3%B6", "ö")  // URL encoded ö
+                .replace("%C3%B7", "÷")  // URL encoded ÷
+                .replace("%C3%B8", "ø")  // URL encoded ø
+                .replace("%C3%B9", "ù")  // URL encoded ù
+                .replace("%C3%BA", "ú")  // URL encoded ú
+                .replace("%C3%BB", "û")  // URL encoded û
+                .replace("%C3%BC", "ü")  // URL encoded ü
+                .replace("%C3%BD", "ý")  // URL encoded ý
+                .replace("%C3%BE", "þ")  // URL encoded þ
+                .replace("%C3%BF", "ÿ"); // URL encoded ÿ
+            
+            System.out.println("🔍 Normalized slug: " + normalizedSlug);
+            
+            movies = jdbcTemplate.query(
+                "SELECT movie_id, title, alias_title, description, release_year, age_rating, imdb_rating, is_series, poster_url, banner_url, created_by, video_id, hls_url, video_status, created_at, updated_at FROM dbo.movies WHERE LOWER(REPLACE(REPLACE(title, ' ', '-'), '--', '-')) = ? OR LOWER(REPLACE(REPLACE(alias_title, ' ', '-'), '--', '-')) = ?",
+                movieRowMapper,
+                normalizedSlug, normalizedSlug
+            );
+            
+            System.out.println("🔍 Normalized match found " + movies.size() + " movies");
+        }
+        
+        return movies.isEmpty() ? null : movies.get(0);
+    }
+
     public int updateMovie(UUID movieId, String title, String aliasTitle, String description, Short releaseYear,
                           String ageRating, BigDecimal imdbRating, boolean isSeries,
                           String posterUrl, String bannerUrl) throws DataAccessException {
