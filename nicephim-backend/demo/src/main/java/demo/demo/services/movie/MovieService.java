@@ -34,6 +34,7 @@ public class MovieService {
 
         try {
             System.out.println("Creating movie with title: " + dto.title + ", createdBy: " + createdBy);
+            System.out.println("Video data - videoId: " + dto.videoId + ", hlsUrl: " + dto.hlsUrl + ", videoStatus: " + dto.videoStatus);
             
             UUID movieId = movieRepository.insertMovie(
                 dto.title.trim(),
@@ -45,7 +46,10 @@ public class MovieService {
                 dto.isSeries,
                 dto.posterUrl,
                 dto.bannerUrl,
-                createdBy
+                createdBy,
+                dto.videoId,
+                dto.hlsUrl,
+                dto.videoStatus
             );
 
             System.out.println("Movie inserted with ID: " + movieId);
@@ -179,6 +183,11 @@ public class MovieService {
         response.createdBy = movie.getCreatedBy();
         response.createdAt = movie.getCreatedAt();
         response.updatedAt = movie.getUpdatedAt();
+        
+        // Add video information
+        response.videoId = movie.getVideoId();
+        response.hlsUrl = movie.getHlsUrl();
+        response.videoStatus = movie.getVideoStatus();
         
         // Add genre information
         List<Genre> genres = genreRepository.findGenresByMovieId(movie.getMovieId());

@@ -4,6 +4,7 @@ import java.util.LinkedHashMap;
 import java.util.Map;
 
 import org.springframework.http.MediaType;
+import org.springframework.web.bind.annotation.CrossOrigin;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.PostMapping;
@@ -18,6 +19,7 @@ import demo.demo.services.video.VideoService.Status;
 
 @RestController
 @RequestMapping("/api/videos")
+@CrossOrigin(origins = "http://localhost:3000")
 public class VideoController {
 
 	private final VideoService videoService;
@@ -71,5 +73,3 @@ public class VideoController {
 		return resp;
 	}
 }
-
-

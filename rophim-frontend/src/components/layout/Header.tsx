@@ -29,11 +29,32 @@ export function Header() {
       }
     }
     setIsLoading(false);
+
+    // Listen for user login events
+    const handleUserLogin = (event: CustomEvent) => {
+      setUser(event.detail);
+    };
+
+    // Listen for user logout events
+    const handleUserLogout = () => {
+      setUser(null);
+    };
+
+    window.addEventListener('userLogin', handleUserLogin as EventListener);
+    window.addEventListener('userLogout', handleUserLogout);
+
+    // Cleanup event listeners
+    return () => {
+      window.removeEventListener('userLogin', handleUserLogin as EventListener);
+      window.removeEventListener('userLogout', handleUserLogout);
+    };
   }, []);
 
   const handleLogout = () => {
     localStorage.removeItem('user');
     setUser(null);
+    // Dispatch custom event to notify other components of logout
+    window.dispatchEvent(new CustomEvent('userLogout'));
     router.push('/');
   };
 
@@ -144,11 +165,6 @@ export function Header() {
             {/* Phim bộ */}
             <Link href="/phim-bo" className="text-gray-300 hover:text-white transition-colors">
               Phim bộ
-            </Link>
-
-            {/* Xem chung */}
-            <Link href="/xem-chung" className="text-gray-300 hover:text-white transition-colors">
-              Xem chung
             </Link>
 
             {/* Quốc gia Dropdown */}

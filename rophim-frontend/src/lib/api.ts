@@ -55,6 +55,9 @@ export interface UpdateMovieRequest {
   isSeries?: boolean;
   posterUrl?: string;
   bannerUrl?: string;
+  videoId?: string;
+  hlsUrl?: string;
+  videoStatus?: string;
 }
 
 export interface MovieResponse {
@@ -72,6 +75,9 @@ export interface MovieResponse {
   createdAt: string;
   updatedAt?: string;
   genres?: GenreResponse[];
+  videoId?: string;
+  hlsUrl?: string;
+  videoStatus?: string;
 }
 
 export interface MovieListResponse {

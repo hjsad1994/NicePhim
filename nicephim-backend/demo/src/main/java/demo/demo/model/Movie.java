@@ -18,6 +18,11 @@ public class Movie {
     private UUID createdBy;
     private OffsetDateTime createdAt;
     private OffsetDateTime updatedAt;
+    
+    // Video fields
+    private String videoId;
+    private String hlsUrl;
+    private String videoStatus;
 
     public UUID getMovieId() { return movieId; }
     public void setMovieId(UUID movieId) { this.movieId = movieId; }
@@ -57,4 +62,14 @@ public class Movie {
 
     public OffsetDateTime getUpdatedAt() { return updatedAt; }
     public void setUpdatedAt(OffsetDateTime updatedAt) { this.updatedAt = updatedAt; }
+
+    // Video field getters and setters
+    public String getVideoId() { return videoId; }
+    public void setVideoId(String videoId) { this.videoId = videoId; }
+
+    public String getHlsUrl() { return hlsUrl; }
+    public void setHlsUrl(String hlsUrl) { this.hlsUrl = hlsUrl; }
+
+    public String getVideoStatus() { return videoStatus; }
+    public void setVideoStatus(String videoStatus) { this.videoStatus = videoStatus; }
 }

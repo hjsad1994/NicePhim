@@ -60,7 +60,11 @@ export default function MovieDetailPage({ params }: MovieDetailPageProps) {
       viewCount: 0, // Default view count
       likeCount: 0, // Default like count
       isHot: false,
-      isFeatured: false
+      isFeatured: false,
+      // Video fields
+      videoId: movieResponse.videoId,
+      hlsUrl: movieResponse.hlsUrl,
+      videoStatus: movieResponse.videoStatus
     };
   };
 

@@ -13,6 +13,7 @@
     "@heroicons/react": "^2.2.0",
     "class-variance-authority": "^0.7.1",
     "clsx": "^2.1.1",
+    "hls.js": "^1.6.12",
     "lucide-react": "^0.542.0",
     "next": "15.5.2",
     "react": "19.1.0",
@@ -22,6 +23,7 @@
   "devDependencies": {
     "@eslint/eslintrc": "^3",
     "@tailwindcss/postcss": "^4",
+    "@types/hls.js": "^0.13.3",
     "@types/node": "^20",
     "@types/react": "^19",
     "@types/react-dom": "^19",

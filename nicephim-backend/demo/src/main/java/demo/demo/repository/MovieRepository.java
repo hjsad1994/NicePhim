@@ -43,6 +43,11 @@ public class MovieRepository {
             movie.setPosterUrl(rs.getString("poster_url"));
             movie.setBannerUrl(rs.getString("banner_url"));
             movie.setCreatedBy(UUID.fromString(rs.getString("created_by")));
+            
+            // Video fields (re-enabled after V2 migration)
+            movie.setVideoId(rs.getString("video_id"));
+            movie.setHlsUrl(rs.getString("hls_url"));
+            movie.setVideoStatus(rs.getString("video_status"));
 
             Object createdAtObj = rs.getObject("created_at");
             if (createdAtObj != null) {
@@ -91,6 +96,11 @@ public class MovieRepository {
             movie.setPosterUrl(rs.getString("poster_url"));
             movie.setBannerUrl(rs.getString("banner_url"));
             movie.setCreatedBy(UUID.fromString(rs.getString("created_by")));
+            
+            // Video fields (re-enabled after V2 migration)
+            movie.setVideoId(rs.getString("video_id"));
+            movie.setHlsUrl(rs.getString("hls_url"));
+            movie.setVideoStatus(rs.getString("video_status"));
 
             Object createdAtObj = rs.getObject("created_at");
             if (createdAtObj != null) {
@@ -129,11 +139,20 @@ public class MovieRepository {
     public UUID insertMovie(String title, String aliasTitle, String description, Short releaseYear,
                            String ageRating, BigDecimal imdbRating, boolean isSeries,
                            String posterUrl, String bannerUrl, UUID createdBy) throws DataAccessException {
+        return insertMovie(title, aliasTitle, description, releaseYear, ageRating, imdbRating, 
+                          isSeries, posterUrl, bannerUrl, createdBy, null, null, null);
+    }
+
+    public UUID insertMovie(String title, String aliasTitle, String description, Short releaseYear,
+                           String ageRating, BigDecimal imdbRating, boolean isSeries,
+                           String posterUrl, String bannerUrl, UUID createdBy,
+                           String videoId, String hlsUrl, String videoStatus) throws DataAccessException {
         UUID movieId = UUID.randomUUID();
         try {
+            System.out.println("Inserting movie with video data - videoId: " + videoId + ", hlsUrl: " + hlsUrl + ", videoStatus: " + videoStatus);
             int rowsAffected = jdbcTemplate.update(
-                "INSERT INTO dbo.movies (movie_id, title, alias_title, description, release_year, age_rating, imdb_rating, is_series, poster_url, banner_url, created_by) VALUES (?,?,?,?,?,?,?,?,?,?,?)",
-                movieId, title, aliasTitle, description, releaseYear, ageRating, imdbRating, isSeries, posterUrl, bannerUrl, createdBy
+                "INSERT INTO dbo.movies (movie_id, title, alias_title, description, release_year, age_rating, imdb_rating, is_series, poster_url, banner_url, created_by, video_id, hls_url, video_status) VALUES (?,?,?,?,?,?,?,?,?,?,?,?,?,?)",
+                movieId, title, aliasTitle, description, releaseYear, ageRating, imdbRating, isSeries, posterUrl, bannerUrl, createdBy, videoId, hlsUrl, videoStatus
             );
             System.out.println("Movie inserted with ID: " + movieId + ", rows affected: " + rowsAffected);
             return movieId;
@@ -148,7 +167,7 @@ public class MovieRepository {
         try {
             System.out.println("Searching for movie by ID: " + movieId);
             List<Movie> movies = jdbcTemplate.query(
-                "SELECT movie_id, title, alias_title, description, release_year, age_rating, imdb_rating, is_series, poster_url, banner_url, created_by, created_at, updated_at FROM dbo.movies WHERE movie_id = ?",
+                "SELECT movie_id, title, alias_title, description, release_year, age_rating, imdb_rating, is_series, poster_url, banner_url, created_by, video_id, hls_url, video_status, created_at, updated_at FROM dbo.movies WHERE movie_id = ?",
                 movieRowMapper,
                 movieId
             );
@@ -171,7 +190,7 @@ public class MovieRepository {
         try {
             System.out.println("Searching for movie with ID: " + movieId);
             List<Movie> movies = jdbcTemplate.query(
-                "SELECT movie_id, title, alias_title, description, release_year, age_rating, imdb_rating, is_series, poster_url, banner_url, created_by, created_at, updated_at FROM dbo.movies WHERE movie_id = ?",
+                "SELECT movie_id, title, alias_title, description, release_year, age_rating, imdb_rating, is_series, poster_url, banner_url, created_by, video_id, hls_url, video_status, created_at, updated_at FROM dbo.movies WHERE movie_id = ?",
                 movieRowMapper,
                 movieId
             );
@@ -192,7 +211,7 @@ public class MovieRepository {
 
     public List<Movie> findAllMovies(int limit, int offset) {
         return jdbcTemplate.query(
-            "SELECT movie_id, title, alias_title, description, release_year, age_rating, imdb_rating, is_series, poster_url, banner_url, created_by, created_at, updated_at FROM dbo.movies ORDER BY created_at DESC OFFSET ? ROWS FETCH NEXT ? ROWS ONLY",
+            "SELECT movie_id, title, alias_title, description, release_year, age_rating, imdb_rating, is_series, poster_url, banner_url, created_by, video_id, hls_url, video_status, created_at, updated_at FROM dbo.movies ORDER BY created_at DESC OFFSET ? ROWS FETCH NEXT ? ROWS ONLY",
             movieRowMapper,
             offset, limit
         );
@@ -200,7 +219,7 @@ public class MovieRepository {
 
     public List<Movie> findMoviesByTitle(String title) {
         return jdbcTemplate.query(
-            "SELECT movie_id, title, alias_title, description, release_year, age_rating, imdb_rating, is_series, poster_url, banner_url, created_by, created_at, updated_at FROM dbo.movies WHERE title LIKE ? OR alias_title LIKE ?",
+            "SELECT movie_id, title, alias_title, description, release_year, age_rating, imdb_rating, is_series, poster_url, banner_url, created_by, video_id, hls_url, video_status, created_at, updated_at FROM dbo.movies WHERE title LIKE ? OR alias_title LIKE ?",
             movieRowMapper,
             "%" + title + "%", "%" + title + "%"
         );

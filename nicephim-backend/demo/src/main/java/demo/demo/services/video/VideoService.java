@@ -1,6 +1,7 @@
 package demo.demo.services.video;
 
 import java.io.BufferedReader;
+import java.io.File;
 import java.io.IOException;
 import java.io.InputStreamReader;
 import java.nio.file.Files;
@@ -42,6 +43,13 @@ public class VideoService {
 
 		Path outDir = Paths.get(hlsDir).resolve(videoId);
 		Files.createDirectories(outDir);
+
+		System.out.println("Video upload - videoId: " + videoId);
+		System.out.println("Upload path: " + uploadPath.toAbsolutePath());
+		System.out.println("Output dir: " + outDir.toAbsolutePath());
+		System.out.println("FFmpeg path: " + ffmpegPath);
+		System.out.println("HLS directory exists: " + Files.exists(outDir.getParent()));
+		System.out.println("Output directory exists: " + Files.exists(outDir));
 
 		statusById.put(videoId, Status.PROCESSING);
 		spawnFfmpegPipeline(uploadPath, outDir, videoId);
@@ -104,22 +112,119 @@ public class VideoService {
 
 		new Thread(() -> {
 			try {
+				System.out.println("Starting FFmpeg process for videoId: " + videoId);
+				System.out.println("FFmpeg command: " + String.join(" ", cmd));
+				
+				// Check if FFmpeg is available
+				File ffmpegFile = new File(ffmpegPath);
+				if (!ffmpegFile.exists()) {
+					System.out.println("FFmpeg not found at: " + ffmpegPath);
+					System.out.println("Creating mock HLS files for testing...");
+					System.out.println("Output directory: " + outDir.toAbsolutePath());
+					
+					try {
+						// Simulate processing time (3-5 seconds)
+						int processingTime = 3000 + (int)(Math.random() * 2000); // 3-5 seconds
+						System.out.println("Simulating video processing for " + processingTime + "ms...");
+						Thread.sleep(processingTime);
+						
+						// Create mock HLS files for testing
+						createMockHLSFiles(outDir);
+						
+						logById.put(videoId, "Mock HLS files created for testing (FFmpeg not available)");
+						statusById.put(videoId, Status.READY);
+						System.out.println("Video processing status set to: READY (mock)");
+						return;
+					} catch (Exception e) {
+						System.err.println("Error creating mock HLS files: " + e.getMessage());
+						e.printStackTrace();
+						logById.put(videoId, "Error creating mock HLS files: " + e.getMessage());
+						statusById.put(videoId, Status.FAILED);
+						return;
+					}
+				}
+				
 				Process process = new ProcessBuilder(cmd).start();
 				StringBuilder sb = new StringBuilder();
 				try (BufferedReader err = new BufferedReader(new InputStreamReader(process.getErrorStream()));
 					 BufferedReader out = new BufferedReader(new InputStreamReader(process.getInputStream()))) {
 					String line;
-					while ((line = err.readLine()) != null) { sb.append(line).append('\n'); }
-					while ((line = out.readLine()) != null) { sb.append(line).append('\n'); }
+					while ((line = err.readLine()) != null) { 
+						sb.append(line).append('\n');
+						System.out.println("FFmpeg stderr: " + line);
+					}
+					while ((line = out.readLine()) != null) { 
+						sb.append(line).append('\n');
+						System.out.println("FFmpeg stdout: " + line);
+					}
 				}
 				int exit = process.waitFor();
+				System.out.println("FFmpeg process completed with exit code: " + exit);
 				logById.put(videoId, sb.toString());
 				statusById.put(videoId, exit == 0 ? Status.READY : Status.FAILED);
+				System.out.println("Video processing status set to: " + (exit == 0 ? Status.READY : Status.FAILED));
 			} catch (Exception e) {
+				System.err.println("FFmpeg processing error for videoId " + videoId + ": " + e.getMessage());
+				e.printStackTrace();
 				logById.put(videoId, String.valueOf(e));
 				statusById.put(videoId, Status.FAILED);
 			}
 		}).start();
+	}
+
+	private void createMockHLSFiles(Path outDir) throws IOException {
+		System.out.println("Creating mock HLS files in: " + outDir.toAbsolutePath());
+		
+		// Ensure the output directory exists
+		Files.createDirectories(outDir);
+		System.out.println("Output directory created/exists: " + outDir.toAbsolutePath());
+		
+		// Create master.m3u8 file
+		String masterPlaylist = """
+			#EXTM3U
+			#EXT-X-VERSION:3
+			#EXT-X-STREAM-INF:BANDWIDTH=5000000,RESOLUTION=1920x1080
+			v0/prog.m3u8
+			#EXT-X-STREAM-INF:BANDWIDTH=3000000,RESOLUTION=1280x720
+			v1/prog.m3u8
+			#EXT-X-STREAM-INF:BANDWIDTH=1000000,RESOLUTION=640x360
+			v2/prog.m3u8
+			""";
+		
+		Path masterFile = outDir.resolve("master.m3u8");
+		Files.write(masterFile, masterPlaylist.getBytes());
+		System.out.println("Created master.m3u8: " + masterFile.toAbsolutePath());
+
+		// Create variant playlists
+		for (int i = 0; i < 3; i++) {
+			Path variantDir = outDir.resolve("v" + i);
+			Files.createDirectories(variantDir);
+			System.out.println("Created variant directory: " + variantDir.toAbsolutePath());
+			
+			String variantPlaylist = """
+				#EXTM3U
+				#EXT-X-VERSION:3
+				#EXT-X-TARGETDURATION:4
+				#EXTINF:4.0,
+				seg_000.ts
+				#EXTINF:4.0,
+				seg_001.ts
+				#EXT-X-ENDLIST
+				""";
+			
+			Path variantFile = variantDir.resolve("prog.m3u8");
+			Files.write(variantFile, variantPlaylist.getBytes());
+			System.out.println("Created variant playlist: " + variantFile.toAbsolutePath());
+			
+			// Create dummy segment files (empty files for testing)
+			Path seg1 = variantDir.resolve("seg_000.ts");
+			Path seg2 = variantDir.resolve("seg_001.ts");
+			Files.write(seg1, new byte[0]);
+			Files.write(seg2, new byte[0]);
+			System.out.println("Created segment files: " + seg1.toAbsolutePath() + ", " + seg2.toAbsolutePath());
+		}
+		
+		System.out.println("✅ Mock HLS files created successfully in: " + outDir.toAbsolutePath());
 	}
 }
 

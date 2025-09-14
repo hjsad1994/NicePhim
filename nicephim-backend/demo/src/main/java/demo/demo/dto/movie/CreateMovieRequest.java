@@ -39,6 +39,15 @@ public class CreateMovieRequest {
     @Size(max = 500, message = "URL banner không được vượt quá 500 ký tự")
     public String bannerUrl;
 
+    // Video fields for uploaded videos
+    @Size(max = 255, message = "Video ID không được vượt quá 255 ký tự")
+    public String videoId;
+
+    @Size(max = 1000, message = "HLS URL không được vượt quá 1000 ký tự")
+    public String hlsUrl;
+
+    public String videoStatus = "ready";
+
     // List of genre IDs to assign to the movie
     public List<UUID> genreIds;
 }

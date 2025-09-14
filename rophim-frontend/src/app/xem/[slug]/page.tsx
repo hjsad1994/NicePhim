@@ -48,7 +48,11 @@ export default function WatchPage({ params }: WatchPageProps) {
       viewCount: 0, // Default view count
       likeCount: 0, // Default like count
       isHot: false,
-      isFeatured: false
+      isFeatured: false,
+      // Add video data for HLS streaming
+      videoId: movieResponse.videoId,
+      hlsUrl: movieResponse.hlsUrl,
+      videoStatus: movieResponse.videoStatus
     };
   };
 
@@ -98,6 +102,9 @@ export default function WatchPage({ params }: WatchPageProps) {
           if (moviesResponse.success && moviesResponse.data && moviesResponse.data.length > 0) {
             // Convert MovieResponse to Movie and find by slug
             const movies = moviesResponse.data.map(convertToMovie);
+            console.log('🎬 All movies from API:', movies);
+            console.log('🎬 Looking for slug:', resolvedParams.slug);
+            
             const foundMovie = movies.find(m => m.slug === resolvedParams.slug);
             
             if (foundMovie) {
@@ -161,12 +168,24 @@ export default function WatchPage({ params }: WatchPageProps) {
     );
   }
 
-  // Mock video sources with different qualities
+  // Mock video sources with different qualities (fallback)
   const videoSources = [
     { quality: '360p', url: 'https://sample-videos.com/zip/10/mp4/mp4-360p.mp4' },
     { quality: '720p', url: 'https://sample-videos.com/zip/10/mp4/mp4-720p.mp4' },
     { quality: '1080p', url: 'https://sample-videos.com/zip/10/mp4/mp4-1080p.mp4' },
   ];
+
+  // Check if movie has uploaded video data
+  const hasUploadedVideo = movie.videoId && movie.hlsUrl && movie.videoStatus === 'ready';
+  const hlsUrl = hasUploadedVideo ? `http://localhost:8080${movie.hlsUrl}` : null;
+  
+  console.log('🎬 Movie video data:', {
+    videoId: movie.videoId,
+    hlsUrl: movie.hlsUrl,
+    videoStatus: movie.videoStatus,
+    hasUploadedVideo,
+    fullHlsUrl: hlsUrl
+  });
 
   return (
     <div className="min-h-screen" style={{backgroundColor: 'var(--bg-2)'}}>
@@ -175,6 +194,7 @@ export default function WatchPage({ params }: WatchPageProps) {
         <VideoPlayer 
           movie={movie}
           videoSources={videoSources}
+          hlsUrl={hlsUrl}
         />
       </div>
 

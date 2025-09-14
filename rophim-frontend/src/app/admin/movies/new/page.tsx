@@ -12,6 +12,7 @@ import {
 } from '@heroicons/react/24/outline';
 import { COUNTRIES } from '@/constants';
 import { ApiService, GenreResponse } from '@/lib/api';
+import { VideoUpload } from '@/components/admin/VideoUpload';
 
 interface MovieFormData {
   title: string;
@@ -47,8 +48,6 @@ export default function NewMovie() {
     quality: 'HD',
     imdbRating: 0,
     genres: [],
-    country: '',
-    director: '',
     cast: [],
     isHot: false,
     type: 'movie'
@@ -62,7 +61,11 @@ export default function NewMovie() {
     poster: null as File | null,
     banner: null as File | null,
     thumbnail: null as File | null,
-    trailer: null as File | null,
+    trailer: null as File   const [videoUpload, setVideoUpload] = useState({
+    videoId: '',
+    hlsUrl: '',
+    isUploaded: false
+  });e | null,
     video: null as File | null
   });
 
@@ -147,12 +150,17 @@ export default function NewMovie() {
     setEpisodes(prev => [...prev, newEpisode]);
   };
 
-  const removeEpisode = (id: string) => {
-    setEpisodes(prev => prev.filter(ep => ep.id !== id));
-  };
-
   const updateEpisode = (id: string, field: keyof Episode, value: string | number | File | null) => {
     setEpisodes(prev => prev.map(ep => 
+      ep.id === id ? { ...ep, [field]: value } : ep
+    ));
+  };
+
+  // Video upload handlers
+  const handleVideoUploaded = (vid  const handleVideoUploadError = (error: string) => {
+    console.error('Video upload error:', error);
+    // You can add a toast notification here
+  };leSubmit = async (e: React.FormEvent) => {prev.map(ep => 
       ep.id === id ? { ...ep, [field]: value } : ep
     ));
   };

@@ -38,10 +38,11 @@ Frontend (Next.js) ←→ Backend (Spring Boot) ←→ Database (SQL Server)
 - **Room Management**: User sessions and permissions
 
 ## Video Processing Pipeline
-1. **Upload**: Original video files stored locally
-2. **Processing**: FFmpeg converts to HLS format
-3. **Storage**: HLS segments stored in media directory
+1. **Upload**: Original video files stored locally (D:/videos_demo)
+2. **Processing**: FFmpeg converts to HLS format with multiple quality variants (360p, 720p, 1080p)
+3. **Storage**: HLS segments stored in media directory (D:/media)
 4. **Streaming**: Direct file serving via Spring static resources
+5. **Database Integration**: Video metadata (video_id, hls_url, video_status) stored in movies table
 
 ## Security Patterns
 - **Password Hashing**: BCrypt with salt rounds
@@ -54,14 +55,34 @@ Frontend (Next.js) ←→ Backend (Spring Boot) ←→ Database (SQL Server)
 - **Validation Layers**: Frontend client-side + backend server-side validation
 - **Error Classification**: Warning vs Error distinction for better UX
 - **Real-time Feedback**: Auto-clear errors when user starts typing
-- **Consistent UI**: Uniform admin interface across all management sections
-
-## Genre-Movie Integration Patterns
+- **Consistent UI**: ## Genre-Movie Integration Patterns
 - **Many-to-Many Relationships**: Proper junction table (movie_genres) design
 - **Embedded Data**: MovieResponse includes genres to reduce API calls
 - **Hybrid Loading**: Frontend uses embedded data with fallback to separate API calls
 - **Visual Indicators**: Genre tags with icons and color coding in admin interface
 - **Bulk Operations**: Support for assigning multiple genres during movie creation/editing
 - **Debug Logging**: Console logging for tracking data flow between backend and frontend
+
+## Development Standards Patterns
+- **Cursor Rules Integration**: Comprehensive development guidelines documented in .cursorrules
+- **Memory Bank Documentation**: Complete documentation system with hierarchical structure
+- **Code Quality Standards**: TypeScript interfaces, Java best practices, database optimization
+- **Error Handling Patterns**: Warning vs error classification, auto-clear functionality
+- **Security Patterns**: BCrypt hashing, input validation, SQL injection prevention
+- **Performance Patterns**: Efficient queries, caching, parallel API calls
+- **Testing Patterns**: Comprehensive validation, responsive design testing
+- **File Organization**: Standardized frontend and backend structures
+- **Documentation Workflow**: Memory bank updates triggered by significant changes or user requests
+- **Development Guidelines**: Complete cursor rules integration with memory bank system
+- **Debug Logging**: Console logging for tracking data flow between backend and frontend
+
+## Database Migration Patterns
+- **Flyway Integration**: Automatic database migration execution during Spring Boot startup
+- **Migration Versioning**: Sequential version numbering (V1, V2, V3) for database schema changes
+- **Backward Compatibility**: Temporary feature disabling during migration issues
+- **Error Resolution Strategy**: Fix repository layer first, then re-enable features
+- **Schema Evolution**: Add new columns with NULL defaults to avoid breaking existing data
+- **Migration Rollback**: Proper migration design to allow rollback if needed
+- **Column Addition Pattern**: ALTER TABLE ADD COLUMN with appropriate defaults and constraints
 
 

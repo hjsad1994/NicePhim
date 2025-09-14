@@ -19,9 +19,12 @@ export interface Movie {
   updatedAt: string;
   viewCount: number;
   views?: number; // alias for viewCount for compatibility
-  likeCount: number;
   isHot?: boolean;
   isFeatured?: boolean;
+  // Video fields for uploaded videos
+  videoId?: string;
+  hlsUrl?: string;
+  videoStatus?: string;
   // Additional video page properties
   director?: string;
   cast?: string[];

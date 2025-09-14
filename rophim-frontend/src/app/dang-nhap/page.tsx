@@ -17,6 +17,9 @@ export default function SignInPage() {
     // Store user data in localStorage (in a real app, you'd use proper session management)
     localStorage.setItem('user', JSON.stringify(user));
 
+    // Dispatch custom event to notify header of user state change
+    window.dispatchEvent(new CustomEvent('userLogin', { detail: user }));
+
     // Redirect to home page after a short delay
     setTimeout(() => {
       router.push('/');
@@ -76,5 +79,3 @@ export default function SignInPage() {
     </div>
   );
 }
-
-

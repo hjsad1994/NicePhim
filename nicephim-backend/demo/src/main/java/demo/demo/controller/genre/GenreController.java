@@ -173,6 +173,10 @@ public class GenreController {
         private List<GenreResponse> data;
         private String error;
 
+        public GenreListResponse() {
+            // Default constructor
+        }
+
         public GenreListResponse(boolean success, List<GenreResponse> data, String error) {
             this.success = success;
             this.data = data;

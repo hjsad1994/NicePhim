@@ -24,21 +24,21 @@ export function InterestSection({ genres }: InterestSectionProps) {
         {/* Topics Horizontal Layout */}
         <div className="flex flex-wrap justify-center gap-4 mb-8">
           {genres.slice(0, 6).map((genre, index) => {
-            const modernGradients = [
-              { bg: 'bg-gradient-to-r from-slate-600 to-slate-500', border: 'border-slate-500', hover: 'hover:from-slate-500 hover:to-slate-400' },
-              { bg: 'bg-gradient-to-r from-zinc-600 to-zinc-500', border: 'border-zinc-500', hover: 'hover:from-zinc-500 hover:to-zinc-400' },
-              { bg: 'bg-gradient-to-r from-neutral-600 to-neutral-500', border: 'border-neutral-500', hover: 'hover:from-neutral-500 hover:to-neutral-400' },
-              { bg: 'bg-gradient-to-r from-stone-600 to-stone-500', border: 'border-stone-500', hover: 'hover:from-stone-500 hover:to-stone-400' },
-              { bg: 'bg-gradient-to-r from-gray-600 to-gray-500', border: 'border-gray-500', hover: 'hover:from-gray-500 hover:to-gray-400' },
-              { bg: 'bg-gradient-to-r from-slate-700 to-slate-600', border: 'border-slate-600', hover: 'hover:from-slate-600 hover:to-slate-500' }
+            const brightGradients = [
+              { bg: 'bg-gradient-to-r from-red-500 to-red-400', border: 'border-red-400', hover: 'hover:from-red-400 hover:to-red-300 hover:shadow-red-500/50' },
+              { bg: 'bg-gradient-to-r from-yellow-500 to-yellow-400', border: 'border-yellow-400', hover: 'hover:from-yellow-400 hover:to-yellow-300 hover:shadow-yellow-500/50' },
+              { bg: 'bg-gradient-to-r from-green-500 to-green-400', border: 'border-green-400', hover: 'hover:from-green-400 hover:to-green-300 hover:shadow-green-500/50' },
+              { bg: 'bg-gradient-to-r from-teal-500 to-teal-400', border: 'border-teal-400', hover: 'hover:from-teal-400 hover:to-teal-300 hover:shadow-teal-500/50' },
+              { bg: 'bg-gradient-to-r from-violet-500 to-violet-400', border: 'border-violet-400', hover: 'hover:from-violet-400 hover:to-violet-300 hover:shadow-violet-500/50' },
+              { bg: 'bg-gradient-to-r from-rose-500 to-rose-400', border: 'border-rose-400', hover: 'hover:from-rose-400 hover:to-rose-300 hover:shadow-rose-500/50' }
             ];
-            const gradientSet = modernGradients[index % modernGradients.length];
+            const gradientSet = brightGradients[index % brightGradients.length];
             
             return (
               <Link
                 key={genre.genreId}
                 href={`/the-loai/${genre.name.toLowerCase().replace(/\s+/g, '-')}`}
-                className={`px-14 py-7 rounded-xl border-2 transition-all duration-300 text-center flex-shrink-0 text-white font-medium text-xl whitespace-nowrap hover:scale-105 hover:shadow-xl min-w-[180px] ${gradientSet.bg} ${gradientSet.border} ${gradientSet.hover}`}
+                className={`px-14 py-7 rounded-xl border-2 transition-all duration-300 text-center flex-shrink-0 text-white font-medium text-xl whitespace-nowrap hover:scale-105 hover:shadow-xl hover:shadow-2xl min-w-[180px] ${gradientSet.bg} ${gradientSet.border} ${gradientSet.hover}`}
               >
                 {genre.name}
               </Link>
@@ -48,7 +48,7 @@ export function InterestSection({ genres }: InterestSectionProps) {
           {/* Chủ đề khác */}
           <Link
             href="/chu-de"
-            className="px-14 py-7 rounded-xl border-2 border-amber-600 bg-gradient-to-r from-amber-700 to-amber-600 hover:from-amber-600 hover:to-amber-500 text-white hover:scale-105 hover:shadow-xl transition-all duration-300 text-center flex-shrink-0 font-medium text-xl whitespace-nowrap min-w-[180px]"
+            className="px-14 py-7 rounded-xl border-2 border-gray-600 bg-gradient-to-r from-gray-700 to-gray-600 hover:from-gray-600 hover:to-gray-500 hover:shadow-gray-600/50 text-white hover:scale-105 hover:shadow-xl hover:shadow-2xl transition-all duration-300 text-center flex-shrink-0 font-medium text-xl whitespace-nowrap min-w-[180px]"
           >
             Chủ đề khác
           </Link>

@@ -21,4 +21,9 @@ public class MovieResponse {
     public OffsetDateTime createdAt;
     public OffsetDateTime updatedAt;
     public List<GenreResponse> genres;
+    
+    // Video fields
+    public String videoId;
+    public String hlsUrl;
+    public String videoStatus;
 }

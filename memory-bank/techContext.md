@@ -28,19 +28,22 @@
 
 ## Database Schema
 - **Users**: Authentication and profile data
-- **Movies**: Content metadata and relationships
+- **Movies**: Content metadata and relationships (includes video_id, hls_url, video_status fields)
 - **Genres**: Movie categorization system
 - **Movie_Genres**: Many-to-many relationship between movies and genres
 - **Episodes**: Series episode management
 - **Assets**: Video file storage references
 - **Watch Rooms**: Collaborative viewing sessions
 - **Comments**: User interactions and feedback
+- **Video Renditions**: HLS streaming quality variants
 
 ## Development Environment
 - **Database**: SQL Server on KARIU:1435
 - **Media Storage**: Local file system (D:/videos_demo, D:/media)
 - **FFmpeg**: C:/ProgramData/chocolatey/bin/ffmpeg.exe
 - **CORS**: Configured for cross-origin requests
+- **Upload Limits**: Spring Boot configured for 500MB file uploads
+- **Video Processing**: FFmpeg creating HLS streams with multiple quality variants
 
 ## Key Dependencies
 - Spring Boot Web, WebSocket, Security
@@ -74,5 +77,18 @@
 - **Frontend Integration**: Complete admin interface with create, read, update, delete
 - **Error Handling**: Enhanced frontend error handling with warning vs error classification
 - **Validation**: Server-side validation with Vietnamese error messages
+
+## Development Environment & Standards
+- **Database Migration**: Flyway automatic migration execution during Spring Boot startup
+- **Migration Management**: V2 migration successfully applied with video fields (video_id, hls_url, video_status)
+- **Error Resolution**: Temporary feature disabling during migration issues, then re-enabling
+- **Cursor Rules**: Comprehensive development guidelines and standards
+- **Memory Bank**: Complete documentation system with hierarchical structure
+- **Code Quality**: TypeScript interfaces, Java best practices, database optimization
+- **Documentation Workflow**: Memory bank updates triggered by significant changes
+- **Development Guidelines**: Complete cursor rules integration with memory bank system
+- **Error Handling**: Warning vs error classification, auto-clear functionality
+- **Security Standards**: BCrypt hashing, input validation, SQL injection prevention
+- **Performance Standards**: Efficient queries, caching, parallel API calls
 
 
