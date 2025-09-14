@@ -44,6 +44,15 @@ Frontend (Next.js) ←→ Backend (Spring Boot) ←→ Database (SQL Server)
 4. **Streaming**: Direct file serving via Spring static resources
 5. **Database Integration**: Video metadata (video_id, hls_url, video_status) stored in movies table
 
+## Video Player Architecture
+- **SimpleHLSPlayer Component**: Simplified video player built from scratch for better maintainability
+- **HLS.js Integration**: Adaptive video streaming with multiple quality options
+- **Event Handling**: Proper click (play/pause) and double-click (fullscreen) functionality
+- **Control Layout**: User-requested layout with timeline, seek buttons, volume, quality, and fullscreen controls
+- **State Management**: Controls timeout, volume state, and fullscreen state management
+- **CSS Optimization**: Pointer events management and z-index handling for proper layering
+- **Event Conflict Resolution**: stopPropagation to prevent conflicts between video element and controls overlay
+
 ## Security Patterns
 - **Password Hashing**: BCrypt with salt rounds
 - **Input Validation**: Server-side validation for all inputs

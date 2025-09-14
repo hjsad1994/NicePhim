@@ -13,7 +13,7 @@
 - **Styling**: Tailwind CSS 4
 - **UI Components**: Headless UI, Heroicons
 - **State Management**: React hooks and context
-- **Video Player**: React Player
+- **Video Player**: React Player, HLS.js for adaptive streaming
 
 ## Backend Stack
 - **Framework**: Spring Boot 3.1.5
@@ -36,6 +36,7 @@
 - **Watch Rooms**: Collaborative viewing sessions
 - **Comments**: User interactions and feedback
 - **Video Renditions**: HLS streaming quality variants
+- **Video Player Components**: SimpleHLSPlayer, HLSVideoPlayer, VideoPlayer wrapper
 
 ## Development Environment
 - **Database**: SQL Server on KARIU:1435
@@ -44,6 +45,7 @@
 - **CORS**: Configured for cross-origin requests
 - **Upload Limits**: Spring Boot configured for 500MB file uploads
 - **Video Processing**: FFmpeg creating HLS streams with multiple quality variants
+- **Video Player Libraries**: hls.js for adaptive streaming, @types/hls.js for TypeScript support
 
 ## Key Dependencies
 - Spring Boot Web, WebSocket, Security
@@ -53,6 +55,8 @@
 - Next.js with TypeScript and Tailwind
 - Jakarta Validation for input validation
 - Spring JDBC for database operations
+- hls.js for adaptive video streaming
+- @types/hls.js for TypeScript support
 
 ## Authentication System
 - **Registration**: Complete with validation and error handling
