@@ -17,6 +17,25 @@
 **Files Modified**: `rophim-frontend/src/components/layout/Header.tsx`
 **Status**: ✅ **COMPLETED** - Header now displays "NicePhim" with "Nice" in red
 
+### ✅ **Image Upload Integration** - COMPLETED
+**Feature**: Added poster and banner upload functionality to movie upload page
+**Implementation**: Integrated ImageUpload component with drag-and-drop functionality
+**Files Modified**: `rophim-frontend/src/app/admin/movies/upload/page.tsx`
+**Status**: ✅ **COMPLETED** - Upload page now has same image upload functionality as edit page
+
+### ✅ **Image Upload Label Styling** - RESOLVED
+**Issue**: ImageUpload component labels displayed in gray, hard to see in dark theme
+**Solution**: Changed label color from `text-gray-700` to `text-white`
+**Files Modified**: `rophim-frontend/src/components/admin/ImageUpload.tsx`
+**Status**: ✅ **RESOLVED** - Labels now display in white for better visibility
+
+### ✅ **Admin View Button Fix** - RESOLVED
+**Issue**: Admin movies view button redirected to 404 error page
+**Root Cause**: Button was redirecting to `/admin/movies/${movieId}` which doesn't exist
+**Solution**: Changed redirect to `/phim/${generateSlug(movie.title)}` using existing slug utility
+**Files Modified**: `rophim-frontend/src/app/admin/movies/page.tsx`
+**Status**: ✅ **RESOLVED** - View button now redirects to public movie page
+
 ## Technical Details
 
 ### Movie Edit Page Fix
@@ -30,6 +49,18 @@
 - **After**: `<span className="text-red-600">Nice</span>Phim`
 - **Styling**: Maintains same visual design with red "Nice" and white "Phim"
 - **Scope**: Affects all pages using Header component
+
+### Image Upload Integration
+- **Component**: ImageUpload with drag-and-drop functionality
+- **Features**: Poster and banner upload with preview and validation
+- **Integration**: Added to movie upload page with proper form handling
+- **Styling**: Fixed label visibility with white text color
+
+### Admin View Button Fix
+- **Problem**: Redirected to non-existent admin route causing 404
+- **Solution**: Use generateSlug utility to create URL-friendly slug from movie title
+- **Implementation**: `router.push(\`/phim/${generateSlug(movie.title)}\`)`
+- **Result**: Proper navigation to public movie viewing page
 
 ## Memory Bank Updates
 - Updated all memory bank files to reflect "NicePhim" branding
@@ -47,4 +78,6 @@
 - **Build Errors**: ✅ All resolved
 - **Branding**: ✅ Updated to NicePhim
 - **Component Functionality**: ✅ Movie edit page working
+- **Image Upload**: ✅ Integrated into upload page with proper styling
+- **Navigation**: ✅ Admin view button fixed to redirect to public pages
 - **Documentation**: ✅ Memory bank updated

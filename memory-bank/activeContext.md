@@ -85,6 +85,9 @@
 - ✅ **Database Integration**: Movie model already includes posterUrl and bannerUrl fields, no migration needed
 - ✅ **Movie Edit Page JSX Fix**: Fixed parsing error by moving genre selection modal inside return statement
 - ✅ **Header Branding Update**: Changed header logo from "Rophim" to "NicePhim" for consistent branding
+- ✅ **Image Upload Integration**: Added poster and banner upload functionality to movie upload page using ImageUpload component
+- ✅ **Image Upload Label Styling**: Fixed ImageUpload component labels to display in white instead of gray for better visibility
+- ✅ **Admin View Button Fix**: Fixed admin movies view button to redirect to public movie page (/phim/[slug]) instead of 404 error
 
 ## Current Focus
 1. ✅ **Video Player State Update Issue**: RESOLVED - Quality and speed selection buttons now display selected values correctly
@@ -102,21 +105,24 @@
 2. ✅ **HLS Adaptive Quality Switching**: RESOLVED - Quality selection now changes actual video quality
 3. ✅ **Movie Edit Page JSX Fix**: RESOLVED - Fixed parsing error by moving genre selection modal inside return statement
 4. ✅ **Header Branding Update**: RESOLVED - Changed header logo from "Rophim" to "NicePhim" for consistent branding
-5. **Test Video Player Functionality**: Verify click (play/pause) and double-click (fullscreen) work correctly
-6. **Test HLS Streaming**: Verify adaptive quality streaming works properly with real videos
-7. **Test Complete Video Workflow**: Upload MP4 → Create movie → Watch from homepage
-8. **Test Watch Together with Real Videos**: Ensure collaborative watching works with uploaded videos
-9. **Create Movies with Videos**: Use /admin/movies/upload to create movies with real video content
-10. **Assign Genres to Movies**: Use movie edit interface to assign movies to genres
-11. **Test Genre Pages**: Verify genre pages show movies with videos after assignment
-12. **Test Movie Routing**: Verify all movie detail pages work correctly with video data
-13. **Frontend Upload Connection**: Fix frontend "Failed to fetch" error when connecting to video upload API
-14. **Video Field Restoration**: Uncomment video field access in MovieRepository RowMapper
-15. Add bulk genre operations for multiple movies
-16. Enhance admin dashboard with video upload statistics
-17. Add proper session management (JWT tokens or secure sessions)
-18. Create user profile management interface
-19. Implement advanced search and filtering for movies and genres
+5. ✅ **Image Upload Integration**: RESOLVED - Added poster and banner upload functionality to movie upload page
+6. ✅ **Image Upload Label Styling**: RESOLVED - Fixed ImageUpload component labels to display in white
+7. ✅ **Admin View Button Fix**: RESOLVED - Fixed admin movies view button to redirect to public movie page
+8. **Test Video Player Functionality**: Verify click (play/pause) and double-click (fullscreen) work correctly
+9. **Test HLS Streaming**: Verify adaptive quality streaming works properly with real videos
+10. **Test Complete Video Workflow**: Upload MP4 → Create movie → Watch from homepage
+11. **Test Watch Together with Real Videos**: Ensure collaborative watching works with uploaded videos
+12. **Create Movies with Videos**: Use /admin/movies/upload to create movies with real video content
+13. **Assign Genres to Movies**: Use movie edit interface to assign movies to genres
+14. **Test Genre Pages**: Verify genre pages show movies with videos after assignment
+15. **Test Movie Routing**: Verify all movie detail pages work correctly with video data
+16. **Frontend Upload Connection**: Fix frontend "Failed to fetch" error when connecting to video upload API
+17. **Video Field Restoration**: Uncomment video field access in MovieRepository RowMapper
+18. Add bulk genre operations for multiple movies
+19. Enhance admin dashboard with video upload statistics
+20. Add proper session management (JWT tokens or secure sessions)
+21. Create user profile management interface
+22. Implement advanced search and filtering for movies and genres
 
 ## Technical Decisions
 - **Video Upload Configuration**: Increased Spring Boot upload limits to 500MB for large video files
@@ -207,3 +213,6 @@
 - ✅ **HLS Adaptive Quality Switching** - RESOLVED: Implemented actual HLS quality switching - selecting 360p now plays at 360p quality, not just displays "360p" while playing 1080p
 - ✅ **Movie Edit Page JSX Parsing Error** - RESOLVED: Fixed parsing error by moving genre selection modal inside return statement, resolving build error
 - ✅ **Header Branding Consistency** - RESOLVED: Updated header logo from "Rophim" to "NicePhim" for consistent branding across the platform
+- ✅ **Image Upload Integration** - RESOLVED: Added poster and banner upload functionality to movie upload page using ImageUpload component with drag-and-drop functionality
+- ✅ **Image Upload Label Visibility** - RESOLVED: Fixed ImageUpload component labels to display in white instead of gray for better visibility in dark theme
+- ✅ **Admin View Button Navigation** - RESOLVED: Fixed admin movies view button to redirect to public movie page (/phim/[slug]) using generateSlug utility instead of showing 404 error

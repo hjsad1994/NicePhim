@@ -4,6 +4,7 @@ import { useState, useEffect } from 'react';
 import { useRouter } from 'next/navigation';
 import { ApiService, CreateMovieRequest, GenreResponse } from '@/lib/api';
 import { VideoUpload } from '@/components/admin/VideoUpload';
+import { ImageUpload } from '@/components/admin/ImageUpload';
 
 export default function UploadMoviePage() {
   const router = useRouter();
@@ -86,6 +87,21 @@ export default function UploadMoviePage() {
       genreIds: prev.genreIds?.includes(genreId)
         ? prev.genreIds.filter(id => id !== genreId)
         : [...(prev.genreIds || []), genreId]
+    }));
+  };
+
+  // Helper function to handle image upload changes
+  const handleImageUpload = (field: 'posterUrl' | 'bannerUrl', url: string) => {
+    setFormData(prev => ({
+      ...prev,
+      [field]: url
+    }));
+  };
+
+  const handleImageRemove = (field: 'posterUrl' | 'bannerUrl') => {
+    setFormData(prev => ({
+      ...prev,
+      [field]: ''
     }));
   };
 
@@ -358,47 +374,25 @@ export default function UploadMoviePage() {
               </div>
             </div>
 
-            {/* URLs */}
+            {/* Image Uploads */}
             <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-              <div>
-                <label htmlFor="posterUrl" className="block text-sm font-medium mb-2" style={{color: 'var(--color-text-secondary)'}}>
-                  URL Poster
-                </label>
-                <input
-                  type="url"
-                  id="posterUrl"
-                  name="posterUrl"
-                  value={formData.posterUrl || ''}
-                  onChange={handleInputChange}
-                  className="w-full px-3 py-2 rounded-md focus:outline-none focus:ring-2 focus:ring-red-500 focus:border-transparent"
-                  style={{
-                    backgroundColor: 'var(--bg-3)',
-                    border: '1px solid var(--bg-3)',
-                    color: 'var(--color-text-primary)'
-                  }}
-                  placeholder="https://example.com/poster.jpg"
-                />
-              </div>
+              <ImageUpload
+                label="Poster"
+                type="poster"
+                currentUrl={formData.posterUrl}
+                onUpload={(url) => handleImageUpload('posterUrl', url)}
+                onRemove={() => handleImageRemove('posterUrl')}
+                required={false}
+              />
 
-              <div>
-                <label htmlFor="bannerUrl" className="block text-sm font-medium mb-2" style={{color: 'var(--color-text-secondary)'}}>
-                  URL Banner
-                </label>
-                <input
-                  type="url"
-                  id="bannerUrl"
-                  name="bannerUrl"
-                  value={formData.bannerUrl || ''}
-                  onChange={handleInputChange}
-                  className="w-full px-3 py-2 rounded-md focus:outline-none focus:ring-2 focus:ring-red-500 focus:border-transparent"
-                  style={{
-                    backgroundColor: 'var(--bg-3)',
-                    border: '1px solid var(--bg-3)',
-                    color: 'var(--color-text-primary)'
-                  }}
-                  placeholder="https://example.com/banner.jpg"
-                />
-              </div>
+              <ImageUpload
+                label="Banner"
+                type="banner"
+                currentUrl={formData.bannerUrl}
+                onUpload={(url) => handleImageUpload('bannerUrl', url)}
+                onRemove={() => handleImageRemove('bannerUrl')}
+                required={false}
+              />
             </div>
 
             {/* Description */}

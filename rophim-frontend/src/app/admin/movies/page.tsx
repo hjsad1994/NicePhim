@@ -3,7 +3,7 @@
 import { useState, useEffect } from 'react';
 import { useRouter } from 'next/navigation';
 import { ApiService, MovieResponse, GenreResponse } from '@/lib/api';
-import { getImageUrl } from '@/lib/utils';
+import { getImageUrl, generateSlug } from '@/lib/utils';
 import {
   PencilIcon,
   TrashIcon,
@@ -335,12 +335,12 @@ export default function MoviesManagement() {
                     <td className="px-6 py-4 whitespace-nowrap text-right text-sm font-medium">
                       <div className="flex justify-end space-x-2">
                         <button
-                          onClick={() => router.push(`/admin/movies/${movie.movieId}`)}
+                          onClick={() => router.push(`/phim/${generateSlug(movie.title)}`)}
                           className="p-1 transition-colors"
                           style={{color: '#3b82f6'}}
                           onMouseEnter={(e) => e.currentTarget.style.color = '#1d4ed8'}
                           onMouseLeave={(e) => e.currentTarget.style.color = '#3b82f6'}
-                          title="Xem chi tiết"
+                          title="Xem phim"
                         >
                           <EyeIcon className="h-4 w-4" />
                         </button>

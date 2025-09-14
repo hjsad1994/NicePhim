@@ -75,6 +75,9 @@
 - **Movie Slug API Implementation**: Added getMovieBySlug endpoint to backend and updated frontend to use real database data instead of mock data for movie watching pages
 - **Movie Edit Page JSX Fix**: Fixed parsing error by moving genre selection modal inside return statement
 - **Header Branding Update**: Changed header logo from "Rophim" to "NicePhim" for consistent branding
+- **Image Upload Integration**: Added poster and banner upload functionality to movie upload page using ImageUpload component
+- **Image Upload Label Styling**: Fixed ImageUpload component labels to display in white instead of gray for better visibility
+- **Admin View Button Fix**: Fixed admin movies view button to redirect to public movie page (/phim/[slug]) instead of 404 error
 
 ## In Progress 🔄
 - ✅ **Video Player Testing**: RESOLVED - Quality and speed selection button display updates now work correctly
@@ -109,6 +112,8 @@
 - ✅ **Movie Detail Page Mock Data Issue**: **RESOLVED** - Fixed slug matching between frontend and backend to properly fetch real movie data from database
 - ✅ **Movie Edit Page JSX Parsing Error**: **RESOLVED** - Fixed parsing error by moving genre selection modal inside return statement
 - ✅ **Header Branding Inconsistency**: **RESOLVED** - Updated header logo from "Rophim" to "NicePhim" for consistent branding
+- ✅ **Image Upload Label Visibility**: **RESOLVED** - Fixed ImageUpload component labels to display in white instead of gray for better visibility
+- ✅ **Admin View Button 404 Error**: **RESOLVED** - Fixed admin movies view button to redirect to public movie page using generateSlug utility
 - **Frontend Upload Connection**: "Failed to fetch" error when frontend tries to connect to video upload API - **INVESTIGATING**: Backend is running and accessible, need to check CORS and endpoint configuration
 - **Video Fields Temporarily Disabled**: MovieRepository video field access is commented out until migration is confirmed - **SOLUTION**: Re-enable after testing V2 migration
 - **Empty Genre Pages**: Genre pages show "Chưa có phim nào trong thể loại này" when no movies are assigned to genres - **SOLUTION PROVIDED**: Use admin interface to create movies and assign genres
