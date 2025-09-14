@@ -2,7 +2,7 @@
 
 import { useState } from 'react';
 import { VideoUpload } from '@/components/admin/VideoUpload';
-import { HLSVideoPlayer } from '@/components/video/HLSVideoPlayer';
+import SimpleHLSPlayer from '@/components/video/SimpleHLSPlayer';
 
 export default function TestVideoPage() {
   const [uploadedVideo, setUploadedVideo] = useState<{
@@ -50,7 +50,7 @@ export default function TestVideoPage() {
               </div>
               
               <div className="aspect-video bg-black rounded-lg overflow-hidden">
-                <HLSVideoPlayer
+                <SimpleHLSPlayer
                   hlsUrl={uploadedVideo.hlsUrl}
                   title="Test Video"
                   className="w-full h-full"
@@ -70,17 +70,10 @@ export default function TestVideoPage() {
               </p>
               
               <div className="aspect-video bg-black rounded-lg overflow-hidden">
-                <HLSVideoPlayer
+                <SimpleHLSPlayer
                   hlsUrl={uploadedVideo.hlsUrl}
                   title="Watch Together Test"
                   className="w-full h-full"
-                  watchTogether={{
-                    roomId: 'test-room-123',
-                    isHost: true,
-                    onControlSync: (action, time) => {
-                      console.log('Control sync:', action, time);
-                    }
-                  }}
                 />
               </div>
               

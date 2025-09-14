@@ -2,7 +2,6 @@
 
 import { useState, useRef, useEffect } from 'react';
 import ReactPlayer from 'react-player';
-import { HLSVideoPlayer } from './HLSVideoPlayer';
 import SimpleHLSPlayer from './SimpleHLSPlayer';
 import { 
   PlayIcon, 

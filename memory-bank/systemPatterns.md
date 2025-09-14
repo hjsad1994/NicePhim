@@ -42,9 +42,7 @@ Frontend (Next.js) ←→ Backend (Spring Boot) ←→ Database (SQL Server)
 2. **Processing**: FFmpeg converts to HLS format with multiple quality variants (360p, 720p, 1080p)
 3. **Storage**: HLS segments stored in media directory (D:/media)
 4. **Streaming**: Direct file serving via Spring static resources
-5. **Database Integration**: Video metadata (video_id, hls_url, video_status) stored in movies table
-
-## Video Player Architecture
+5. **Database Integration**: Video metadata (video_id, hls## Video Player Architecture
 - **SimpleHLSPlayer Component**: Simplified video player built from scratch for better maintainability
 - **HLS.js Integration**: Adaptive video streaming with multiple quality options
 - **Event Handling**: Proper click (play/pause) and double-click (fullscreen) functionality
@@ -52,6 +50,11 @@ Frontend (Next.js) ←→ Backend (Spring Boot) ←→ Database (SQL Server)
 - **State Management**: Controls timeout, volume state, and fullscreen state management
 - **CSS Optimization**: Pointer events management and z-index handling for proper layering
 - **Event Conflict Resolution**: stopPropagation to prevent conflicts between video element and controls overlay
+- **Quality/Speed Selection**: Working dropdown menus with proper state updates and click outside handling
+- **Menu Management**: Data attributes and improved event handling for reliable menu interactions
+- **HLS Adaptive Quality Switching**: Real-time quality switching using hls.currentLevel API with level mapping and event handling
+- **Dynamic Quality Menu**: Shows only available qualities from HLS manifest with actual resolution display
+- **Component Consolidation**: Single SimpleHLSPlayer component replaces legacy HLSVideoPlayer for cleaner architecture
 
 ## Security Patterns
 - **Password Hashing**: BCrypt with salt rounds

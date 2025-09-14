@@ -86,7 +86,7 @@ export default function UploadGuidePage() {
               <h3 className="font-medium text-gray-800 mb-2">Video Playback</h3>
               <ul className="list-disc list-inside space-y-1 text-gray-600">
                 <li>Frontend checks if movie has <code className="bg-gray-100 px-1 rounded">videoId</code> and <code className="bg-gray-100 px-1 rounded">hlsUrl</code></li>
-                <li>Uses <code className="bg-gray-100 px-1 rounded">HLSVideoPlayer</code> component for streaming</li>
+                <li>Uses <code className="bg-gray-100 px-1 rounded">SimpleHLSPlayer</code> component for streaming</li>
                 <li>HLS URL: <code className="bg-gray-100 px-1 rounded">http://localhost:8080/videos/{videoId}/master.m3u8</code></li>
                 <li>Adaptive quality streaming (auto-selects best quality)</li>
               </ul>

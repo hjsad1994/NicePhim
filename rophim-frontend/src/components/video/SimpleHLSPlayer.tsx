@@ -27,6 +27,30 @@ const SimpleHLSPlayer: React.FC<SimpleHLSPlayerProps> = ({
   const [showSpeedMenu, setShowSpeedMenu] = useState(false);
   const [currentQuality, setCurrentQuality] = useState('1080p');
   const [playbackRate, setPlaybackRate] = useState(1);
+  const [availableLevels, setAvailableLevels] = useState<any[]>([]);
+  const [currentLevel, setCurrentLevel] = useState(-1);
+
+  // Helper function to convert HLS level to quality text
+  const getQualityTextFromLevel = (level: any) => {
+    if (!level || !level.height) return 'Unknown';
+    
+    const height = level.height;
+    if (height <= 360) return '360p';
+    if (height <= 480) return '480p';
+    if (height <= 720) return '720p';
+    if (height <= 1080) return '1080p';
+    return '4K';
+  };
+
+  // Helper function to find level index by quality text
+  const getLevelIndexByQuality = (qualityText: string) => {
+    const targetHeight = qualityText === '360p' ? 360 :
+                        qualityText === '480p' ? 480 :
+                        qualityText === '720p' ? 720 :
+                        qualityText === '1080p' ? 1080 : 1080;
+    
+    return availableLevels.findIndex(level => level.height === targetHeight);
+  };
 
   // Initialize HLS
   useEffect(() => {
@@ -35,8 +59,52 @@ const SimpleHLSPlayer: React.FC<SimpleHLSPlayerProps> = ({
     const video = videoRef.current;
 
     if (Hls.isSupported()) {
-      const hls = new Hls();
+      const hls = new Hls({
+        enableWorker: true,
+        lowLatencyMode: false,
+        backBufferLength: 90,
+        maxBufferLength: 30,
+        maxMaxBufferLength: 600,
+        liveSyncDurationCount: 3,
+        liveMaxLatencyDurationCount: 5,
+        seekHole: true,
+        seekDurationLimit: 0.5
+      });
+      
       hlsRef.current = hls;
+      
+      // Listen for manifest loaded to get available levels
+      hls.on(Hls.Events.MANIFEST_PARSED, (event, data) => {
+        console.log('🎯 HLS Manifest loaded, available levels:', data.levels);
+        setAvailableLevels(data.levels);
+        
+        // Set initial quality to highest available
+        if (data.levels.length > 0) {
+          const highestLevel = data.levels.length - 1;
+          hls.currentLevel = highestLevel;
+          setCurrentLevel(highestLevel);
+          
+          // Update quality display based on actual level
+          const level = data.levels[highestLevel];
+          const qualityText = getQualityTextFromLevel(level);
+          setCurrentQuality(qualityText);
+          console.log('🎯 Set initial quality to:', qualityText, 'Level:', highestLevel);
+        }
+      });
+      
+      // Listen for level changes
+      hls.on(Hls.Events.LEVEL_SWITCHED, (event, data) => {
+        console.log('🎯 Level switched to:', data.level);
+        setCurrentLevel(data.level);
+        
+        if (data.level >= 0 && availableLevels[data.level]) {
+          const level = availableLevels[data.level];
+          const qualityText = getQualityTextFromLevel(level);
+          setCurrentQuality(qualityText);
+          console.log('🎯 Updated quality display to:', qualityText);
+        }
+      });
+      
       hls.loadSource(hlsUrl);
       hls.attachMedia(video);
     } else if (video.canPlayType('application/vnd.apple.mpegurl')) {
@@ -153,26 +221,40 @@ const SimpleHLSPlayer: React.FC<SimpleHLSPlayerProps> = ({
   };
 
   const handleQualityChange = (quality: string) => {
-    console.log('Before quality change:', currentQuality);
+    console.log('🎯 Quality changing to:', quality);
+    console.log('🎯 Current quality before change:', currentQuality);
+    console.log('🎯 Available levels:', availableLevels);
+    
+    if (hlsRef.current && availableLevels.length > 0) {
+      const targetLevelIndex = getLevelIndexByQuality(quality);
+      console.log('🎯 Target level index:', targetLevelIndex);
+      
+      if (targetLevelIndex >= 0) {
+        hlsRef.current.currentLevel = targetLevelIndex;
+        console.log('🎯 Switched to level:', targetLevelIndex);
+      } else {
+        console.log('🎯 Quality not available, keeping current level');
+        // Don't update the display if the quality isn't available
+        setShowQualityMenu(false);
+        return;
+      }
+    }
+    
     setCurrentQuality(quality);
     setShowQualityMenu(false);
-    console.log('After quality change:', quality);
-    // Force re-render by updating state
-    setTimeout(() => {
-      console.log('Quality after timeout:', quality);
-    }, 100);
-    // TODO: Implement actual quality switching with HLS.js
+    console.log('🎯 Quality change completed');
   };
 
   const handlePlaybackRateChange = (rate: number) => {
     const video = videoRef.current;
     if (!video) return;
     
-    console.log('Before speed change:', playbackRate);
+    console.log('🎯 Speed changing to:', rate);
+    console.log('🎯 Current speed before change:', playbackRate);
     video.playbackRate = rate;
     setPlaybackRate(rate);
     setShowSpeedMenu(false);
-    console.log('After speed change:', rate);
+    console.log('🎯 Speed change completed');
   };
 
   const formatTime = (time: number) => {
@@ -223,30 +305,42 @@ const SimpleHLSPlayer: React.FC<SimpleHLSPlayerProps> = ({
 
   // Debug state changes
   useEffect(() => {
-    console.log('Current quality state:', currentQuality);
+    console.log('🎯 Current quality state:', currentQuality);
   }, [currentQuality]);
 
   useEffect(() => {
-    console.log('Current playback rate state:', playbackRate);
+    console.log('🎯 Current playback rate state:', playbackRate);
   }, [playbackRate]);
+
+  useEffect(() => {
+    console.log('🎯 Available levels changed:', availableLevels);
+  }, [availableLevels]);
+
+  useEffect(() => {
+    console.log('🎯 Current level changed:', currentLevel);
+  }, [currentLevel]);
 
   // Close menus when clicking outside
   useEffect(() => {
     const handleClickOutside = (event: MouseEvent) => {
-      if (showQualityMenu) {
+      const target = event.target as Element;
+      
+      // Check if click is outside both menus
+      if (showQualityMenu && !target.closest('[data-quality-menu]')) {
         setShowQualityMenu(false);
       }
-      if (showSpeedMenu) {
+      if (showSpeedMenu && !target.closest('[data-speed-menu]')) {
         setShowSpeedMenu(false);
       }
     };
 
     if (showQualityMenu || showSpeedMenu) {
-      document.addEventListener('mousedown', handleClickOutside);
+      // Use click instead of mousedown to allow onClick handlers to execute first
+      document.addEventListener('click', handleClickOutside);
     }
 
     return () => {
-      document.removeEventListener('mousedown', handleClickOutside);
+      document.removeEventListener('click', handleClickOutside);
     };
   }, [showQualityMenu, showSpeedMenu]);
 
@@ -270,7 +364,6 @@ const SimpleHLSPlayer: React.FC<SimpleHLSPlayerProps> = ({
           toggleFullscreen();
         }}
       />
-
 
       {/* Controls Overlay */}
       {showControls && (
@@ -380,7 +473,7 @@ const SimpleHLSPlayer: React.FC<SimpleHLSPlayerProps> = ({
               {/* Right Controls */}
               <div className="flex items-center space-x-3">
                 {/* Quality Selector */}
-                <div className="relative">
+                <div className="relative" data-quality-menu>
                   <button 
                     onClick={() => {
                       setShowQualityMenu(!showQualityMenu);
@@ -388,33 +481,55 @@ const SimpleHLSPlayer: React.FC<SimpleHLSPlayerProps> = ({
                     }}
                     className="px-3 py-2 bg-white/20 rounded-full flex items-center justify-center text-white hover:bg-white/30 transition-colors relative z-10"
                   >
-                    <span key={currentQuality} className="text-xs font-medium">{currentQuality}</span>
+                    <span className="text-xs font-medium">{currentQuality}</span>
                   </button>
                   
                   {/* Quality Menu */}
                   {showQualityMenu && (
                     <div className="absolute bottom-12 right-0 bg-black/90 rounded-lg p-2 min-w-[120px] z-20">
                       <div className="text-white text-xs font-medium mb-2 px-2">Chất lượng video</div>
-                      {['360p', '480p', '720p', '1080p'].map((quality) => (
-                        <button
-                          key={quality}
-                          onClick={(e) => {
-                            e.stopPropagation();
-                            handleQualityChange(quality);
-                          }}
-                          className={`w-full text-left px-2 py-1 text-sm rounded hover:bg-white/20 transition-colors ${
-                            currentQuality === quality ? 'text-blue-400' : 'text-white'
-                          }`}
-                        >
-                          {quality}
-                        </button>
-                      ))}
+                      {availableLevels.length > 0 ? (
+                        availableLevels.map((level, index) => {
+                          const qualityText = getQualityTextFromLevel(level);
+                          return (
+                            <button
+                              key={index}
+                              onClick={(e) => {
+                                console.log('🎯 Quality button clicked:', qualityText, 'Level:', index);
+                                e.stopPropagation();
+                                handleQualityChange(qualityText);
+                              }}
+                              className={`w-full text-left px-2 py-1 text-sm rounded hover:bg-white/20 transition-colors ${
+                                currentLevel === index ? 'text-blue-400' : 'text-white'
+                              }`}
+                            >
+                              {qualityText} {level.height ? `(${level.height}p)` : ''}
+                            </button>
+                          );
+                        })
+                      ) : (
+                        ['360p', '480p', '720p', '1080p'].map((quality) => (
+                          <button
+                            key={quality}
+                            onClick={(e) => {
+                              console.log('🎯 Quality button clicked:', quality);
+                              e.stopPropagation();
+                              handleQualityChange(quality);
+                            }}
+                            className={`w-full text-left px-2 py-1 text-sm rounded hover:bg-white/20 transition-colors ${
+                              currentQuality === quality ? 'text-blue-400' : 'text-white'
+                            }`}
+                          >
+                            {quality}
+                          </button>
+                        ))
+                      )}
                     </div>
                   )}
                 </div>
 
                 {/* Speed Selector */}
-                <div className="relative">
+                <div className="relative" data-speed-menu>
                   <button 
                     onClick={() => {
                       setShowSpeedMenu(!showSpeedMenu);
@@ -422,7 +537,7 @@ const SimpleHLSPlayer: React.FC<SimpleHLSPlayerProps> = ({
                     }}
                     className="px-3 py-2 bg-white/20 rounded-full flex items-center justify-center text-white hover:bg-white/30 transition-colors relative z-10"
                   >
-                    <span key={playbackRate} className="text-xs font-medium">{playbackRate}x</span>
+                    <span className="text-xs font-medium">{playbackRate}x</span>
                   </button>
                   
                   {/* Speed Menu */}
@@ -433,6 +548,7 @@ const SimpleHLSPlayer: React.FC<SimpleHLSPlayerProps> = ({
                         <button
                           key={rate}
                           onClick={(e) => {
+                            console.log('🎯 Speed button clicked:', rate);
                             e.stopPropagation();
                             handlePlaybackRateChange(rate);
                           }}

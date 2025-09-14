@@ -68,10 +68,13 @@
 - **Video Player Fullscreen Fix**: Fixed fullscreen icon visibility and implemented proper fullscreen functionality
 - **Video Player Event Handling**: Resolved click event conflicts between video element and controls overlay
 - **Video Player Quality/Speed Selection**: Added separate quality and speed selection buttons with dropdown menus
-- **Video Player State Update Issue**: Quality and speed selection buttons not updating display text when options are selected
+- **Video Player State Update Fix**: Resolved quality and speed selection button display text update issue by fixing click outside handler and simplifying state management
+- **HLS Adaptive Quality Switching**: Implemented actual HLS quality switching functionality - quality selection now changes actual video quality, not just display text
+- **HLSVideoPlayer Cleanup**: Removed legacy HLSVideoPlayer component and updated all references to use SimpleHLSPlayer
 
 ## In Progress 🔄
-- **Video Player State Update Fix**: Debugging and resolving quality/speed selection button text not updating issue
+- ✅ **Video Player Testing**: RESOLVED - Quality and speed selection button display updates now work correctly
+- ✅ **HLS Adaptive Quality Switching**: RESOLVED - Quality selection now changes actual video quality (360p, 480p, 720p, 1080p)
 - **Frontend Upload Connection**: Resolving "Failed to fetch" error when frontend connects to video upload API
 - **MovieRepository Restoration**: Re-enabling video field access after V2 migration confirmation
 - **Backend API Testing**: Verifying all movie endpoints work correctly with video fields
@@ -97,7 +100,8 @@
 - **Movie Import/Export**: Bulk movie data management
 
 ## Known Issues 🐛
-- **Video Player State Update Issue**: Quality and speed selection buttons not updating display text when options are selected - **INVESTIGATING**: State updates are being called but React not re-rendering properly
+- ✅ **Video Player State Update Issue**: **RESOLVED** - Fixed by correcting click outside handler (mousedown → click event) and simplifying state management
+- ✅ **HLS Adaptive Quality Switching Issue**: **RESOLVED** - Implemented actual HLS quality switching using hls.currentLevel API
 - **Frontend Upload Connection**: "Failed to fetch" error when frontend tries to connect to video upload API - **INVESTIGATING**: Backend is running and accessible, need to check CORS and endpoint configuration
 - **Video Fields Temporarily Disabled**: MovieRepository video field access is commented out until migration is confirmed - **SOLUTION**: Re-enable after testing V2 migration
 - **Empty Genre Pages**: Genre pages show "Chưa có phim nào trong thể loại này" when no movies are assigned to genres - **SOLUTION PROVIDED**: Use admin interface to create movies and assign genres
