@@ -1,4 +1,4 @@
-# Video Player Implementation: Rophim Platform
+# Video Player Implementation: NicePhim Platform
 
 ## Overview
 The video player system has been completely rebuilt with a focus on user experience, performance, and maintainability. The new SimpleHLSPlayer component provides adaptive video streaming with intuitive controls.

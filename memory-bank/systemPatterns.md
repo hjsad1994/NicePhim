@@ -42,7 +42,9 @@ Frontend (Next.js) ←→ Backend (Spring Boot) ←→ Database (SQL Server)
 2. **Processing**: FFmpeg converts to HLS format with multiple quality variants (360p, 720p, 1080p)
 3. **Storage**: HLS segments stored in media directory (D:/media)
 4. **Streaming**: Direct file serving via Spring static resources
-5. **Database Integration**: Video metadata (video_id, hls## Video Player Architecture
+5. **Database Integration**: Video metadata (video_id, hls_url, video_status) stored in database
+
+## Video Player Architecture
 - **SimpleHLSPlayer Component**: Simplified video player built from scratch for better maintainability
 - **HLS.js Integration**: Adaptive video streaming with multiple quality options
 - **Event Handling**: Proper click (play/pause) and double-click (fullscreen) functionality
@@ -55,6 +57,9 @@ Frontend (Next.js) ←→ Backend (Spring Boot) ←→ Database (SQL Server)
 - **HLS Adaptive Quality Switching**: Real-time quality switching using hls.currentLevel API with level mapping and event handling
 - **Dynamic Quality Menu**: Shows only available qualities from HLS manifest with actual resolution display
 - **Component Consolidation**: Single SimpleHLSPlayer component replaces legacy HLSVideoPlayer for cleaner architecture
+- **Video Player Layout Optimization**: Responsive sizing with max-w-full width and optimized padding for screen utilization
+- **Header Spacing Management**: Proper top padding (pt-12) applied at page level to prevent header overlap
+- **Padding Configuration**: Horizontal padding (px-5) for 20px side margins and minimal vertical padding for maximum screen usage
 
 ## Security Patterns
 - **Password Hashing**: BCrypt with salt rounds
@@ -96,5 +101,12 @@ Frontend (Next.js) ←→ Backend (Spring Boot) ←→ Database (SQL Server)
 - **Schema Evolution**: Add new columns with NULL defaults to avoid breaking existing data
 - **Migration Rollback**: Proper migration design to allow rollback if needed
 - **Column Addition Pattern**: ALTER TABLE ADD COLUMN with appropriate defaults and constraints
+
+## Project Structure Patterns
+- **Frontend Directory**: nicephim-frontend (renamed from rophim-frontend)
+- **Backend Directory**: nicephim-backend
+- **Consistent Naming**: All project references use "NicePhim" branding
+- **Memory Bank Integration**: All documentation files updated with new branding
+- **Code References**: Updated all code references from rophim to nicephim
 
 

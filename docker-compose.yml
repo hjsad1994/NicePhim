@@ -1,0 +1,21 @@
+version: '3'
+
+volumes:
+  mssql-db:
+
+services:
+  mssql:
+    image: mcr.microsoft.com/mssql/server:2022-latest
+    platform: linux/amd64
+    ports:
+      - "1433:1433"
+    environment:
+      - ACCEPT_EULA=Y
+      - SA_PASSWORD=Aa@123456
+      - MSSQL_PID=Developer
+      - MSSQL_COLLATION=SQL_Latin1_General_CP1_CI_AS
+      - TZ=Asia/Ho_Chi_Minh
+    volumes:
+      - mssql-db:/var/opt/mssql
+    container_name: mssql
+    restart: always

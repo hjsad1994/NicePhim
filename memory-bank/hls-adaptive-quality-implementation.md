@@ -238,7 +238,7 @@ const handleQualityChange = (quality: string) => {
 - **Testing Status**: Fully functional with comprehensive debugging
 
 ## Related Files
-- **Main Component**: `rophim-frontend/src/components/video/SimpleHLSPlayer.tsx`
+- **Main Component**: `nicephim-frontend/src/components/video/SimpleHLSPlayer.tsx`
 - **HLS Library**: `hls.js` and `@types/hls.js`
 - **Video Processing**: FFmpeg HLS conversion pipeline
 - **Memory Bank**: Updated documentation in `activeContext.md`, `progress.md`, `systemPatterns.md`

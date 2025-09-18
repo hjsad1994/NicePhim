@@ -1,7 +1,7 @@
-# Cursor Rules Integration: Rophim Development Standards
+# Cursor Rules Integration: NicePhim Development Standards
 
 ## Overview
-This document outlines the comprehensive cursor rules integration for the Rophim movie streaming platform project. The cursor rules system provides development guidelines, coding standards, and documentation workflows to ensure consistent and high-quality development practices.
+This document outlines the comprehensive cursor rules integration for the NicePhim movie streaming platform project. The cursor rules system provides development guidelines, coding standards, and documentation workflows to ensure consistent and high-quality development practices.
 
 ## Cursor Rules Structure
 
@@ -103,7 +103,7 @@ Create additional files when needed for:
 - Testing strategies
 - Deployment procedures
 
-## Integration with Rophim Project
+## Integration with NicePhim Project
 
 ### Current Integration Status
 - ✅ **Memory Bank Documentation**: Complete documentation system
@@ -135,4 +135,4 @@ Create additional files when needed for:
 
 ---
 
-*This document is part of the Rophim project's memory bank system and should be updated whenever cursor rules or development standards change.*
+*This document is part of the NicePhim project's memory bank system and should be updated whenever cursor rules or development standards change.*

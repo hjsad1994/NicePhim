@@ -129,7 +129,7 @@ const handlePlaybackRateChange = (rate: number) => {
 5. **Select 1.25x** - see console logs, button text changes to "1.25x", and video speed changes immediately
 
 ## Code Location
-- **File**: `rophim-frontend/src/components/video/SimpleHLSPlayer.tsx`
+- **File**: `nicephim-frontend/src/components/video/SimpleHLSPlayer.tsx`
 - **Lines**: 155-172 (event handlers), 391-426 (UI rendering)
 - **Component**: SimpleHLSPlayer
 

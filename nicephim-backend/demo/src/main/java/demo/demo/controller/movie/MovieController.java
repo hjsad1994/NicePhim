@@ -270,7 +270,7 @@ public class MovieController {
             // Try to create admin user
             RegisterRequest adminRequest = new RegisterRequest();
             adminRequest.username = "admin";
-            adminRequest.email = "admin@rophim.com";
+            adminRequest.email = "admin@nicephim.com";
             adminRequest.password = "admin123";
             adminRequest.displayName = "System Administrator";
             
@@ -285,7 +285,7 @@ public class MovieController {
                 // For now, create a unique admin user
                 RegisterRequest adminRequest = new RegisterRequest();
                 adminRequest.username = "admin_" + System.currentTimeMillis();
-                adminRequest.email = "admin_" + System.currentTimeMillis() + "@rophim.com";
+                adminRequest.email = "admin_" + System.currentTimeMillis() + "@nicephim.com";
                 adminRequest.password = "admin123";
                 adminRequest.displayName = "System Administrator";
                 

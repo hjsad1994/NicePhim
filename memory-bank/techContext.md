@@ -37,6 +37,7 @@
 - **Comments**: User interactions and feedback
 - **Video Renditions**: HLS streaming quality variants
 - **Video Player Components**: SimpleHLSPlayer, HLSVideoPlayer, VideoPlayer wrapper
+- **Project Structure**: nicephim-frontend (renamed from rophim-frontend), nicephim-backend
 
 ## Development Environment
 - **Database**: SQL Server on KARIU:1435
