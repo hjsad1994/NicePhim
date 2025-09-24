@@ -221,29 +221,6 @@ export default function EditMoviePage() {
             </div>
           </div>
 
-      {/* Success Message */}
-      {success && (
-        <div className="rounded-md p-4" style={{backgroundColor: 'var(--bg-4)', border: '1px solid #10b981'}}>
-          <div className="flex">
-            <CheckIcon className="h-5 w-5 text-green-400" />
-            <div className="ml-3">
-              <p className="text-sm font-medium text-green-400">{success}</p>
-            </div>
-          </div>
-        </div>
-      )}
-
-      {/* Error Message */}
-      {error && (
-        <div className="rounded-md p-4" style={{backgroundColor: 'var(--bg-4)', border: '1px solid #ef4444'}}>
-          <div className="flex">
-            <div className="ml-3">
-              <p className="text-sm font-medium text-red-400">{error}</p>
-            </div>
-          </div>
-        </div>
-      )}
-
           <form onSubmit={handleSubmit} className="px-6 py-6 space-y-6">
                 {/* Title */}
                 <div>
@@ -472,6 +449,29 @@ export default function EditMoviePage() {
               </button>
             </div>
           </form>
+
+          {/* Success Message */}
+          {success && (
+            <div className="mx-6 mb-6 rounded-md p-4" style={{backgroundColor: 'var(--bg-4)', border: '1px solid #10b981'}}>
+              <div className="flex">
+                <CheckIcon className="h-5 w-5 text-green-400" />
+                <div className="ml-3">
+                  <p className="text-sm font-medium text-green-400">{success}</p>
+                </div>
+              </div>
+            </div>
+          )}
+
+          {/* Error Message */}
+          {error && (
+            <div className="mx-6 mb-6 rounded-md p-4" style={{backgroundColor: 'var(--bg-4)', border: '1px solid #ef4444'}}>
+              <div className="flex">
+                <div className="ml-3">
+                  <p className="text-sm font-medium text-red-400">{error}</p>
+                </div>
+              </div>
+            </div>
+          )}
         </div>
       </div>
 
