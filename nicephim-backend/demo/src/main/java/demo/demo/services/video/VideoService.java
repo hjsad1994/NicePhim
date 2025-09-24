@@ -37,10 +37,22 @@ public class VideoService {
 
 	public UploadResult handleUpload(MultipartFile file) throws IOException {
 		String videoId = UUID.randomUUID().toString();
-		Path uploadPath = Paths.get(uploadDir).resolve(videoId + ".mp4");
-		Files.createDirectories(uploadPath.getParent());
+
+		// Ensure upload directory exists
+		Path uploadDirPath = Paths.get(uploadDir);
+		Files.createDirectories(uploadDirPath);
+
+		// Create the upload path
+		Path uploadPath = uploadDirPath.resolve(videoId + ".mp4");
+
+		System.out.println("Video upload - videoId: " + videoId);
+		System.out.println("Upload directory: " + uploadDirPath.toAbsolutePath());
+		System.out.println("Upload path: " + uploadPath.toAbsolutePath());
+
+		// Transfer the file
 		file.transferTo(uploadPath.toFile());
 
+		// Ensure HLS directory exists
 		Path outDir = Paths.get(hlsDir).resolve(videoId);
 		Files.createDirectories(outDir);
 

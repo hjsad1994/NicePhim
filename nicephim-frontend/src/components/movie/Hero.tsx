@@ -3,7 +3,7 @@
 import { useState, useEffect, useRef } from 'react';
 import Image from 'next/image';
 import Link from 'next/link';
-import { PlayIcon, InformationCircleIcon, ChevronLeftIcon, ChevronRightIcon, StarIcon, ClockIcon } from '@heroicons/react/24/solid';
+import { PlayIcon, InformationCircleIcon, ChevronLeftIcon, ChevronRightIcon, StarIcon, ClockIcon, PauseIcon } from '@heroicons/react/24/solid';
 import { Movie } from '@/types/movie';
 import { getImageUrl, truncateText } from '@/lib/utils';
 
@@ -23,14 +23,16 @@ export function Hero({ movies }: HeroProps) {
 
   // Auto-play carousel with progress bar
   useEffect(() => {
-    if (!isAutoPlay || movies.length <= 1 || isHovered) return;
+    if (!isAutoPlay || movies.length <= 1) return;
 
     const startProgress = () => {
       setProgress(0);
+      if (progressIntervalRef.current) {
+        clearInterval(progressIntervalRef.current);
+      }
       progressIntervalRef.current = setInterval(() => {
         setProgress((prev) => {
           if (prev >= 100) {
-            clearInterval(progressIntervalRef.current);
             return 100;
           }
           return prev + 2; // 2% every 100ms = 5s total
@@ -50,13 +52,39 @@ export function Hero({ movies }: HeroProps) {
     };
   }, [movies.length, isAutoPlay, isHovered]);
 
-  // Reset progress when movie changes
+  // Reset progress and restart auto-play when movie changes
   useEffect(() => {
     setProgress(0);
     if (progressIntervalRef.current) {
       clearInterval(progressIntervalRef.current);
     }
-  }, [currentIndex]);
+
+    // Restart progress for new slide
+    if (isAutoPlay && !isHovered) {
+      const restartProgress = () => {
+        progressIntervalRef.current = setInterval(() => {
+          setProgress((prev) => {
+            if (prev >= 100) {
+              return 100;
+            }
+            return prev + 2;
+          });
+        }, 100);
+      };
+      restartProgress();
+    }
+  }, [currentIndex, isAutoPlay, isHovered]);
+
+  // Resume auto-play after user interaction
+  useEffect(() => {
+    if (!isHovered && !isAutoPlay && movies.length > 1) {
+      const resumeTimeout = setTimeout(() => {
+        setIsAutoPlay(true);
+      }, 10000); // Resume after 10 seconds of inactivity
+
+      return () => clearTimeout(resumeTimeout);
+    }
+  }, [isHovered, isAutoPlay, movies.length]);
 
   const goToPrevious = () => {
     setCurrentIndex((prev) => (prev - 1 + movies.length) % movies.length);
@@ -71,6 +99,10 @@ export function Hero({ movies }: HeroProps) {
   const goToSlide = (index: number) => {
     setCurrentIndex(index);
     setIsAutoPlay(false);
+  };
+
+  const toggleAutoPlay = () => {
+    setIsAutoPlay(!isAutoPlay);
   };
 
   if (movies.length === 0) return null;
@@ -229,19 +261,10 @@ export function Hero({ movies }: HeroProps) {
           </>
         )}
 
-        {/* Progress Bar */}
-        {movies.length > 1 && isAutoPlay && !isHovered && (
-          <div className="absolute bottom-0 left-0 right-0 h-1 bg-gray-800/50">
-            <div
-              className="h-full bg-gradient-to-r from-red-600 to-pink-600 transition-all duration-100 ease-linear"
-              style={{ width: `${progress}%` }}
-            />
-          </div>
-        )}
-
+  
         {/* Dots Indicator */}
         {movies.length > 1 && (
-          <div className="absolute bottom-8 left-1/2 -translate-x-1/2 flex space-x-3">
+          <div className="absolute bottom-20 left-1/2 -translate-x-1/2 flex space-x-3">
             {movies.map((_, index) => (
               <button
                 key={index}
@@ -262,27 +285,37 @@ export function Hero({ movies }: HeroProps) {
 
       {/* Side Info Panel */}
       {movies.length > 1 && (
-        <div className="absolute right-0 top-1/2 -translate-y-1/2 hidden lg:block">
-          <div className="space-y-4 px-6">
+        <div className="absolute right-25 top-1/2 -translate-y-1/2 hidden lg:block">
+          <div className="space-x-2"> 
             {movies.map((movie, index) => (
               <button
                 key={movie.id}
                 onClick={() => goToSlide(index)}
-                className={`group relative w-32 h-20 rounded-lg overflow-hidden transition-all duration-300 ${
-                  index === currentIndex ? 'ring-2 ring-white scale-110' : 'opacity-60 hover:opacity-80'
+                className={`group relative w-32 h-20 rounded-lg overflow-hidden transition-all duration-300 transform hover:scale-100 ${
+                  index === currentIndex
+                    ? 'ring-2 ring-red-500 scale-110 shadow-lg'
+                    : 'opacity-70 hover:opacity-90 hover:ring-1 hover:ring-white/50'
                 }`}
+                title={movie.title}
               >
                 <Image
                   src={getImageUrl(movie.poster, 'small')}
                   alt={movie.title}
                   fill
                   className="object-cover"
+                  priority={index === currentIndex}
                 />
-                <div className="absolute inset-0 bg-gradient-to-t from-black/80 to-transparent" />
-                <div className="absolute bottom-2 left-2 right-2">
-                  <p className="text-white text-xs font-medium truncate">
+                <div className="absolute inset-0 bg-gradient-to-t from-black/90 via-black/40 to-transparent"  />
+                <div className="absolute bottom-1 left-1 right-1">
+                  <p className="text-white text-xs font-medium truncate leading-tight">
                     {movie.title}
                   </p>
+                  {index === currentIndex && (
+                    <div className="flex items-center mt-1">
+                      <div className="w-1.5 h-1.5 bg-red-500 rounded-full mr-1 animate-pulse" />
+                      <span className="text-red-400 text-[10px] font-medium">Đang phát</span>
+                    </div>
+                  )}
                 </div>
               </button>
             ))}

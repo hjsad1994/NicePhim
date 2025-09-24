@@ -88,10 +88,24 @@
 - ✅ **Dark Mode Feature Removal**: Removed dark/light mode theme switching functionality
 - ✅ **Test Files Cleanup**: Removed all test files and test features from the platform
 - ✅ **Environment Configuration Management**: Created .env file for flexible directory URL management and updated application.properties to use environment variables with fallbacks
+- ✅ **Windows Path Configuration**: Updated media directory paths and ffmpeg path in .env file for Windows environment
+- ✅ **Authentication State Management**: Fixed header user icon requiring page reload after login
+- ✅ **Video Upload Path Error**: Resolved file path error with proper directory creation in VideoService
+- ✅ **Movie Detail Page Redesign**: Updated /phim/ page to match homepage cinematic style
+- ✅ **Button Styling Consistency**: Made "Xem Ngay", "Xem Chung", and "Thích" buttons consistent with homepage styling
+- ✅ **Homepage Auto-play Carousel**: Implemented auto-changing movies with progress indicator and user controls
+- ✅ **Movie Carousel Optimization**: Enhanced transition timing and repositioned mini movie cards for better UX
 
 ## In Progress 🔄
 - ✅ **Video Player Testing**: RESOLVED - Quality and speed selection button display updates now work correctly
 - ✅ **HLS Adaptive Quality Switching**: RESOLVED - Quality selection now changes actual video quality (360p, 480p, 720p, 1080p)
+- ✅ **Windows Path Configuration**: RESOLVED - Updated .env file media paths and ffmpeg path for Windows environment
+- ✅ **Authentication State Issue**: RESOLVED - Fixed header user icon requiring page reload after login
+- ✅ **Video Upload Path Error**: RESOLVED - Fixed file path error with proper directory creation
+- ✅ **Movie Detail Page Styling**: RESOLVED - Updated /phim/ page to match homepage cinematic style
+- ✅ **Button Styling Consistency**: RESOLVED - Made all buttons consistent with homepage styling
+- ✅ **Homepage Auto-play Feature**: RESOLVED - Implemented auto-changing movies with progress indicator
+- ✅ **Movie Carousel Positioning**: RESOLVED - Optimized mini movie card positioning and transitions
 - **Frontend Upload Connection**: Resolving "Failed to fetch" error when frontend connects to video upload API
 - **MovieRepository Restoration**: Re-enabling video field access after V2 migration confirmation
 - **Backend API Testing**: Verifying all movie endpoints work correctly with video fields
@@ -124,6 +138,13 @@
 - ✅ **Header Branding Inconsistency**: **RESOLVED** - Updated header logo from "Rophim" to "NicePhim" for consistent branding
 - ✅ **Image Upload Label Visibility**: **RESOLVED** - Fixed ImageUpload component labels to display in white instead of gray for better visibility
 - ✅ **Admin View Button 404 Error**: **RESOLVED** - Fixed admin movies view button to redirect to public movie page using generateSlug utility
+- ✅ **Windows Path Configuration Issue**: **RESOLVED** - Updated .env file media paths and ffmpeg path for Windows environment
+- ✅ **Authentication State Issue**: **RESOLVED** - Fixed header user icon requiring page reload after login by implementing event-driven state updates
+- ✅ **Video Upload Path Error**: **RESOLVED** - Fixed file path error with proper directory creation before file transfer
+- ✅ **Movie Detail Page Styling**: **RESOLVED** - Updated /phim/ page to match homepage cinematic style with glass-morphism effects
+- ✅ **Button Styling Inconsistency**: **RESOLVED** - Made all buttons consistent with homepage red gradient styling and arrow animations
+- ✅ **Homepage Auto-play Feature**: **RESOLVED** - Implemented auto-changing movies with progress indicator and play/pause controls
+- ✅ **Movie Carousel Positioning**: **RESOLVED** - Optimized mini movie card positioning (moved left) and transition timing
 - **Frontend Upload Connection**: "Failed to fetch" error when frontend tries to connect to video upload API - **INVESTIGATING**: Backend is running and accessible, need to check CORS and endpoint configuration
 - **Video Fields Temporarily Disabled**: MovieRepository video field access is commented out until migration is confirmed - **SOLUTION**: Re-enable after testing V2 migration
 - **Empty Genre Pages**: Genre pages show "Chưa có phim nào trong thể loại này" when no movies are assigned to genres - **SOLUTION PROVIDED**: Use admin interface to create movies and assign genres
