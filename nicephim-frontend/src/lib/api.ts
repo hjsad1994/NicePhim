@@ -154,6 +154,14 @@ export class ApiService {
         console.log('API Response Data:', data);
       } catch (jsonError) {
         console.error('JSON Parse Error:', jsonError);
+        console.error('Response Status:', response.status);
+        console.error('Response Headers:', response.headers);
+
+        // If the response is successful but empty, return a success object
+        if (response.ok && response.status === 204) {
+          return { success: true };
+        }
+
         throw new Error('Phản hồi từ server không hợp lệ');
       }
 

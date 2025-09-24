@@ -3,6 +3,7 @@
 import Link from 'next/link';
 import Image from 'next/image';
 import { useState, useEffect, use } from 'react';
+import { useRouter } from 'next/navigation';
 import { ApiService, MovieResponse } from '@/lib/api';
 import { Movie } from '@/types/movie';
 
@@ -13,16 +14,19 @@ interface TaoPhongXemChungPageProps {
 }
 
 export default function TaoPhongXemChungPage({ searchParams }: TaoPhongXemChungPageProps) {
+  const router = useRouter();
   const resolvedSearchParams = use(searchParams);
   const [movie, setMovie] = useState<Movie | null>(null);
+  const [movies, setMovies] = useState<Movie[]>([]); // Store all movies for poster selection
   const [isLoading, setIsLoading] = useState(true);
   const [roomName, setRoomName] = useState<string>('');
   const [autoStart, setAutoStart] = useState<boolean>(false);
   const [privateOnly, setPrivateOnly] = useState<boolean>(false);
+  const [isCreating, setIsCreating] = useState<boolean>(false);
 
   // Convert MovieResponse to Movie type for compatibility
   const convertToMovie = (movieResponse: MovieResponse): Movie => {
-    const slug = movieResponse.aliasTitle || movieResponse.title.toLowerCase().replace(/\s+/g, '-');
+    const slug = movieResponse.aliasTitle || movieResponse.title.toLowerCase().split(' ').join('-');
     return {
       id: movieResponse.movieId,
       title: movieResponse.title,
@@ -36,7 +40,7 @@ export default function TaoPhongXemChungPage({ searchParams }: TaoPhongXemChungP
       genres: (movieResponse.genres || []).map(genre => ({
         id: genre.genreId,
         name: genre.name,
-        slug: genre.name.toLowerCase().replace(/\s+/g, '-')
+        slug: genre.name.toLowerCase().split(' ').join('-')
       })),
       country: 'Vietnam', // Default country
       status: 'completed' as const,
@@ -56,7 +60,7 @@ export default function TaoPhongXemChungPage({ searchParams }: TaoPhongXemChungP
     const loadMovie = async () => {
       try {
         setIsLoading(true);
-        
+
         // Create realistic fallback movie
         const createFallbackMovie = (): Movie => ({
           id: 'watch-together-movie',
@@ -89,43 +93,44 @@ export default function TaoPhongXemChungPage({ searchParams }: TaoPhongXemChungP
           // Try to get movies from database
           const moviesResponse = await Promise.race([
             ApiService.getMovies(0, 100),
-            new Promise((_, reject) => 
+            new Promise((_, reject) =>
               setTimeout(() => reject(new Error('API timeout')), 5000)
             )
-          ]) as any;
-          
+          ]) as PromiseSettledResult<unknown>[];
+
           if (moviesResponse.success && moviesResponse.data && moviesResponse.data.length > 0) {
             // Convert MovieResponse to Movie
-            const movies = moviesResponse.data.map(convertToMovie);
-            
+            const convertedMovies = moviesResponse.data.map(convertToMovie);
+            setMovies(convertedMovies); // Store all movies for poster selection
+
             // If movie slug is provided in search params, find that specific movie
             if (resolvedSearchParams.movie) {
-              const foundMovie = movies.find(m => m.slug === resolvedSearchParams.movie);
+              const foundMovie = convertedMovies.find(m => m.slug === resolvedSearchParams.movie);
               if (foundMovie) {
                 setMovie(foundMovie);
-                setRoomName(`Cùng xem ${foundMovie.title} nhé`);
+                setRoomName('Cùng xem ' + foundMovie.title + ' nhé');
               } else {
-                setMovie(movies[0]);
-                setRoomName(`Cùng xem ${movies[0].title} nhé`);
+                setMovie(convertedMovies[0]);
+                setRoomName('Cùng xem ' + convertedMovies[0].title + ' nhé');
               }
             } else {
               // Use first movie if no specific movie requested
-              setMovie(movies[0]);
-              setRoomName(`Cùng xem ${movies[0].title} nhé`);
+              setMovie(convertedMovies[0]);
+              setRoomName('Cùng xem ' + convertedMovies[0].title + ' nhé');
             }
           } else {
-            console.log('⚠️ No movies in database, using fallback');
+            console.log('No movies in database, using fallback');
             setMovie(createFallbackMovie());
             setRoomName('Cùng xem Spider-Man: No Way Home nhé');
           }
         } catch (apiError) {
-          console.error('❌ API call failed:', apiError);
+          console.error('API call failed:', apiError);
           setMovie(createFallbackMovie());
           setRoomName('Cùng xem Spider-Man: No Way Home nhé');
         }
-        
+
       } catch (error) {
-        console.error('❌ Unexpected error:', error);
+        console.error('Unexpected error:', error);
       } finally {
         setIsLoading(false);
       }
@@ -134,30 +139,89 @@ export default function TaoPhongXemChungPage({ searchParams }: TaoPhongXemChungP
     loadMovie();
   }, [resolvedSearchParams.movie]);
 
-  const posters = [
+  // Generate posters from available movies in database
+  const posters = movies.length > 0 ? movies.slice(0, 6).map((m) => ({
+    alt: m.title,
+    src: m.poster,
+    movie: m, // Store movie object for selection
+    id: m.id
+  })) : [
+    // Fallback posters if no movies in database
     {
       alt: 'poster 1',
       src: movie?.poster || 'https://image.tmdb.org/t/p/w500/1g0dhYtq4irTY1GPXvft6k4YLjm.jpg',
+      movie: movie,
+      id: 'fallback-1'
     },
     {
       alt: 'poster 2',
       src: movie?.banner || 'https://image.tmdb.org/t/p/w1280/14QbnygCuTO0vl7CAFmPf1fgZfV.jpg',
+      movie: movie,
+      id: 'fallback-2'
     },
     {
       alt: 'poster 3',
       src: 'https://image.tmdb.org/t/p/w500/dDlEmu3EZ0Pgg93K2SVNLCjCSvE.jpg',
+      movie: movie,
+      id: 'fallback-3'
     },
   ];
   const [activePoster, setActivePoster] = useState<number>(0);
 
-  const handleCreate = () => {
-    // TODO: integrate API create room
-    alert('Đã tạo phòng: ' + roomName + (privateOnly ? ' (chỉ bạn bè)' : ' (công khai)'));
+  // Handle poster selection - update the selected movie when user clicks a poster
+  const handlePosterSelect = (index: number) => {
+    setActivePoster(index);
+    const selectedPoster = posters[index];
+    if (selectedPoster.movie) {
+      setMovie(selectedPoster.movie);
+      setRoomName('Cùng xem ' + selectedPoster.movie.title + ' nhé');
+    }
+  };
+
+  const handleCreate = async () => {
+    if (!roomName || roomName.length < 10) {
+      alert('Vui lòng nhập tên phòng có ít nhất 10 ký tự');
+      return;
+    }
+
+    setIsCreating(true);
+
+    try {
+      // TODO: integrate API create room
+      // const roomData = {
+      //   name: roomName,
+      //   movie: movie?.title,
+      //   poster: posters[activePoster].src,
+      //   autoStart,
+      //   isPrivate: privateOnly,
+      //   createdAt: new Date().toISOString()
+      // };
+
+      // Simulate API call
+      await new Promise(resolve => setTimeout(resolve, 1000));
+
+      // Simulate successful room creation
+      alert('Đã tạo phòng "' + roomName + '" thành công!' +
+            '\n\nPhim: ' + (movie?.title || 'Unknown') +
+            '\nLoại phòng: ' + (privateOnly ? 'Riêng tư' : 'Công khai') +
+            '\nBắt đầu: ' + (autoStart ? 'Tự động' : 'Thủ công'));
+
+      // Redirect to room management after successful creation
+      setTimeout(() => {
+        router.push('/xem-chung/quan-ly');
+      }, 500);
+
+    } catch (error) {
+      alert('Đã xảy ra lỗi khi tạo phòng. Vui lòng thử lại!');
+      console.error('Room creation error:', error);
+    } finally {
+      setIsCreating(false);
+    }
   };
 
   if (isLoading) {
     return (
-      <div className="min-h-screen flex items-center justify-center" style={{backgroundColor: 'var(--bg-2)'}}>
+      <div className="min-h-screen flex items-center justify-center bg-black">
         <div className="text-center">
           <div className="animate-spin rounded-full h-32 w-32 border-b-2 border-red-600 mx-auto mb-4"></div>
           <div className="text-white text-xl">Đang tải thông tin phim...</div>
@@ -168,7 +232,7 @@ export default function TaoPhongXemChungPage({ searchParams }: TaoPhongXemChungP
 
   if (!movie) {
     return (
-      <div className="min-h-screen flex items-center justify-center" style={{backgroundColor: 'var(--bg-2)'}}>
+      <div className="min-h-screen flex items-center justify-center bg-black">
         <div className="text-center">
           <div className="text-6xl mb-4">🎬</div>
           <h1 className="text-2xl font-bold text-white mb-4">Không thể tải thông tin phim</h1>
@@ -179,188 +243,402 @@ export default function TaoPhongXemChungPage({ searchParams }: TaoPhongXemChungP
   }
 
   return (
-    <div className="min-h-screen" style={{backgroundColor: 'var(--bg-2)'}}>
-      <div className="w-[90%] mx-auto px-4 sm:px-6 lg:px-8 py-8">
-        {/* Header */}
-        <div className="mb-4 flex items-center gap-3">
-          <Link href={`/phim/${movie.slug}`} className="btn btn-circle btn-outline border-2 border-gray-400/30 text-white hover:bg-white/10" aria-label="Quay lại">
-            <span className="i-fa6-solid-angle-left" aria-hidden />
-          </Link>
-          <h3 className="category-name text-white text-2xl font-semibold">Tạo phòng xem chung</h3>
+    <div className="min-h-screen bg-black">
+      <div className="relative w-[90%] mx-auto px-4 sm:px-6 lg:px-8 py-8">
+        {/* Enhanced Header */}
+        <div className="mb-8">
+          <nav className="flex items-center space-x-2 text-sm text-gray-400 mb-4">
+            <Link href="/" className="hover:text-red-400 transition-colors">
+              Trang chủ
+            </Link>
+            <span>/</span>
+            <Link href="/xem-chung" className="hover:text-red-400 transition-colors">
+              Xem chung
+            </Link>
+            <span>/</span>
+            <span className="text-white">Tạo phòng mới</span>
+          </nav>
+
+          <div className="flex items-center gap-4 mb-4">
+            <Link
+              href={`/phim/${movie.slug}`}
+              className="group flex items-center justify-center w-12 h-12 rounded-full border-2 border-gray-400/30 text-white hover:bg-red-500/20 hover:border-red-500/50 transition-all duration-300"
+              aria-label="Quay lại"
+            >
+              <svg className="w-5 h-5 group-hover:-translate-x-0.5 transition-transform" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 19l-7-7 7-7" />
+              </svg>
+            </Link>
+            <div>
+              <h1 className="text-4xl font-bold text-white mb-2 bg-gradient-to-r from-red-400 to-pink-400 bg-clip-text text-transparent">
+                Tạo phòng xem chung
+              </h1>
+              <p className="text-gray-400">Cùng xem phim với bạn bè mọi lúc mọi nơi</p>
+            </div>
+          </div>
         </div>
 
-        <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
-          {/* Movie detail */}
-          <div className="border-2 border-gray-400/15 rounded-lg p-5" style={{backgroundColor: 'var(--bg-3)'}}>
-            <div className="flex gap-5">
-              <div className="div-poster w-[140px] shrink-0">
-                <div className="v-thumbnail relative w-[140px] h-[200px] overflow-hidden rounded-md border border-gray-500/30">
-                  <Image
-                    alt={movie.title}
-                    src={movie.poster}
-                    fill
-                    className="object-cover"
-                    sizes="140px"
-                  />
+        <div className="grid grid-cols-1 xl:grid-cols-3 gap-8">
+          {/* Main content */}
+          <div className="xl:col-span-2 space-y-6">
+            {/* Enhanced Movie Card */}
+            <div className="border-2 border-gray-400/15 rounded-2xl overflow-hidden bg-[#23242F]">
+              <div className="relative p-6">
+                <div className="flex gap-6">
+                  {/* Enhanced Poster */}
+                  <div className="relative group">
+                    <div className="absolute -inset-1 bg-gradient-to-r from-red-500 to-purple-500 rounded-lg blur opacity-25 group-hover:opacity-40 transition duration-1000 group-hover:duration-200"></div>
+                    <div className="relative w-[160px] h-[240px] overflow-hidden rounded-lg border-2 border-gray-400/20 shadow-2xl">
+                      <Image
+                        alt={movie.title}
+                        src={movie.poster}
+                        fill
+                        className="object-cover transform group-hover:scale-105 transition-transform duration-500"
+                        sizes="160px"
+                      />
+                      <div className="absolute inset-0 bg-gradient-to-t from-black/50 to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-300"></div>
+                    </div>
+                  </div>
+
+                  {/* Enhanced Info */}
+                  <div className="flex-1">
+                    <h2 className="text-2xl font-bold text-white mb-3 group-hover:text-red-400 transition-colors">
+                      <Link
+                        title={movie.title}
+                        href={`/phim/${movie.slug}`}
+                        className="hover:text-red-400 transition-colors"
+                      >
+                        {movie.title}
+                      </Link>
+                    </h2>
+
+                    {movie.releaseYear && (
+                      <div className="text-red-400 font-semibold mb-4">{movie.releaseYear}</div>
+                    )}
+
+                    <div className="space-y-3">
+                      {/* Enhanced Tags */}
+                      <div className="flex flex-wrap gap-2">
+                        <div className="px-3 py-1 rounded-full bg-gradient-to-r from-red-500/20 to-red-600/20 border border-red-500/30 text-white text-sm font-medium">
+                          {movie.quality}
+                        </div>
+                        {movie.releaseYear && (
+                          <div className="px-3 py-1 rounded-full bg-gray-600/40 border border-gray-500/30 text-white text-sm">
+                            {movie.releaseYear}
+                          </div>
+                        )}
+                        {movie.imdbRating && (
+                          <div className="px-3 py-1 rounded-full bg-gradient-to-r from-yellow-500/20 to-yellow-600/20 border border-yellow-500/30 text-white text-sm font-medium flex items-center gap-1">
+                            <span>⭐</span>
+                            {movie.imdbRating}
+                          </div>
+                        )}
+                      </div>
+
+                      {/* Enhanced Genres */}
+                      <div className="flex flex-wrap gap-2">
+                        {movie.genres.map((genre) => (
+                          <Link
+                            key={genre.id}
+                            href={`/the-loai/${genre.slug}`}
+                            className="px-3 py-1 rounded-lg border border-gray-400/30 text-gray-200 text-sm hover:bg-white/10 hover:border-white/50 transition-all duration-300"
+                          >
+                            {genre.name}
+                          </Link>
+                        ))}
+                      </div>
+
+                      {/* Enhanced Description */}
+                      <p className="text-gray-300/90 text-sm leading-relaxed line-clamp-3">
+                        {movie.description}
+                      </p>
+
+                      {/* Enhanced Duration */}
+                      <div className="flex items-center gap-2 pt-2">
+                        <div className="w-8 h-8 rounded-full bg-red-500/20 border border-red-500/30 flex items-center justify-center">
+                          <svg className="w-4 h-4 text-red-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z" />
+                          </svg>
+                        </div>
+                        <span className="text-white font-medium">{movie.duration} phút</span>
+                      </div>
+                    </div>
+                  </div>
                 </div>
               </div>
-              <div className="info flex-1">
-                <h2 className="heading-sm media-name text-white text-xl font-semibold leading-snug">
-                  <Link
-                    title={movie.title}
-                    href={`/phim/${movie.slug}`}
-                    className="hover:text-red-400"
-                  >
-                    {movie.title}
-                  </Link>
-                </h2>
-                {movie.releaseYear && (
-                  <div className="alias-name mb-3 text-red-400">{movie.releaseYear}</div>
-                )}
-                <div className="detail-more space-y-3 text-gray-300">
-                  <div className="hl-tags flex items-center gap-2">
-                    <div className="tag-model">
-                      <span className="last inline-block px-2 py-0.5 rounded bg-gray-600/40 text-white text-xs">
-                        <strong>{movie.quality}</strong>
-                      </span>
+            </div>
+
+            {/* Enhanced Room Creation Form */}
+            <div className="border-2 border-gray-400/15 rounded-2xl overflow-hidden bg-[#23242F]">
+              <div className="relative p-6 space-y-8">
+                {/* 1. Room Name */}
+                <div className="group">
+                  <div className="flex items-center gap-3 mb-3">
+                    <div className="w-8 h-8 rounded-full bg-gradient-to-r from-red-500/20 to-red-600/20 border border-red-500/30 flex items-center justify-center">
+                      <span className="text-red-400 font-bold text-sm">1</span>
                     </div>
-                    {movie.releaseYear && (
-                      <div className="tag-classic">
-                        <span className="inline-block px-2 py-0.5 rounded bg-gray-600/40 text-white text-xs">
-                          {movie.releaseYear}
-                        </span>
-                      </div>
-                    )}
-                    {movie.imdbRating && (
-                      <div className="tag-classic">
-                        <span className="inline-block px-2 py-0.5 rounded bg-gray-600/40 text-white text-xs">
-                          ⭐ {movie.imdbRating}
-                        </span>
+                    <h3 className="text-white font-semibold text-lg">Tên phòng</h3>
+                  </div>
+                  <div className="relative">
+                    <input
+                      className={`w-full px-4 py-4 rounded-xl bg-black/30 border-2 text-white placeholder:text-gray-400 outline-none transition-all duration-300 text-lg ${
+                        roomName.length > 0 && roomName.length < 10
+                          ? 'border-red-500/50 focus:border-red-500/70'
+                          : 'border-gray-400/30 focus:border-red-500/50'
+                      } focus:bg-black/40`}
+                      placeholder="Nhập tên phòng của bạn..."
+                      maxLength={100}
+                      minLength={10}
+                      type="text"
+                      value={roomName}
+                      onChange={(e) => setRoomName(e.target.value)}
+                    />
+                    <div className={`absolute right-3 top-1/2 -translate-y-1/2 text-sm ${
+                      roomName.length > 0 && roomName.length < 10
+                        ? 'text-red-400'
+                        : 'text-gray-400'
+                    }`}>
+                      {roomName.length}/100
+                    </div>
+                    {roomName.length > 0 && roomName.length < 10 && (
+                      <div className="absolute -bottom-6 left-0 text-red-400 text-sm">
+                        Tên phòng cần ít nhất 10 ký tự
                       </div>
                     )}
                   </div>
-                  <div className="hl-tags flex flex-wrap items-center gap-2">
-                    {movie.genres.map((genre) => (
-                      <Link 
-                        key={genre.id} 
-                        href={`/the-loai/${genre.slug}`}
-                        className="tag-topic inline-block text-xs px-2 py-0.5 rounded border border-gray-400/30 text-gray-200 hover:bg-white/10"
+                </div>
+
+                {/* 2. Poster Selection */}
+                <div className="group">
+                  <div className="flex items-center gap-3 mb-4">
+                    <div className="w-8 h-8 rounded-full bg-gradient-to-r from-purple-500/20 to-purple-600/20 border border-purple-500/30 flex items-center justify-center">
+                      <span className="text-purple-400 font-bold text-sm">2</span>
+                    </div>
+                    <h3 className="text-white font-semibold text-lg">Chọn poster hiển thị</h3>
+                  </div>
+                  <div className="grid grid-cols-3 gap-4">
+                    {posters.map((p, idx) => (
+                      <button
+                        key={p.id}
+                        type="button"
+                        onClick={() => handlePosterSelect(idx)}
+                        className={`relative group/poster overflow-hidden rounded-xl border-2 transition-all duration-300 ${
+                          activePoster === idx
+                            ? 'border-red-500/50 ring-2 ring-red-500/30'
+                            : 'border-gray-400/30 hover:border-white/50'
+                        }`}
                       >
-                        {genre.name}
-                      </Link>
+                        <Image
+                          alt={p.alt}
+                          src={p.src}
+                          width={120}
+                          height={120}
+                          className="w-full h-24 object-cover transform group-hover/poster:scale-110 transition-transform duration-300"
+                        />
+                        {/* Movie title overlay */}
+                        <div className="absolute bottom-0 left-0 right-0 bg-gradient-to-t from-black/80 to-transparent p-2">
+                          <p className="text-white text-xs font-medium truncate leading-tight">
+                            {p.movie?.title || p.alt}
+                          </p>
+                        </div>
+                        {activePoster === idx && (
+                          <div className="absolute inset-0 bg-red-500/20 flex items-center justify-center">
+                            <div className="w-6 h-6 rounded-full bg-red-500 flex items-center justify-center">
+                              <svg className="w-3 h-3 text-white" fill="currentColor" viewBox="0 0 20 20">
+                                <path fillRule="evenodd" d="M16.707 5.293a1 1 0 010 1.414l-8 8a1 1 0 01-1.414 0l-4-4a1 1 0 011.414-1.414L8 12.586l7.293-7.293a1 1 0 011.414 0z" clipRule="evenodd" />
+                              </svg>
+                            </div>
+                          </div>
+                        )}
+                      </button>
                     ))}
                   </div>
-                  <div className="description text-sm text-gray-300/90 leading-relaxed">
-                    {movie.description}
-                  </div>
-                  <div className="buttons mt-2">
-                    <div className="btn btn-outline inline-flex items-center gap-2 rounded-full border-2 border-gray-400/30 text-white px-4 py-2">
-                      <span className="i-fa6-solid-play" aria-hidden />
-                      <span>{movie.duration} phút</span>
+                </div>
+
+                {/* 3. Auto Start */}
+                <div className="group">
+                  <div className="flex items-center gap-3 mb-3">
+                    <div className="w-8 h-8 rounded-full bg-gradient-to-r from-blue-500/20 to-blue-600/20 border border-blue-500/30 flex items-center justify-center">
+                      <span className="text-blue-400 font-bold text-sm">3</span>
                     </div>
+                    <h3 className="text-white font-semibold text-lg">Cài đặt thời gian</h3>
                   </div>
+                  <p className="text-gray-400 mb-4 text-sm">Có thể bắt đầu thủ công hoặc tự động theo thời gian cài đặt.</p>
+                  <button
+                    type="button"
+                    onClick={() => setAutoStart((v) => !v)}
+                    className="flex items-center gap-4 p-4 rounded-xl bg-black/20 border border-gray-400/30 hover:bg-black/30 transition-all duration-300 w-full"
+                  >
+                    <div className={`relative w-14 h-7 rounded-full transition-colors duration-300 ${
+                      autoStart ? 'bg-gradient-to-r from-red-500 to-red-600' : 'bg-gray-600'
+                    }`}>
+                      <span className={`absolute top-0.5 left-0.5 w-6 h-6 rounded-full bg-white transition-all duration-300 shadow-lg ${
+                        autoStart ? 'translate-x-7' : ''
+                      }`}></span>
+                    </div>
+                    <div className="flex-1 text-left">
+                      <div className="text-white font-medium">Bắt đầu tự động</div>
+                      <div className="text-gray-400 text-sm">
+                        {autoStart ? 'Phòng sẽ tự động bắt đầu khi có người tham gia' : 'Bạn sẽ chủ động bắt đầu phòng'}
+                      </div>
+                    </div>
+                  </button>
+                </div>
+
+                {/* 4. Privacy */}
+                <div className="group">
+                  <div className="flex items-center gap-3 mb-3">
+                    <div className="w-8 h-8 rounded-full bg-gradient-to-r from-green-500/20 to-green-600/20 border border-green-500/30 flex items-center justify-center">
+                      <span className="text-green-400 font-bold text-sm">4</span>
+                    </div>
+                    <h3 className="text-white font-semibold text-lg">Quyền riêng tư</h3>
+                  </div>
+                  <button
+                    type="button"
+                    onClick={() => setPrivateOnly((v) => !v)}
+                    className="flex items-center gap-4 p-4 rounded-xl bg-black/20 border border-gray-400/30 hover:bg-black/30 transition-all duration-300 w-full"
+                  >
+                    <div className={`relative w-14 h-7 rounded-full transition-colors duration-300 ${
+                      privateOnly ? 'bg-gradient-to-r from-green-500 to-green-600' : 'bg-gray-600'
+                    }`}>
+                      <span className={`absolute top-0.5 left-0.5 w-6 h-6 rounded-full bg-white transition-all duration-300 shadow-lg ${
+                        privateOnly ? 'translate-x-7' : ''
+                      }`}></span>
+                    </div>
+                    <div className="flex-1 text-left">
+                      <div className="text-white font-medium">Chỉ bạn bè có thể tham gia</div>
+                      <div className="text-gray-400 text-sm">
+                        {privateOnly ? 'Chỉ người có link mời mới tham gia được' : 'Bất kỳ ai cũng có thể tham gia phòng'}
+                      </div>
+                    </div>
+                  </button>
+                </div>
+
+                {/* Action Buttons */}
+                <div className="flex gap-4 pt-4">
+                  <button
+                    onClick={handleCreate}
+                    disabled={!roomName || roomName.length < 10 || isCreating}
+                    className="flex-1 bg-gradient-to-r from-red-500 to-red-600 hover:from-red-600 hover:to-red-700 disabled:from-gray-600 disabled:to-gray-700 text-white font-semibold py-4 px-8 rounded-xl transition-all duration-300 transform hover:scale-[1.02] disabled:opacity-50 disabled:cursor-not-allowed disabled:transform-none shadow-lg hover:shadow-xl"
+                  >
+                    <div className="flex items-center justify-center gap-2">
+                      {isCreating ? (
+                        <>
+                          <div className="animate-spin rounded-full h-5 w-5 border-b-2 border-white"></div>
+                          Đang tạo phòng...
+                        </>
+                      ) : (
+                        <>
+                          <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 4v16m8-8H4" />
+                          </svg>
+                          Tạo phòng ngay
+                        </>
+                      )}
+                    </div>
+                  </button>
+                  <Link
+                    href={`/phim/${movie.slug}`}
+                    className="px-8 py-4 rounded-xl border-2 border-gray-400/30 text-white hover:bg-white/10 transition-all duration-300 font-medium"
+                  >
+                    Huỷ bỏ
+                  </Link>
                 </div>
               </div>
             </div>
           </div>
 
-          {/* Steps */}
-          <div className="border-2 border-gray-400/15 rounded-lg p-5" style={{backgroundColor: 'var(--bg-3)'}}>
-            {/* 1. Name */}
-            <div className="step-row is-name mb-6">
-              <div className="step-name mb-3 text-white">1. Tên phòng</div>
-              <div className="form-group">
-                <input
-                  className="form-control size-lg v-form-control w-full rounded-lg bg-black/20 border-2 border-gray-400/30 text-white placeholder:text-gray-400 px-4 py-3 outline-none focus:border-red-500/80"
-                  placeholder="Nhập tên phòng"
-                  maxLength={100}
-                  minLength={10}
-                  type="text"
-                  value={roomName}
-                  onChange={(e) => setRoomName(e.target.value)}
-                />
-              </div>
-            </div>
-
-            {/* 2. Poster */}
-            <div className="step-row is-poster mb-6">
-              <div className="flex items-start justify-between gap-4 w-full">
-                <div className="flex flex-col flex-grow">
-                  <div className="step-name text-white">2. Chọn poster hiển thị</div>
+          {/* Sidebar */}
+          <div className="xl:col-span-1 space-y-6">
+            {/* Features Card */}
+            <div className="border-2 border-gray-400/15 rounded-2xl p-6 bg-[#23242F]">
+              <h3 className="text-xl font-bold text-white mb-6 flex items-center gap-2">
+                <div className="w-6 h-6 rounded-full bg-red-500/20 border border-red-500/30 flex items-center justify-center">
+                  <svg className="w-3 h-3 text-red-400" fill="currentColor" viewBox="0 0 20 20">
+                    <path fillRule="evenodd" d="M11.3 1.046A1 1 0 0112 2v5h4a1 1 0 01.82 1.573l-7 10A1 1 0 018 18v-5H4a1 1 0 01-.82-1.573l7-10a1 1 0 011.12-.38z" clipRule="evenodd" />
+                  </svg>
                 </div>
-                <div className="d-poster flex items-center gap-3">
-                  {posters.map((p, idx) => (
-                    <button
-                      key={p.src}
-                      type="button"
-                      onClick={() => setActivePoster(idx)}
-                      className={`item ${activePoster === idx ? 'ring-2 ring-red-500/80' : ''} rounded-md overflow-hidden`}
-                    >
-                      <Image 
-                        alt={p.alt} 
-                        src={p.src} 
-                        width={90}
-                        height={90}
-                        className="object-cover" 
-                      />
-                    </button>
-                  ))}
+                Tính năng nổi bật
+              </h3>
+              <div className="space-y-4">
+                <div className="flex items-start gap-3">
+                  <div className="w-8 h-8 rounded-lg bg-red-500/20 border border-red-500/30 flex items-center justify-center flex-shrink-0">
+                    <svg className="w-4 h-4 text-red-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M13 10V3L4 14h7v7l9-11h-7z" />
+                    </svg>
+                  </div>
+                  <div>
+                    <div className="text-white font-medium">Đồng bộ thời gian thực</div>
+                    <div className="text-gray-400 text-sm">Tất cả cùng xem một khung hình</div>
+                  </div>
+                </div>
+                <div className="flex items-start gap-3">
+                  <div className="w-8 h-8 rounded-lg bg-blue-500/20 border border-blue-500/30 flex items-center justify-center flex-shrink-0">
+                    <svg className="w-4 h-4 text-blue-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M8 12h.01M12 12h.01M16 12h.01M21 12c0 4.418-4.03 8-9 8a9.863 9.863 0 01-4.255-.949L3 20l1.395-3.72C3.512 15.042 3 13.574 3 12c0-4.418 4.03-8 9-8s9 3.582 9 8z" />
+                    </svg>
+                  </div>
+                  <div>
+                    <div className="text-white font-medium">Chat trong khi xem</div>
+                    <div className="text-gray-400 text-sm">Trao đổi ngay trên màn hình</div>
+                  </div>
+                </div>
+                <div className="flex items-start gap-3">
+                  <div className="w-8 h-8 rounded-lg bg-green-500/20 border border-green-500/30 flex items-center justify-center flex-shrink-0">
+                    <svg className="w-4 h-4 text-green-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 5v2m0 4v2m0 4v2M5 5a2 2 0 00-2 2v3a2 2 0 110 4v3a2 2 0 002 2h14a2 2 0 002-2v-3a2 2 0 110-4V7a2 2 0 00-2-2H5z" />
+                    </svg>
+                  </div>
+                  <div>
+                    <div className="text-white font-medium">Điều khiển chung</div>
+                    <div className="text-gray-400 text-sm">Play, pause, seek cùng nhau</div>
+                  </div>
+                </div>
+                <div className="flex items-start gap-3">
+                  <div className="w-8 h-8 rounded-lg bg-purple-500/20 border border-purple-500/30 flex items-center justify-center flex-shrink-0">
+                    <svg className="w-4 h-4 text-purple-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z" />
+                    </svg>
+                  </div>
+                  <div>
+                    <div className="text-white font-medium">Không giới hạn thời gian</div>
+                    <div className="text-gray-400 text-sm">Xem bao lâu cũng được</div>
+                  </div>
                 </div>
               </div>
             </div>
 
-            {/* 3. Time */}
-            <div className="step-row is-time mb-6">
-              <div className="step-name text-white">3. Cài đặt thời gian</div>
-              <p className="step-desc text-gray-400">Có thể bắt đầu thủ công hoặc tự động theo thời gian cài đặt.</p>
-              <div className="start-manual mt-2">
-                <button
-                  type="button"
-                  onClick={() => setAutoStart((v) => !v)}
-                  className="line-center inline-flex items-center gap-2"
-                >
-                  <div className={`toggle-x relative w-12 h-6 rounded-full transition-colors ${autoStart ? 'bg-red-500/80' : 'bg-gray-600/60'}`}>
-                    <span className={`absolute top-0.5 left-0.5 h-5 w-5 rounded-full bg-white transition-all ${autoStart ? 'translate-x-6' : ''}`}></span>
-                  </div>
-                  <div className="text text-gray-200">Tôi muốn bắt đầu tự động</div>
-                </button>
+            {/* Tips Card */}
+            <div className="border-2 border-gray-400/15 rounded-2xl p-6 bg-[#23242F]">
+              <h3 className="text-xl font-bold text-white mb-6 flex items-center gap-2">
+                <div className="w-6 h-6 rounded-full bg-yellow-500/20 border border-yellow-500/30 flex items-center justify-center">
+                  <svg className="w-3 h-3 text-yellow-400" fill="currentColor" viewBox="0 0 20 20">
+                    <path fillRule="evenodd" d="M18 10a8 8 0 11-16 0 8 8 0 0116 0zm-7-4a1 1 0 11-2 0 1 1 0 012 0zM9 9a1 1 0 000 2v3a1 1 0 001 1h1a1 1 0 100-2v-3a1 1 0 00-1-1H9z" clipRule="evenodd" />
+                  </svg>
+                </div>
+                Mẹo tạo phòng
+              </h3>
+              <div className="space-y-3 text-sm">
+                <div className="flex items-start gap-2">
+                  <span className="text-red-400 mt-1">•</span>
+                  <span className="text-gray-300">Chọn tên phòng dễ nhớ để bạn bè dễ tìm</span>
+                </div>
+                <div className="flex items-start gap-2">
+                  <span className="text-red-400 mt-1">•</span>
+                  <span className="text-gray-300">Chọn poster đẹp để thu hút người tham gia</span>
+                </div>
+                <div className="flex items-start gap-2">
+                  <span className="text-red-400 mt-1">•</span>
+                  <span className="text-gray-300">Bật riêng tư nếu muốn kiểm soát người tham gia</span>
+                </div>
+                <div className="flex items-start gap-2">
+                  <span className="text-red-400 mt-1">•</span>
+                  <span className="text-gray-300">Chia sẻ link phòng sau khi tạo thành công</span>
+                </div>
               </div>
             </div>
 
-            {/* 4. Privacy */}
-            <div className="step-row is-public mb-2">
-              <div className="flex items-center w-full mb-2 gap-4">
-                <div className="step-name mb-0 flex-grow text-white">4. Bạn chỉ muốn xem với bạn bè?</div>
-                <button
-                  type="button"
-                  onClick={() => setPrivateOnly((v) => !v)}
-                  className="v-toggle"
-                >
-                  <div className={`toggle-x relative w-12 h-6 rounded-full transition-colors ${privateOnly ? 'bg-red-500/80' : 'bg-gray-600/60'}`}>
-                    <span className={`absolute top-0.5 left-0.5 h-5 w-5 rounded-full bg-white transition-all ${privateOnly ? 'translate-x-6' : ''}`}></span>
-                  </div>
-                </button>
-              </div>
-              <p className="step-desc text-gray-400 mb-0">Nếu bật, chỉ có thành viên có link mới xem được phòng này.</p>
-            </div>
-
-            {/* Submit */}
-            <div className="is-submit mt-5">
-              <div className="buttons flex items-center gap-3 w-full">
-                <button
-                  className="btn btn-xl btn-primary flex-grow rounded-full border-2 border-red-500/80 bg-red-500/10 hover:bg-red-500/20 text-white py-3"
-                  onClick={handleCreate}
-                >
-                  Tạo phòng
-                </button>
-                <Link
-                  className="btn btn-xl btn-light rounded-full border-2 border-gray-400/30 text-white hover:bg-white/10 py-3 px-6"
-                  href={`/phim/${movie.slug}`}
-                >
-                  Huỷ bỏ
-                </Link>
-              </div>
-            </div>
+            
           </div>
         </div>
       </div>

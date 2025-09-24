@@ -19,6 +19,7 @@ export default function GenreManagement() {
   const [showEditModal, setShowEditModal] = useState(false);
   const [editingGenre, setEditingGenre] = useState<GenreResponse | null>(null);
   const [isSubmitting, setIsSubmitting] = useState(false);
+  const [successMessage, setSuccessMessage] = useState<string | null>(null);
 
   // Form states
   const [createForm, setCreateForm] = useState<CreateGenreRequest>({ name: '' });
@@ -53,9 +54,14 @@ export default function GenreManagement() {
       setIsSubmitting(true);
       setError(null);
       const response = await ApiService.createGenre(createForm);
-      if (response.success) {
+      console.log('Create Genre Response:', response);
+
+      // Check if the response indicates success (either through success flag or by not having error)
+      if (response.success || !response.error) {
         setShowCreateModal(false);
         setCreateForm({ name: '' });
+        setSuccessMessage('Thêm thể loại thành công');
+        setTimeout(() => setSuccessMessage(null), 3000);
         await fetchGenres();
       } else {
         setError(response.error || 'Không thể tạo thể loại');
@@ -85,6 +91,8 @@ export default function GenreManagement() {
         setShowEditModal(false);
         setEditingGenre(null);
         setEditForm({ name: '' });
+        setSuccessMessage('Cập nhật thể loại thành công');
+        setTimeout(() => setSuccessMessage(null), 3000);
         await fetchGenres();
       } else {
         setError(response.error || 'Không thể cập nhật thể loại');
@@ -103,6 +111,8 @@ export default function GenreManagement() {
       setError(null);
       const response = await ApiService.deleteGenre(genreId);
       if (response.success) {
+        setSuccessMessage('Xóa thể loại thành công');
+        setTimeout(() => setSuccessMessage(null), 3000);
         await fetchGenres();
       } else {
         setError(response.error || 'Không thể xóa thể loại');
@@ -138,6 +148,20 @@ export default function GenreManagement() {
           Thêm thể loại
         </button>
       </div>
+
+      {/* Success Message */}
+      {successMessage && (
+        <div className="fixed top-4 right-4 z-50 rounded-md p-4 bg-green-50 border border-green-200">
+          <div className="flex">
+            <div className="ml-3">
+              <h3 className="text-sm font-medium text-green-800">Thành công</h3>
+              <div className="mt-2 text-sm text-green-700">
+                {successMessage}
+              </div>
+            </div>
+          </div>
+        </div>
+      )}
 
       {/* Error/Warning Message */}
       {error && (
@@ -266,8 +290,8 @@ export default function GenreManagement() {
 
       {/* Create Modal */}
       {showCreateModal && (
-        <div className="fixed inset-0 bg-black bg-opacity-50 overflow-y-auto h-full w-full z-50">
-          <div className="relative top-20 mx-auto p-5 w-96 shadow-lg rounded-md" style={{backgroundColor: 'var(--bg-4)', border: '1px solid var(--bg-3)'}}>
+        <div className="fixed inset-0 overflow-y-auto h-full w-full z-50 flex items-center justify-center" style={{backdropFilter: 'blur(4px)', backgroundColor: 'rgba(0, 0, 0, 0.3)'}}>
+          <div className="relative mx-auto p-5 w-96 shadow-lg rounded-md" style={{backgroundColor: 'var(--bg-4)', border: '1px solid var(--bg-3)'}}>
             <div className="mt-3">
               <h3 className="text-lg font-medium mb-4" style={{color: 'var(--color-text-primary)'}}>Thêm thể loại mới</h3>
               <form onSubmit={handleCreateGenre}>
@@ -329,8 +353,8 @@ export default function GenreManagement() {
 
       {/* Edit Modal */}
       {showEditModal && editingGenre && (
-        <div className="fixed inset-0 bg-black bg-opacity-50 overflow-y-auto h-full w-full z-50">
-          <div className="relative top-20 mx-auto p-5 w-96 shadow-lg rounded-md" style={{backgroundColor: 'var(--bg-4)', border: '1px solid var(--bg-3)'}}>
+        <div className="fixed inset-0 overflow-y-auto h-full w-full z-50 flex items-center justify-center" style={{backdropFilter: 'blur(4px)', backgroundColor: 'rgba(0, 0, 0, 0.3)'}}>
+          <div className="relative mx-auto p-5 w-96 shadow-lg rounded-md" style={{backgroundColor: 'var(--bg-4)', border: '1px solid var(--bg-3)'}}>
             <div className="mt-3">
               <h3 className="text-lg font-medium mb-4" style={{color: 'var(--color-text-primary)'}}>Chỉnh sửa thể loại</h3>
               <form onSubmit={handleUpdateGenre}>

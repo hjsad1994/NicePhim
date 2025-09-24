@@ -65,12 +65,14 @@ export default function NewMovie() {
     poster: null as File | null,
     banner: null as File | null,
     thumbnail: null as File | null,
-    trailer: null as File   const [videoUpload, setVideoUpload] = useState({
+    trailer: null as File | null,
+    video: null as File | null
+  });
+
+  const [videoUpload, setVideoUpload] = useState({
     videoId: '',
     hlsUrl: '',
     isUploaded: false
-  });e | null,
-    video: null as File | null
   });
 
   const [episodes, setEpisodes] = useState<Episode[]>([]);
@@ -161,12 +163,13 @@ export default function NewMovie() {
   };
 
   // Video upload handlers
-  const handleVideoUploaded = (vid  const handleVideoUploadError = (error: string) => {
+  const handleVideoUploaded = (videoId: string) => {
+    setVideoUpload(prev => ({ ...prev, videoId, isUploaded: true }));
+  };
+
+  const handleVideoUploadError = (error: string) => {
     console.error('Video upload error:', error);
     // You can add a toast notification here
-  };leSubmit = async (e: React.FormEvent) => {prev.map(ep => 
-      ep.id === id ? { ...ep, [field]: value } : ep
-    ));
   };
 
   const handleSubmit = async (e: React.FormEvent) => {
@@ -188,7 +191,12 @@ export default function NewMovie() {
       return;
     }
 
-    if (formData.type === 'series' && episodes.length ===      // Prepare movie data
+    if (formData.type === 'series' && episodes.length === 0) {
+      alert('Vui lòng thêm ít nhất một tập phim');
+      return;
+    }
+
+    // Prepare movie data
       const movieData = {
         title: formData.title,
         aliasTitle: formData.title, // Use title as alias for now
@@ -199,9 +207,6 @@ export default function NewMovie() {
         isSeries: formData.type === 'series',
         posterUrl: formData.posterUrl,
         bannerUrl: formData.bannerUrl,
-        genreIds: formData.genres // Include selected genre IDs
-      };file upload
-        bannerUrl: '', // Will be handled by file upload
         genreIds: formData.genres // Include selected genre IDs
       };
 
@@ -222,7 +227,7 @@ export default function NewMovie() {
     } finally {
       setIsSubmitting(false);
     }
-  };
+  }
 
   return (
     <div className="max-w-4xl mx-auto space-y-6">
