@@ -85,6 +85,9 @@
 - ✅ **Video Player Size Optimization**: Adjusted media player size and spacing for better screen fit
 - ✅ **Header Overlap Resolution**: Fixed header overlapping media player with proper padding
 - ✅ **Video Player Layout Enhancement**: Optimized padding and spacing for optimal viewing experience
+- ✅ **Dark Mode Feature Removal**: Removed dark/light mode theme switching functionality
+- ✅ **Test Files Cleanup**: Removed all test files and test features from the platform
+- ✅ **Environment Configuration Management**: Created .env file for flexible directory URL management and updated application.properties to use environment variables with fallbacks
 
 ## In Progress 🔄
 - ✅ **Video Player Testing**: RESOLVED - Quality and speed selection button display updates now work correctly
@@ -146,11 +149,12 @@
 8. ✅ Implement complete movie edit interface with genre assignment
 9. ✅ Implement genre-movie relationship management in admin interface
 10. ✅ **Memory Bank Documentation**: Comprehensive documentation system with cursor rules integration
-11. Add proper user session management (JWT/sessions)
-11. Add user profile management
-12. Add logout functionality
-13. Add bulk genre operations for multiple movies
-14. Implement email verification system
-15. Add password reset functionality
-16. Add comprehensive testing
-17. Add admin statistics and analytics dashboard
+11. ✅ **Environment Configuration Management**: Implement .env file support for flexible directory URL management
+12. Add proper user session management (JWT/sessions)
+13. Add user profile management
+14. Add logout functionality
+15. Add bulk genre operations for multiple movies
+16. Implement email verification system
+17. Add password reset functionality
+18. Add comprehensive testing
+19. Add admin statistics and analytics dashboard

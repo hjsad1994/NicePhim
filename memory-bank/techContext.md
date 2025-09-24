@@ -47,6 +47,7 @@
 - **Upload Limits**: Spring Boot configured for 500MB file uploads
 - **Video Processing**: FFmpeg creating HLS streams with multiple quality variants
 - **Video Player Libraries**: hls.js for adaptive streaming, @types/hls.js for TypeScript support
+- **Environment Configuration**: .env file support for flexible directory URL management without source code modifications
 
 ## Key Dependencies
 - Spring Boot Web, WebSocket, Security

@@ -95,17 +95,21 @@
 - ✅ **Video Player Size Optimization**: Adjusted media player size and spacing for better screen fit
 - ✅ **Header Overlap Resolution**: Fixed header overlapping media player with proper padding
 - ✅ **Video Player Layout Enhancement**: Optimized padding and spacing for optimal viewing experience
+- ✅ **Dark Mode Feature Removal**: Removed dark/light mode theme switching functionality
+- ✅ **Test Files Cleanup**: Removed all test files and test features from the platform
+- ✅ **Environment Configuration**: Created .env file for flexible directory URL management and updated application.properties to use environment variables with fallbacks
 
 ## Current Focus
 1. ✅ **Video Player State Update Issue**: RESOLVED - Quality and speed selection buttons now display selected values correctly
 2. ✅ **HLS Adaptive Quality Switching**: RESOLVED - Quality selection now changes actual video quality (360p, 480p, 720p, 1080p)
 3. ✅ **Movie Slug API Implementation**: RESOLVED - Movie watching pages now fetch real data from database instead of using mock data
 4. ✅ **Image Upload System**: RESOLVED - Complete image upload functionality for movie posters and banners
-5. **Video Player Optimization**: Complete video player with smooth controls and user interaction
-6. **HLS Streaming Integration**: Adaptive video streaming with multiple quality options (360p, 720p, 1080p)
-7. **Video Player Event Handling**: Proper click and double-click functionality for play/pause and fullscreen
-8. **Content Population**: Continue creating movies with real videos and assigning them to genres
-9. **End-to-End Testing**: Complete video workflow from upload to playback
+5. ✅ **Environment Configuration**: RESOLVED - Created .env file for flexible directory URL management, allowing developers to easily change paths without modifying source code
+6. **Video Player Optimization**: Complete video player with smooth controls and user interaction
+7. **HLS Streaming Integration**: Adaptive video streaming with multiple quality options (360p, 720p, 1080p)
+8. **Video Player Event Handling**: Proper click and double-click functionality for play/pause and fullscreen
+9. **Content Population**: Continue creating movies with real videos and assigning them to genres
+10. **End-to-End Testing**: Complete video workflow from upload to playback
 
 ## Next Steps
 1. ✅ **Video Player State Update Issue**: RESOLVED - Quality and speed selection buttons now display selected values correctly
@@ -125,13 +129,15 @@
 15. **Test Movie Routing**: Verify all movie detail pages work correctly with video data
 16. **Frontend Upload Connection**: Fix frontend "Failed to fetch" error when connecting to video upload API
 17. **Video Field Restoration**: Uncomment video field access in MovieRepository RowMapper
-18. Add bulk genre operations for multiple movies
-19. Enhance admin dashboard with video upload statistics
-20. Add proper session management (JWT tokens or secure sessions)
-21. Create user profile management interface
-22. Implement advanced search and filtering for movies and genres
+18. **Environment Configuration Documentation**: Update documentation to guide developers on using .env file for configuration management
+20. Add bulk genre operations for multiple movies
+21. Enhance admin dashboard with video upload statistics
+22. Add proper session management (JWT tokens or secure sessions)
+23. Create user profile management interface
+24. Implement advanced search and filtering for movies and genres
 
 ## Technical Decisions
+- **Environment Configuration Management**: Implemented .env file support for flexible directory URL management, allowing developers to easily change paths without modifying source code
 - **Video Upload Configuration**: Increased Spring Boot upload limits to 500MB for large video files
 - **Controller Conflict Resolution**: Renamed TestController to VideoTestController to resolve bean definition conflicts
 - **Video Processing Pipeline**: FFmpeg successfully converting videos to HLS with multiple quality variants
@@ -226,3 +232,5 @@
 - ✅ **Video Player Size Optimization** - RESOLVED: Adjusted media player size from max-w-4xl to max-w-full with optimized padding for better screen utilization
 - ✅ **Header Overlap Issue** - RESOLVED: Fixed header overlapping media player by applying proper top padding (pt-12) at page level
 - ✅ **Video Player Layout Enhancement** - RESOLVED: Optimized padding configuration with 20px horizontal padding (px-5) and minimal top padding (pt-12) for optimal viewing experience
+- ✅ **Dark Mode Feature Removal** - RESOLVED: Removed theme context, theme toggle components, and all theme-related CSS variables to return to single dark theme
+- ✅ **Test Files Cleanup** - RESOLVED: Removed all test pages (/test-*), test directories, and test functionality to clean up codebase for production

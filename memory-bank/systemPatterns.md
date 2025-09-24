@@ -43,6 +43,7 @@ Frontend (Next.js) ←→ Backend (Spring Boot) ←→ Database (SQL Server)
 3. **Storage**: HLS segments stored in media directory (D:/media)
 4. **Streaming**: Direct file serving via Spring static resources
 5. **Database Integration**: Video metadata (video_id, hls_url, video_status) stored in database
+6. **Environment Configuration**: Directory paths configurable via .env file with fallback values in application.properties
 
 ## Video Player Architecture
 - **SimpleHLSPlayer Component**: Simplified video player built from scratch for better maintainability
@@ -60,6 +61,8 @@ Frontend (Next.js) ←→ Backend (Spring Boot) ←→ Database (SQL Server)
 - **Video Player Layout Optimization**: Responsive sizing with max-w-full width and optimized padding for screen utilization
 - **Header Spacing Management**: Proper top padding (pt-12) applied at page level to prevent header overlap
 - **Padding Configuration**: Horizontal padding (px-5) for 20px side margins and minimal vertical padding for maximum screen usage
+- **Single Theme Architecture**: Simplified dark theme only, no theme switching complexity
+- **Production-Only Codebase**: Clean codebase with only production features, no test files or development utilities
 
 ## Security Patterns
 - **Password Hashing**: BCrypt with salt rounds
@@ -92,6 +95,7 @@ Frontend (Next.js) ←→ Backend (Spring Boot) ←→ Database (SQL Server)
 - **Documentation Workflow**: Memory bank updates triggered by significant changes or user requests
 - **Development Guidelines**: Complete cursor rules integration with memory bank system
 - **Debug Logging**: Console logging for tracking data flow between backend and frontend
+- **Environment Configuration**: .env file support for flexible configuration management without source code modifications
 
 ## Database Migration Patterns
 - **Flyway Integration**: Automatic database migration execution during Spring Boot startup

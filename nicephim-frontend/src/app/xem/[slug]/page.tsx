@@ -180,10 +180,16 @@ export default function WatchPage({ params }: WatchPageProps) {
 
   if (isLoading) {
     return (
-      <div className="min-h-screen flex items-center justify-center" style={{backgroundColor: 'var(--bg-2)'}}>
+      <div className="min-h-screen flex items-center justify-center bg-gradient-to-b from-black via-gray-900 to-black">
         <div className="text-center">
-          <div className="animate-spin rounded-full h-32 w-32 border-b-2 border-red-600 mx-auto mb-4"></div>
-          <div className="text-white text-xl">Đang tải video...</div>
+          <div className="relative mb-8">
+            <div className="w-32 h-32 bg-gradient-to-br from-red-600 to-pink-600 rounded-full flex items-center justify-center mx-auto">
+              <div className="animate-spin rounded-full h-24 w-24 border-b-2 border-white"></div>
+            </div>
+            <div className="absolute -inset-4 bg-gradient-to-r from-red-600 to-pink-600 rounded-full blur-xl opacity-50 animate-pulse"></div>
+          </div>
+          <div className="text-white text-xl font-medium mb-2">Đang tải video...</div>
+          <div className="text-gray-400 text-sm">Vui lòng chờ trong giây lát</div>
         </div>
       </div>
     );
@@ -191,32 +197,59 @@ export default function WatchPage({ params }: WatchPageProps) {
 
   if (error || !movie) {
     return (
-      <div className="min-h-screen flex items-center justify-center" style={{backgroundColor: 'var(--bg-2)'}}>
-        <div className="text-center max-w-2xl mx-auto px-4">
-          <div className="text-6xl mb-4">🎬</div>
-          <h1 className="text-2xl font-bold text-white mb-4">Không thể tải video</h1>
-          <p className="text-gray-400 mb-6">{error || 'Phim không tồn tại'}</p>
-          
+      <div className="min-h-screen flex items-center justify-center bg-gradient-to-b from-black via-gray-900 to-black">
+        <div className="text-center max-w-2xl mx-auto px-6">
+          <div className="relative mb-8">
+            <div className="w-24 h-24 bg-gradient-to-br from-red-600 to-pink-600 rounded-full flex items-center justify-center mx-auto mb-6">
+              <span className="text-4xl">🎬</span>
+            </div>
+            <div className="absolute -inset-2 bg-gradient-to-r from-red-600 to-pink-600 rounded-full blur-xl opacity-30"></div>
+          </div>
+          <h1 className="text-4xl font-bold bg-gradient-to-r from-white via-gray-300 to-white bg-clip-text text-transparent mb-4">
+            Không thể tải video
+          </h1>
+          <p className="text-gray-400 text-lg mb-8 leading-relaxed">{error || 'Phim không tồn tại'}</p>
+
           {error && error.includes('backend') && (
-            <div className="bg-red-900/20 border border-red-500/30 rounded-lg p-4 mb-6">
-              <h3 className="text-red-400 font-semibold mb-2">Hướng dẫn khắc phục:</h3>
-              <ul className="text-red-300 text-sm text-left space-y-1">
-                <li>• Đảm bảo backend đang chạy tại http://localhost:8080</li>
-                <li>• Kiểm tra kết nối mạng</li>
-                <li>• Thử tải lại trang sau vài giây</li>
-                <li>• Liên hệ quản trị viên nếu vấn đề vẫn tiếp diễn</li>
+            <div className="bg-red-900/20 backdrop-blur-sm border border-red-500/30 rounded-2xl p-6 mb-8">
+              <h3 className="text-red-400 font-semibold mb-4 flex items-center">
+                <svg className="w-5 h-5 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z" />
+                </svg>
+                Hướng dẫn khắc phục:
+              </h3>
+              <ul className="text-red-300 text-sm text-left space-y-2 ml-6">
+                <li className="flex items-start">
+                  <span className="mr-2">•</span>
+                  Đảm bảo backend đang chạy tại http://localhost:8080
+                </li>
+                <li className="flex items-start">
+                  <span className="mr-2">•</span>
+                  Kiểm tra kết nối mạng
+                </li>
+                <li className="flex items-start">
+                  <span className="mr-2">•</span>
+                  Thử tải lại trang sau vài giây
+                </li>
+                <li className="flex items-start">
+                  <span className="mr-2">•</span>
+                  Liên hệ quản trị viên nếu vấn đề vẫn tiếp diễn
+                </li>
               </ul>
             </div>
           )}
-          
-          <div className="space-y-2">
-            <a 
-              href="/" 
-              className="inline-block bg-red-600 hover:bg-red-700 text-white px-6 py-2 rounded-lg transition-colors"
+
+          <div className="space-y-4">
+            <a
+              href="/"
+              className="inline-flex items-center px-8 py-3 bg-gradient-to-r from-red-600 to-pink-600 text-white font-medium rounded-xl hover:from-red-700 hover:to-pink-700 transition-all duration-300 transform hover:scale-105 shadow-lg hover:shadow-xl"
             >
+              <svg className="w-5 h-5 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M3 12l2-2m0 0l7-7 7 7M5 10v10a1 1 0 001 1h3m10-11l2 2m-2-2v10a1 1 0 01-1 1h-3m-6 0a1 1 0 001-1v-4a1 1 0 011-1h2a1 1 0 011 1v4a1 1 0 001 1m-6 0h6" />
+              </svg>
               Về trang chủ
             </a>
-            <div className="text-gray-500 text-sm">
+            <div className="text-gray-500 text-sm bg-gray-800/50 backdrop-blur-sm rounded-lg px-4 py-2">
               URL hiện tại: /xem/{decodedSlug}
             </div>
           </div>
@@ -245,24 +278,33 @@ export default function WatchPage({ params }: WatchPageProps) {
   });
 
   return (
-    <div className="min-h-screen" style={{backgroundColor: 'var(--bg-2)'}}>
+    <div className="min-h-screen bg-gradient-to-b from-black via-gray-900 to-black">
+      {/* Background Effects */}
+      <div className="absolute inset-0 overflow-hidden">
+        <div className="absolute top-0 left-1/4 w-96 h-96 bg-red-600/10 rounded-full blur-3xl animate-pulse"></div>
+        <div className="absolute bottom-0 right-1/4 w-96 h-96 bg-blue-600/10 rounded-full blur-3xl animate-pulse delay-1000"></div>
+        <div className="absolute top-1/2 left-1/2 transform -translate-x-1/2 -translate-y-1/2 w-[600px] h-[600px] bg-gradient-to-r from-red-600/10 via-blue-600/10 to-purple-600/10 rounded-full blur-3xl animate-pulse"></div>
+      </div>
+
       {/* Video Player Section */}
-      <div className="w-full pt-12 px-5">
-        <VideoPlayer 
-          movie={movie}
-          videoSources={videoSources}
-          hlsUrl={hlsUrl}
-        />
+      <div className="relative w-full pt-12 px-6">
+        <div className="max-w-7xl mx-auto">
+          <VideoPlayer
+            movie={movie}
+            videoSources={videoSources}
+            hlsUrl={hlsUrl}
+          />
+        </div>
       </div>
 
       {/* Content Below Video */}
-      <div className="w-[90%] mx-auto px-4 sm:px-6 lg:px-8 py-8">
+      <div className="relative max-w-7xl mx-auto px-6 lg:px-8 py-12">
         <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
           {/* Main Content */}
           <div className="lg:col-span-2 space-y-8">
             {/* Movie Info */}
             <MovieInfo movie={movie} />
-            
+
             {/* Comments Section */}
             <VideoComments movieId={movie.id} />
           </div>

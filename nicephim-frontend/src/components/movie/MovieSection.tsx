@@ -60,6 +60,8 @@ export function MovieSection({
               movie={movie}
               size={size}
               showDetails={showDetails}
+              isFavorite={favoriteMovies.includes(movie.id)}
+              onFavoriteToggle={onFavoriteToggle}
             />
           ))}
         </div>

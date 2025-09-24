@@ -83,7 +83,7 @@ export function VideoPlayer({ movie, videoSources, hlsUrl }: VideoPlayerProps) {
 
   const handleVolumeChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     const newVolume = parseFloat(e.target.value);
-    setVolume(newVolume);
+    setVolume(newVolume); 
     setMuted(newVolume === 0);
   };
 

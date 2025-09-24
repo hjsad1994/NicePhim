@@ -1,9 +1,9 @@
 'use client';
 
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useRef } from 'react';
 import Image from 'next/image';
 import Link from 'next/link';
-import { PlayIcon, InformationCircleIcon, ChevronLeftIcon, ChevronRightIcon } from '@heroicons/react/24/solid';
+import { PlayIcon, InformationCircleIcon, ChevronLeftIcon, ChevronRightIcon, StarIcon, ClockIcon } from '@heroicons/react/24/solid';
 import { Movie } from '@/types/movie';
 import { getImageUrl, truncateText } from '@/lib/utils';
 
@@ -14,25 +14,49 @@ interface HeroProps {
 export function Hero({ movies }: HeroProps) {
   const [currentIndex, setCurrentIndex] = useState(0);
   const [isAutoPlay, setIsAutoPlay] = useState(true);
-  const [animationKey, setAnimationKey] = useState(0);
+  const [isHovered, setIsHovered] = useState(false);
+  const [progress, setProgress] = useState(0);
+  const intervalRef = useRef<NodeJS.Timeout | null>(null);
+  const progressIntervalRef = useRef<NodeJS.Timeout | null>(null);
 
   const currentMovie = movies[currentIndex];
 
-  // Trigger animation when movie changes
+  // Auto-play carousel with progress bar
   useEffect(() => {
-    setAnimationKey(prev => prev + 1);
-  }, [currentIndex]);
+    if (!isAutoPlay || movies.length <= 1 || isHovered) return;
 
-  // Auto-play carousel
-  useEffect(() => {
-    if (!isAutoPlay || movies.length <= 1) return;
+    const startProgress = () => {
+      setProgress(0);
+      progressIntervalRef.current = setInterval(() => {
+        setProgress((prev) => {
+          if (prev >= 100) {
+            clearInterval(progressIntervalRef.current);
+            return 100;
+          }
+          return prev + 2; // 2% every 100ms = 5s total
+        });
+      }, 100);
+    };
 
-    const interval = setInterval(() => {
+    startProgress();
+
+    intervalRef.current = setInterval(() => {
       setCurrentIndex((prev) => (prev + 1) % movies.length);
     }, 5000);
 
-    return () => clearInterval(interval);
-  }, [movies.length, isAutoPlay]);
+    return () => {
+      if (intervalRef.current) clearInterval(intervalRef.current);
+      if (progressIntervalRef.current) clearInterval(progressIntervalRef.current);
+    };
+  }, [movies.length, isAutoPlay, isHovered]);
+
+  // Reset progress when movie changes
+  useEffect(() => {
+    setProgress(0);
+    if (progressIntervalRef.current) {
+      clearInterval(progressIntervalRef.current);
+    }
+  }, [currentIndex]);
 
   const goToPrevious = () => {
     setCurrentIndex((prev) => (prev - 1 + movies.length) % movies.length);
@@ -52,13 +76,17 @@ export function Hero({ movies }: HeroProps) {
   if (movies.length === 0) return null;
 
   return (
-    <div className="relative h-[60vh] sm:h-[70vh] lg:h-[80vh] overflow-hidden">
-      {/* Background Images */}
+    <div
+      className="relative h-[70vh] sm:h-[80vh] lg:h-[90vh] overflow-hidden"
+      onMouseEnter={() => setIsHovered(true)}
+      onMouseLeave={() => setIsHovered(false)}
+    >
+      {/* Background Images with Parallax Effect */}
       {movies.map((movie, index) => (
         <div
           key={movie.id}
-          className={`absolute inset-0 transition-opacity duration-1000 ${
-            index === currentIndex ? 'opacity-100' : 'opacity-0'
+          className={`absolute inset-0 transition-all duration-1000 ease-out ${
+            index === currentIndex ? 'opacity-100 scale-100' : 'opacity-0 scale-110'
           }`}
         >
           <Image
@@ -69,70 +97,113 @@ export function Hero({ movies }: HeroProps) {
             priority={index === 0}
             sizes="100vw"
           />
-          {/* Gradient Overlay */}
-          <div className="absolute inset-0 bg-gradient-to-r from-black/80 via-black/40 to-transparent" />
+          {/* Enhanced Gradient Overlay */}
+          <div className="absolute inset-0 bg-gradient-to-r from-black/90 via-black/60 via-30% to-transparent" />
           <div className="absolute inset-0 bg-gradient-to-t from-black/80 via-transparent to-transparent" />
+          <div className="absolute inset-0 bg-gradient-to-b from-transparent via-transparent to-black/40" />
         </div>
       ))}
 
+      {/* Floating Particles Effect */}
+      <div className="absolute inset-0 overflow-hidden">
+        {[...Array(20)].map((_, i) => (
+          <div
+            key={i}
+            className="absolute w-1 h-1 bg-white/20 rounded-full animate-pulse"
+            style={{
+              left: `${Math.random() * 100}%`,
+              top: `${Math.random() * 100}%`,
+              animationDelay: `${Math.random() * 2}s`,
+              animationDuration: `${2 + Math.random() * 2}s`
+            }}
+          />
+        ))}
+      </div>
+
       {/* Content */}
-      <div className="relative h-full flex items-center pt-16">
-        <div className="w-[90%] mx-auto px-4 sm:px-6 lg:px-8">
-          <div className="max-w-xl lg:max-w-2xl">
-            {/* Title */}
-            <h1 
-              key={`title-${animationKey}`}
-              className="text-4xl sm:text-5xl lg:text-6xl font-bold text-white mb-4 animate-slide-in-left"
-            >
-              {currentMovie.title}
+      <div className="relative h-full flex items-center">
+        <div className="max-w-7xl mx-auto px-6 lg:px-8 w-full">
+          <div className="max-w-2xl lg:max-w-3xl">
+            {/* Movie Badge */}
+            <div className="inline-flex items-center space-x-2 mb-6 bg-black/40 backdrop-blur-sm border border-gray-700/50 rounded-full px-4 py-2">
+              <div className="flex items-center space-x-1">
+                <StarIcon className="h-4 w-4 text-yellow-400" />
+                <span className="text-white text-sm font-medium">
+                  {currentMovie.imdbRating || '8.5'}
+                </span>
+              </div>
+              <div className="w-px h-4 bg-gray-600" />
+              <span className="text-gray-300 text-sm">{currentMovie.releaseYear}</span>
+              <div className="w-px h-4 bg-gray-600" />
+              <span className="bg-gradient-to-r from-red-600 to-pink-600 text-white text-xs px-2 py-1 rounded-full font-medium">
+                {currentMovie.quality || 'HD'}
+              </span>
+            </div>
+
+            {/* Title with Animation */}
+            <h1 className="text-5xl sm:text-6xl lg:text-7xl xl:text-8xl font-bold text-white mb-6 leading-tight">
+              <span className="bg-gradient-to-r from-white via-gray-200 to-white bg-clip-text text-transparent">
+                {currentMovie.title}
+              </span>
             </h1>
 
-            {/* Info */}
-            <div 
-              key={`info-${animationKey}`}
-              className="flex items-center space-x-4 text-gray-300 mb-4 animate-slide-in-left-delayed"
-            >
-              <span className="bg-red-600 text-white px-2 py-1 rounded text-sm font-medium">
-                {currentMovie.quality}
-              </span>
-              <span>{currentMovie.releaseYear}</span>
-              {currentMovie.imdbRating && (
-                <div className="flex items-center">
-                  <span className="text-yellow-400 mr-1">★</span>
-                  <span>{currentMovie.imdbRating}</span>
-                </div>
-              )}
-              <span>{currentMovie.genres[0]?.name}</span>
+            {/* Genre Tags */}
+            <div className="flex flex-wrap gap-2 mb-6">
+              {currentMovie.genres?.slice(0, 3).map((genre) => (
+                <span
+                  key={genre.id}
+                  className="px-3 py-1 bg-gray-800/60 backdrop-blur-sm border border-gray-700/50 text-gray-300 text-sm rounded-full hover:bg-gray-700/60 transition-colors"
+                >
+                  {genre.name}
+                </span>
+              ))}
             </div>
 
             {/* Description */}
-            <p 
-              key={`desc-${animationKey}`}
-              className="text-gray-200 text-lg mb-8 leading-relaxed animate-slide-in-left-delayed-2"
-            >
-              {truncateText(currentMovie.description, 200)}
+            <p className="text-gray-200 text-lg lg:text-xl mb-8 leading-relaxed max-w-2xl">
+              {truncateText(currentMovie.description || 'Khám phá bộ phim hấp dẫn này ngay hôm nay.', 200)}
             </p>
 
             {/* Action Buttons */}
-            <div 
-              key={`buttons-${animationKey}`}
-              className="flex items-center space-x-4 animate-slide-in-left-delayed-3"
-            >
+            <div className="flex flex-col sm:flex-row items-start sm:items-center gap-4">
               <Link
                 href={`/xem/${currentMovie.slug}`}
-                className="flex items-center bg-red-600 hover:bg-red-700 text-white px-6 py-3 rounded-lg font-medium transition-colors"
+                className="group inline-flex items-center px-8 py-4 bg-gradient-to-r from-red-600 to-pink-600 text-white font-semibold rounded-xl hover:from-red-700 hover:to-pink-700 transition-all duration-500 shadow-lg hover:shadow-xl transform hover:scale-105"
               >
-                <PlayIcon className="h-5 w-5 mr-2" />
-                Xem ngay
+                <PlayIcon className="h-6 w-6 mr-3" />
+                Xem Ngay
+                <svg className="w-5 h-5 ml-2 group-hover:translate-x-1 transition-transform" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M13 7l5 5m0 0l-5 5m5-5H6" />
+                </svg>
               </Link>
-              
+
               <Link
                 href={`/phim/${currentMovie.slug}`}
-                className="flex items-center bg-gray-800/80 hover:bg-gray-700/80 text-white px-6 py-3 rounded-lg font-medium transition-colors backdrop-blur-sm"
+                className="group inline-flex items-center px-8 py-4 bg-black/40 backdrop-blur-sm border border-gray-700/50 text-white font-semibold rounded-xl hover:bg-gray-800/60 hover:border-gray-600/50 transition-all duration-500"
               >
-                <InformationCircleIcon className="h-5 w-5 mr-2" />
-                Chi tiết
+                <InformationCircleIcon className="h-6 w-6 mr-3" />
+                Thông Tin
+                <svg className="w-5 h-5 ml-2 group-hover:translate-x-1 transition-transform" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 5l7 7-7 7" />
+                </svg>
               </Link>
+            </div>
+
+            {/* Additional Info */}
+            <div className="flex items-center space-x-6 mt-8 text-gray-400">
+              <div className="flex items-center space-x-2">
+                <ClockIcon className="h-5 w-5" />
+                <span className="text-sm">{currentMovie.duration || 120} phút</span>
+              </div>
+              <div className="flex items-center space-x-2">
+                <span className="text-sm">{currentMovie.country || 'Việt Nam'}</span>
+              </div>
+              {currentMovie.isHot && (
+                <div className="flex items-center space-x-1">
+                  <div className="w-2 h-2 bg-orange-500 rounded-full animate-pulse" />
+                  <span className="text-sm text-orange-400 font-medium">HOT</span>
+                </div>
+              )}
             </div>
           </div>
         </div>
@@ -142,38 +213,82 @@ export function Hero({ movies }: HeroProps) {
           <>
             <button
               onClick={goToPrevious}
-              className="absolute left-4 top-1/2 -translate-y-1/2 p-2 bg-black/50 hover:bg-black/70 text-white rounded-full transition-colors"
+              className="absolute left-6 top-1/2 -translate-y-1/2 p-3 bg-black/40 backdrop-blur-sm border border-gray-700/50 text-white rounded-full transition-all duration-300 hover:bg-black/60 hover:scale-110 group"
               aria-label="Phim trước"
             >
-              <ChevronLeftIcon className="h-6 w-6" />
+              <ChevronLeftIcon className="h-6 w-6 group-hover:scale-110 transition-transform" />
             </button>
-            
+
             <button
               onClick={goToNext}
-              className="absolute right-4 top-1/2 -translate-y-1/2 p-2 bg-black/50 hover:bg-black/70 text-white rounded-full transition-colors"
+              className="absolute right-6 top-1/2 -translate-y-1/2 p-3 bg-black/40 backdrop-blur-sm border border-gray-700/50 text-white rounded-full transition-all duration-300 hover:bg-black/60 hover:scale-110 group"
               aria-label="Phim tiếp theo"
             >
-              <ChevronRightIcon className="h-6 w-6" />
+              <ChevronRightIcon className="h-6 w-6 group-hover:scale-110 transition-transform" />
             </button>
           </>
         )}
 
+        {/* Progress Bar */}
+        {movies.length > 1 && isAutoPlay && !isHovered && (
+          <div className="absolute bottom-0 left-0 right-0 h-1 bg-gray-800/50">
+            <div
+              className="h-full bg-gradient-to-r from-red-600 to-pink-600 transition-all duration-100 ease-linear"
+              style={{ width: `${progress}%` }}
+            />
+          </div>
+        )}
+
         {/* Dots Indicator */}
         {movies.length > 1 && (
-          <div className="absolute bottom-8 left-1/2 -translate-x-1/2 flex space-x-2">
+          <div className="absolute bottom-8 left-1/2 -translate-x-1/2 flex space-x-3">
             {movies.map((_, index) => (
               <button
                 key={index}
                 onClick={() => goToSlide(index)}
-                className={`w-3 h-3 rounded-full transition-colors ${
-                  index === currentIndex ? 'bg-red-600' : 'bg-white/50 hover:bg-white/70'
+                className={`relative w-3 h-3 rounded-full transition-all duration-300 ${
+                  index === currentIndex ? 'bg-white' : 'bg-white/30 hover:bg-white/50'
                 }`}
                 aria-label={`Đi đến slide ${index + 1}`}
-              />
+              >
+                {index === currentIndex && (
+                  <div className="absolute inset-0 bg-white rounded-full animate-ping opacity-50" />
+                )}
+              </button>
             ))}
           </div>
         )}
       </div>
+
+      {/* Side Info Panel */}
+      {movies.length > 1 && (
+        <div className="absolute right-0 top-1/2 -translate-y-1/2 hidden lg:block">
+          <div className="space-y-4 px-6">
+            {movies.map((movie, index) => (
+              <button
+                key={movie.id}
+                onClick={() => goToSlide(index)}
+                className={`group relative w-32 h-20 rounded-lg overflow-hidden transition-all duration-300 ${
+                  index === currentIndex ? 'ring-2 ring-white scale-110' : 'opacity-60 hover:opacity-80'
+                }`}
+              >
+                <Image
+                  src={getImageUrl(movie.poster, 'small')}
+                  alt={movie.title}
+                  fill
+                  className="object-cover"
+                />
+                <div className="absolute inset-0 bg-gradient-to-t from-black/80 to-transparent" />
+                <div className="absolute bottom-2 left-2 right-2">
+                  <p className="text-white text-xs font-medium truncate">
+                    {movie.title}
+                  </p>
+                </div>
+              </button>
+            ))}
+          </div>
+        </div>
+      )}
     </div>
   );
 }
