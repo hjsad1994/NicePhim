@@ -1,30 +1,32 @@
 # Technical Context: NicePhim Platform
 
 ## Architecture Overview
-- **Frontend**: Next.js 15 with App Router
-- **Backend**: Spring Boot 3.1.5 with Java 17
+- **Frontend**: Next.js 15 with App Router (45 TypeScript/React files)
+- **Backend**: Spring Boot 3.1.5 with Java 17 (40 Java files)
 - **Database**: Microsoft SQL Server with Flyway migrations
 - **Real-time**: WebSocket with STOMP protocol
-- **Video Processing**: FFmpeg for HLS conversion
+- **Video Processing**: FFmpeg for HLS conversion with multiple quality variants
 
 ## Frontend Stack
-- **Framework**: Next.js 15.5.2 with React 19.1.0
-- **Language**: TypeScript 5
-- **Styling**: Tailwind CSS 4
-- **UI Components**: Headless UI, Heroicons
-- **State Management**: React hooks and context
-- **Video Player**: React Player, HLS.js for adaptive streaming
+- **Framework**: Next.js 15.5.2 with React 19.1.0 and App Router
+- **Language**: TypeScript 5 with comprehensive type definitions
+- **Styling**: Tailwind CSS 4 with glass-morphism effects and animations
+- **UI Components**: Headless UI, Heroicons, custom React components
+- **State Management**: React hooks with local state and API integration
+- **Video Player**: React Player, HLS.js for adaptive streaming, custom SimpleHLSPlayer
+- **Image Handling**: Next.js Image component with external domain configuration
 
 ## Backend Stack
-- **Framework**: Spring Boot 3.1.5
-- **Language**: Java 17
-- **Database**: SQL Server with JDBC
-- **Security**: Spring Security with BCrypt
-- **Validation**: Jakarta Validation
-- **Migration**: Flyway 9.16.0
-- **WebSocket**: Spring WebSocket with STOMP
-- **Authentication**: Complete login/register system
-- **Password Security**: BCrypt hashing with salt
+- **Framework**: Spring Boot 3.1.5 with MVC architecture
+- **Language**: Java 17 with modern features
+- **Database**: SQL Server with JDBC and JdbcTemplate
+- **Security**: BCrypt password hashing with validation
+- **Validation**: Jakarta Validation with Vietnamese error messages
+- **Migration**: Flyway 9.16.0 for database schema management
+- **WebSocket**: Spring WebSocket with STOMP protocol
+- **Architecture**: Controllers, Services, Repositories, DTOs with proper separation
+- **Error Handling**: Comprehensive exception handling with HTTP responses
+- **Data Access**: Manual SQL queries with JdbcTemplate for performance
 
 ## Database Schema
 - **Users**: Authentication and profile data

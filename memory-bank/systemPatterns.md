@@ -9,28 +9,41 @@ Frontend (Next.js) ←→ Backend (Spring Boot) ←→ Database (SQL Server)
                     Video Processing (FFmpeg)
 ```
 
+## Codebase Analysis
+- **Backend**: 40 Java files implementing complete Spring Boot MVC architecture
+- **Frontend**: 45 TypeScript/React files with Next.js App Router and modern UI components
+- **Database**: SQL Server with proper relationships and UUID-based primary keys
+- **Video Processing**: FFmpeg HLS conversion with multiple quality variants
+
 ## Frontend Patterns
-- **App Router**: Next.js 15 App Router for routing
-- **Component Architecture**: Reusable UI components
-- **Type Safety**: TypeScript interfaces for all data models
-- **Responsive Design**: Mobile-first with Tailwind CSS
-- **State Management**: React hooks and context
+- **App Router**: Next.js 15 App Router for routing with dynamic params
+- **Component Architecture**: Reusable UI components with TypeScript props
+- **Type Safety**: TypeScript interfaces for all data models (Movie, Genre, User)
+- **Responsive Design**: Mobile-first with Tailwind CSS and glass-morphism effects
+- **State Management**: React hooks with local state and API integration
+- **Cinematic UI**: Dark theme with gradients, animations, and hover effects
+- **Video Player Architecture**: SimpleHLSPlayer with HLS.js adaptive streaming
+- **Image Handling**: Next.js Image component with domain configuration
 
 ## Backend Patterns
-- **MVC Architecture**: Controllers, Services, Repositories
-- **Dependency Injection**: Spring IoC container
-- **Data Access**: JdbcTemplate for database operations
-- **Security**: BCrypt password hashing
-- **Validation**: Jakarta Bean Validation
+- **MVC Architecture**: Controllers, Services, Repositories, DTOs with proper separation
+- **Dependency Injection**: Spring IoC container with constructor injection
+- **Data Access**: JdbcTemplate for SQL operations with manual SQL queries
+- **Security**: BCrypt password hashing with proper validation
+- **Validation**: Jakarta Bean Validation with Vietnamese error messages
+- **Error Handling**: Comprehensive exception handling with proper HTTP responses
+- **UUID Architecture**: All entities use UUID primary keys for better security
+- **Service Layer**: Business logic separated from data access and presentation
 
 ## Database Patterns
-- **UUID Primary Keys**: Unique identifiers for all entities
-- **Foreign Key Constraints**: Referential integrity
-- **Audit Fields**: created_at, updated_at timestamps
-- **Soft Deletes**: is_deleted flags where appropriate
-- **Indexes**: Performance optimization for queries
-- **Junction Tables**: Many-to-many relationships (movie_genres)
-- **Normalized Design**: Separate tables for entities with proper relationships
+- **UUID Primary Keys**: Unique identifiers for all entities (movies, users, genres)
+- **Foreign Key Constraints**: Proper referential integrity with cascading updates
+- **Audit Fields**: created_at, updated_at timestamps with proper timezone handling
+- **Video Integration**: Movies table includes video_id, hls_url, video_status fields
+- **Junction Tables**: Many-to-many relationships (movie_genres) for flexible categorization
+- **Manual SQL**: Custom SQL queries with JdbcTemplate for optimal performance
+- **Migration Management**: Flyway migrations for schema versioning
+- **SQL Server Optimization**: Proper indexing and query optimization for large datasets
 
 ## Real-time Communication
 - **WebSocket**: STOMP protocol for watch-together features
