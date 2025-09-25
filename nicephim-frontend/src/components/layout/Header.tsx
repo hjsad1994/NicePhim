@@ -123,8 +123,8 @@ export default function Header() {
                       onClick={() => setIsUserMenuOpen(!isUserMenuOpen)}
                       className="flex items-center space-x-3 text-gray-300 hover:text-white transition-colors p-2 rounded-lg hover:bg-gray-800/50"
                     >
-                      <div className="w-8 h-8 bg-gradient-to-br from-red-600 to-pink-600 rounded-full flex items-center justify-center">
-                        <UserIcon className="h-4 w-4 text-white" />
+                      <div className="w-8 h-8 bg-gradient-to-br from-white to-gray-300 rounded-full flex items-center justify-center">
+                        <UserIcon className="h-4 w-4 text-gray-800" />
                       </div>
                       <span className="hidden sm:block text-sm font-medium">{user?.username || 'Tài khoản'}</span>
                       <ChevronDownIcon className={`h-4 w-4 transition-transform ${isUserMenuOpen ? 'rotate-180' : ''}`} />
@@ -132,49 +132,63 @@ export default function Header() {
 
                     {/* Dropdown Menu */}
                     {isUserMenuOpen && (
-                      <div className="absolute right-0 mt-2 w-56 bg-gray-800/95 backdrop-blur-md rounded-xl border border-gray-700/50 shadow-2xl py-2 z-50">
-                        <div className="px-4 py-3 border-b border-gray-700/50">
-                          <p className="text-xs text-gray-400">Xin chào!</p>
-                          <p className="text-sm font-semibold text-white">{user?.username || 'Người dùng'}</p>
-                        </div>
+                      <div className="absolute right-0 mt-2 w-72 bg-white/8.5 backdrop-blur-xl rounded-2xl border border-white/15 shadow-2xl p-6 z-50">
+                        <h3 className="text-xl font-bold text-white mb-4 drop-shadow-lg">Thông tin cá nhân</h3>
 
-                        <div className="py-2">
-                          <Link
-                            href="/admin"
-                            className="flex items-center px-4 py-2 text-sm text-gray-300 hover:bg-gray-700/50 hover:text-white transition-colors"
-                            onClick={() => setIsUserMenuOpen(false)}
-                          >
-                            <Cog6ToothIcon className="h-4 w-4 mr-3" />
-                            Quản trị viên
-                          </Link>
+                        <div className="space-y-4">
+                          {/* User Info */}
+                          <div className="flex items-center space-x-3">
+                            <div className="w-12 h-12 bg-gradient-to-br from-white to-gray-300 rounded-full flex items-center justify-center shadow-lg">
+                              <UserIcon className="h-6 w-6 text-gray-800" />
+                            </div>
+                            <div>
+                              <p className="text-white font-medium text-lg drop-shadow-md">{user?.username || 'Người dùng'}</p>
+                              <p className="text-gray-200 text-sm drop-shadow-sm">{user?.email || 'user@nicephim.com'}</p>
+                            </div>
+                          </div>
 
-                          <Link
-                            href="/admin/movies"
-                            className="flex items-center px-4 py-2 text-sm text-gray-300 hover:bg-gray-700/50 hover:text-white transition-colors"
-                            onClick={() => setIsUserMenuOpen(false)}
-                          >
-                            <Cog6ToothIcon className="h-4 w-4 mr-3" />
-                            Quản lý phim
-                          </Link>
+                          {/* Admin Links */}
+                          <div className="border-t border-white/20 pt-4">
+                            <div className="space-y-2">
+                              <Link
+                                href="/admin"
+                                className="flex items-center px-3 py-2 text-sm text-white hover:bg-white/20 hover:text-white transition-colors rounded-lg"
+                                onClick={() => setIsUserMenuOpen(false)}
+                              >
+                                <Cog6ToothIcon className="h-4 w-4 mr-3 text-white" />
+                                Quản trị viên
+                              </Link>
 
-                          <Link
-                            href="/admin/movies/new"
-                            className="flex items-center px-4 py-2 text-sm text-gray-300 hover:bg-gray-700/50 hover:text-white transition-colors"
-                            onClick={() => setIsUserMenuOpen(false)}
-                          >
-                            <Cog6ToothIcon className="h-4 w-4 mr-3" />
-                            Thêm phim mới
-                          </Link>
-                        </div>
+                              <Link
+                                href="/admin/movies"
+                                className="flex items-center px-3 py-2 text-sm text-white hover:bg-white/20 hover:text-white transition-colors rounded-lg"
+                                onClick={() => setIsUserMenuOpen(false)}
+                              >
+                                <Cog6ToothIcon className="h-4 w-4 mr-3 text-white" />
+                                Quản lý phim
+                              </Link>
 
-                        <div className="border-t border-gray-700/50 pt-2">
-                          <button
-                            onClick={handleLogout}
-                            className="flex items-center w-full px-4 py-2 text-sm text-red-400 hover:bg-red-600/20 hover:text-red-300 transition-colors"
-                          >
-                            <ArrowRightOnRectangleIcon className="h-4 w-4 mr-3" />
-                            Đăng xuất
-                          </button>
+                              <Link
+                                href="/admin/movies/new"
+                                className="flex items-center px-3 py-2 text-sm text-white hover:bg-white/20 hover:text-white transition-colors rounded-lg"
+                                onClick={() => setIsUserMenuOpen(false)}
+                              >
+                                <Cog6ToothIcon className="h-4 w-4 mr-3 text-white" />
+                                Thêm phim mới
+                              </Link>
+                            </div>
+                          </div>
+
+                          {/* Logout */}
+                          <div className="border-t border-white/20 pt-4">
+                            <button
+                              onClick={handleLogout}
+                              className="flex items-center w-full px-3 py-2 text-sm text-red-300 hover:bg-red-500/20 hover:text-red-200 transition-colors rounded-lg"
+                            >
+                              <ArrowRightOnRectangleIcon className="h-4 w-4 mr-3 text-red-300" />
+                              Đăng xuất
+                            </button>
+                          </div>
                         </div>
                       </div>
                     )}

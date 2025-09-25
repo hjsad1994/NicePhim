@@ -17,13 +17,11 @@ interface AdminLayoutProps {
 
 export default function AdminLayout({ children }: AdminLayoutProps) {
   const navigation = [
-    { name: 'Dashboard', href: '/admin', icon: HomeIcon },
+    { name: 'Về trang chủ', href: '/', icon: HomeIcon },
+    { name: 'Dashboard', href: '/admin', icon: ChartBarIcon },
     { name: 'Quản lý phim', href: '/admin/movies', icon: FilmIcon },
     { name: 'Thêm phim mới', href: '/admin/movies/upload', icon: PlusIcon },
     { name: 'Quản lý thể loại', href: '/admin/genres', icon: TagIcon },
-    { name: 'Người dùng', href: '/admin/users', icon: UserGroupIcon },
-    { name: 'Thống kê', href: '/admin/analytics', icon: ChartBarIcon },
-    { name: 'Cài đặt', href: '/admin/settings', icon: Cog6ToothIcon },
   ];
 
   return (
@@ -64,9 +62,36 @@ export default function AdminLayout({ children }: AdminLayoutProps) {
             <div className="flex items-center justify-between">
               <h2 className="text-lg font-semibold" style={{color: 'var(--color-text-primary)'}}>Admin Panel</h2>
               <div className="flex items-center space-x-4">
-                <span className="text-sm" style={{color: 'var(--color-text-secondary)'}}>Xin chào, Admin</span>
-                <div className="w-8 h-8 bg-red-500 rounded-full flex items-center justify-center">
-                  <span className="text-white font-medium text-sm">A</span>
+                <div className="relative group">
+                  <div className="w-8 h-8 bg-red-500 rounded-full flex items-center justify-center cursor-pointer transition-all duration-300 group-hover:scale-110">
+                    <span className="text-white font-medium text-sm">A</span>
+                  </div>
+
+                  {/* Profile Dropdown */}
+                  <div className="absolute right-0 mt-2 w-64 opacity-0 invisible group-hover:opacity-100 group-hover:visible transition-all duration-300 transform group-hover:translate-y-0 translate-y-2 z-50">
+                    <div className="bg-gray-900/80 backdrop-blur-sm rounded-2xl p-6 border border-gray-800">
+                      <h3 className="text-xl font-bold text-white mb-4">Thông tin cá nhân</h3>
+                      <div className="space-y-3">
+                        <div className="flex items-center space-x-3">
+                          <div className="w-12 h-12 bg-red-500 rounded-full flex items-center justify-center">
+                            <span className="text-white font-medium text-lg">A</span>
+                          </div>
+                          <div>
+                            <p className="text-white font-medium">Admin</p>
+                            <p className="text-gray-400 text-sm">admin@nicephim.com</p>
+                          </div>
+                        </div>
+                        <div className="border-t border-gray-800 pt-3">
+                          <p className="text-gray-400 text-sm">Vai trò</p>
+                          <p className="text-white font-medium">Quản trị viên</p>
+                        </div>
+                        <div className="border-t border-gray-800 pt-3">
+                          <p className="text-gray-400 text-sm">Ngày tham gia</p>
+                          <p className="text-white font-medium">01/01/2024</p>
+                        </div>
+                      </div>
+                    </div>
+                  </div>
                 </div>
               </div>
             </div>
