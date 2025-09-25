@@ -55,8 +55,10 @@ build/
 !**/src/test/**/build/
 
 # Spring Boot
+application.properties
 application-*.properties
 application-*.yml
+!application.properties.template
 spring-boot-app.jar
 *.jar
 *.war

@@ -113,6 +113,9 @@
 - ✅ **Button Styling Consistency**: Made "Xem Ngay", "Xem Chung", and "Thích" buttons consistent with homepage styling
 - ✅ **Homepage Auto-play Carousel**: Implemented auto-changing movies with progress indicator and user controls
 - ✅ **Movie Carousel Optimization**: Enhanced transition timing and repositioned mini movie cards for better UX
+- ✅ **Video Upload Path Configuration**: Fixed Windows path conflicts in application.properties - updated default paths to use correct Mac paths (/Users/trantai/Documents/NicePhim/...)
+- ✅ **Hero Component UI Adjustments**: Moved content left with negative margins (-ml-20 lg:-ml-30) and reduced heading text size for better layout
+- ✅ **Media Directory Creation**: Created required directories (videos_demo, media, poster_img, banner_img) for proper file storage
 
 ## Current Focus
 1. ✅ **Video Player State Update Issue**: RESOLVED - Quality and speed selection buttons now display selected values correctly

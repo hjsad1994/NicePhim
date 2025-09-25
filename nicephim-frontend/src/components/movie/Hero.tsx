@@ -155,7 +155,7 @@ export function Hero({ movies }: HeroProps) {
       {/* Content */}
       <div className="relative h-full flex items-center">
         <div className="max-w-7xl mx-auto px-6 lg:px-8 w-full">
-          <div className="max-w-2xl lg:max-w-3xl">
+          <div className="max-w-2xl lg:max-w-3xl -ml-20 lg:-ml-30">
             {/* Movie Badge */}
             <div className="inline-flex items-center space-x-2 mb-6 bg-black/40 backdrop-blur-sm border border-gray-700/50 rounded-full px-4 py-2">
               <div className="flex items-center space-x-1">
@@ -173,7 +173,7 @@ export function Hero({ movies }: HeroProps) {
             </div>
 
             {/* Title with Animation */}
-            <h1 className="text-5xl sm:text-6xl lg:text-7xl xl:text-8xl font-bold text-white mb-6 leading-tight">
+            <h1 className="text-4xl sm:text-5xl lg:text-6xl xl:text-7xl font-bold text-white mb-6 leading-tight">
               <span className="bg-gradient-to-r from-white via-gray-200 to-white bg-clip-text text-transparent">
                 {currentMovie.title}
               </span>

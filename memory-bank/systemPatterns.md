@@ -24,6 +24,8 @@ Frontend (Next.js) ←→ Backend (Spring Boot) ←→ Database (SQL Server)
 - **Cinematic UI**: Dark theme with gradients, animations, and hover effects
 - **Video Player Architecture**: SimpleHLSPlayer with HLS.js adaptive streaming
 - **Image Handling**: Next.js Image component with domain configuration
+- **Layout Adjustments**: Negative margin utilities (-ml-*, -mt-*) for precise component positioning
+- **Typography Scaling**: Responsive text sizing with consistent breakpoints (text-4xl, lg:text-6xl, etc.)
 
 ## Backend Patterns
 - **MVC Architecture**: Controllers, Services, Repositories, DTOs with proper separation
