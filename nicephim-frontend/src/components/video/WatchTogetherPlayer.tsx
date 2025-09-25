@@ -26,6 +26,9 @@ interface WatchTogetherPlayerProps {
   onHostChange: (isHost: boolean) => void;
   roomCreator: string;
   currentUser: string;
+  broadcastMode?: boolean;
+  broadcastStartTime?: number;
+  broadcastStatus?: string;
   className?: string;
 }
 
@@ -53,6 +56,9 @@ const WatchTogetherPlayer: React.FC<WatchTogetherPlayerProps> = ({
   onHostChange,
   roomCreator,
   currentUser,
+  broadcastMode = false,
+  broadcastStartTime,
+  broadcastStatus,
   className = ''
 }) => {
   const videoRef = useRef<HTMLVideoElement>(null);
@@ -78,6 +84,11 @@ const WatchTogetherPlayer: React.FC<WatchTogetherPlayerProps> = ({
   // Sync state
   const [creatorCurrentTime, setCreatorCurrentTime] = useState(0);
   const [lastSyncTime, setLastSyncTime] = useState(0);
+
+  // Broadcast mode state
+  const [serverTime, setServerTime] = useState(0);
+  const [broadcastActive, setBroadcastActive] = useState(false);
+  const [syncInterval, setSyncInterval] = useState<NodeJS.Timeout | null>(null);
 
   // Chat state
   const [chatMessages, setChatMessages] = useState<ChatMessage[]>([]);
@@ -210,6 +221,72 @@ const WatchTogetherPlayer: React.FC<WatchTogetherPlayerProps> = ({
       }
     };
   }, [hlsUrl]);
+
+  // Initialize broadcast mode sync
+  useEffect(() => {
+    if (broadcastMode) {
+      console.log('📺 Broadcast mode enabled, starting sync interval...');
+
+      // Check if broadcast should be active
+      const checkBroadcastStatus = () => {
+        if (broadcastStartTime && broadcastStartTime <= Date.now()) {
+          setBroadcastActive(true);
+        } else {
+          setBroadcastActive(false);
+        }
+      };
+
+      // Initial check
+      checkBroadcastStatus();
+
+      // Set up periodic sync with server
+      const interval = setInterval(async () => {
+        try {
+          const response = await fetch(`http://localhost:8080/api/rooms/${roomId}/server-time`);
+          if (response.ok) {
+            const data = await response.json();
+            setServerTime(data.serverTime);
+
+            // Sync video to server time if broadcast is active
+            if (broadcastActive && data.broadcastStatus === 'live') {
+              syncToServerTime(data.serverTime);
+            }
+          }
+        } catch (error) {
+          console.error('Error fetching server time:', error);
+        }
+
+        checkBroadcastStatus();
+      }, 5000); // Sync every 5 seconds
+
+      setSyncInterval(interval);
+
+      return () => {
+        if (interval) clearInterval(interval);
+      };
+    }
+  }, [broadcastMode, broadcastStartTime, roomId, broadcastActive]);
+
+  // Sync video to server time
+  const syncToServerTime = useCallback((targetTime: number) => {
+    const video = videoRef.current;
+    if (!video) return;
+
+    console.log('🔄 Syncing to server time:', targetTime);
+
+    if (Math.abs(video.currentTime - targetTime / 1000) > 1) {
+      // Only seek if difference is more than 1 second
+      video.currentTime = targetTime / 1000;
+
+      // Add sync message to chat
+      setChatMessages(prev => [...prev, {
+        username: 'system',
+        message: `🔄 Đã đồng bộ với thời gian máy chủ`,
+        timestamp: Date.now(),
+        type: 'system'
+      }]);
+    }
+  }, []);
 
   // Initialize WebSocket connection
   useEffect(() => {
@@ -772,18 +849,51 @@ const WatchTogetherPlayer: React.FC<WatchTogetherPlayerProps> = ({
   };
 
   const handleSeek = (time: number) => {
+    if (broadcastMode) {
+      // In broadcast mode, seeking is disabled for all users
+      setChatMessages(prev => [...prev, {
+        username: 'system',
+        message: '❌ Tua video bị vô hiệu hóa trong chế độ phát trực tiếp',
+        timestamp: Date.now(),
+        type: 'system'
+      }]);
+      return;
+    }
+
     const video = videoRef.current;
     if (!video) return;
     video.currentTime = time;
   };
 
   const seekForward = () => {
+    if (broadcastMode) {
+      // In broadcast mode, seeking is disabled for all users
+      setChatMessages(prev => [...prev, {
+        username: 'system',
+        message: '❌ Tua video bị vô hiệu hóa trong chế độ phát trực tiếp',
+        timestamp: Date.now(),
+        type: 'system'
+      }]);
+      return;
+    }
+
     const video = videoRef.current;
     if (!video) return;
     video.currentTime = Math.min(video.currentTime + 10, video.duration);
   };
 
   const seekBackward = () => {
+    if (broadcastMode) {
+      // In broadcast mode, seeking is disabled for all users
+      setChatMessages(prev => [...prev, {
+        username: 'system',
+        message: '❌ Tua video bị vô hiệu hóa trong chế độ phát trực tiếp',
+        timestamp: Date.now(),
+        type: 'system'
+      }]);
+      return;
+    }
+
     const video = videoRef.current;
     if (!video) return;
     video.currentTime = Math.max(video.currentTime - 10, 0);
@@ -1119,6 +1229,15 @@ const WatchTogetherPlayer: React.FC<WatchTogetherPlayerProps> = ({
           {stompClient?.connected ? '🟢 Đã kết nối' : '🔴 Mất kết nối'}
         </div>
 
+        {/* Broadcast Status */}
+        {broadcastMode && (
+          <div className={`absolute top-2 left-2 px-2 py-1 rounded text-xs font-medium ${
+            broadcastActive ? 'bg-blue-500/80 text-white' : 'bg-yellow-500/80 text-white'
+          }`}>
+            {broadcastActive ? '📺 Đang phát' : '⏰ Chờ phát'}
+          </div>
+        )}
+
         {/* User Status */}
         <div className={`absolute top-2 left-2 px-2 py-1 rounded text-xs font-medium ${
           currentUser === roomCreator ? 'bg-blue-500/80 text-white' : 'bg-gray-500/80 text-white'
@@ -1181,10 +1300,13 @@ const WatchTogetherPlayer: React.FC<WatchTogetherPlayerProps> = ({
                   max={duration || 0}
                   value={currentTime}
                   onChange={(e) => handleSeek(parseFloat(e.target.value))}
-                  className="w-full h-1 bg-white/30 rounded-lg appearance-none cursor-pointer"
+                  className={`w-full h-1 bg-white/30 rounded-lg appearance-none ${
+                    broadcastMode ? 'cursor-not-allowed opacity-50' : 'cursor-pointer'
+                  }`}
                   style={{
                     background: `linear-gradient(to right, #3b82f6 0%, #3b82f6 ${(currentTime / duration) * 100}%, rgba(255,255,255,0.3) ${(currentTime / duration) * 100}%, rgba(255,255,255,0.3) 100%)`
                   }}
+                  disabled={broadcastMode}
                 />
               </div>
 
@@ -1208,22 +1330,32 @@ const WatchTogetherPlayer: React.FC<WatchTogetherPlayerProps> = ({
                     )}
                   </button>
 
-                  {/* Seek Backward Button - All users can control */}
+                  {/* Seek Backward Button - Disabled in broadcast mode */}
                   <button
                     onClick={seekBackward}
-                    className="w-10 h-10 bg-white/20 rounded-full flex items-center justify-center text-white hover:bg-white/30 transition-colors"
-                    title="Tua lại 10 giây"
+                    disabled={broadcastMode}
+                    className={`w-10 h-10 rounded-full flex items-center justify-center text-white transition-colors ${
+                      broadcastMode
+                        ? 'bg-gray-500/20 cursor-not-allowed opacity-50'
+                        : 'bg-white/20 hover:bg-white/30'
+                    }`}
+                    title={broadcastMode ? "Tua video bị vô hiệu hóa" : "Tua lại 10 giây"}
                   >
                     <svg className="w-4 h-4" fill="currentColor" viewBox="0 0 20 20">
                       <path d="M8.445 14.832A1 1 0 0010 14v-2.798l5.445 3.63A1 1 0 0017 14V6a1 1 0 00-1.555-.832L10 8.798V6a1 1 0 00-1.555-.832l-6 4a1 1 0 000 1.664l6 4z"/>
                     </svg>
                   </button>
 
-                  {/* Seek Forward Button - All users can control */}
+                  {/* Seek Forward Button - Disabled in broadcast mode */}
                   <button
                     onClick={seekForward}
-                    className="w-10 h-10 bg-white/20 rounded-full flex items-center justify-center text-white hover:bg-white/30 transition-colors"
-                    title="Tua tới 10 giây"
+                    disabled={broadcastMode}
+                    className={`w-10 h-10 rounded-full flex items-center justify-center text-white transition-colors ${
+                      broadcastMode
+                        ? 'bg-gray-500/20 cursor-not-allowed opacity-50'
+                        : 'bg-white/20 hover:bg-white/30'
+                    }`}
+                    title={broadcastMode ? "Tua video bị vô hiệu hóa" : "Tua tới 10 giây"}
                   >
                     <svg className="w-4 h-4" fill="currentColor" viewBox="0 0 20 20">
                       <path d="M4.555 5.168A1 1 0 003 6v8a1 1 0 001.555.832L10 11.202V14a1 1 0 001.555.832l6-4a1 1 0 000-1.664l-6-4A1 1 0 0010 6v2.798L4.555 5.168z"/>

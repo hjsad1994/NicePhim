@@ -51,6 +51,9 @@ Frontend (Next.js) ←→ Backend (Spring Boot) ←→ Database (SQL Server)
 - **WebSocket**: STOMP protocol for watch-together features
 - **Event Broadcasting**: Real-time updates to connected clients
 - **Room Management**: User sessions and permissions
+- **Broadcast Synchronization**: Server-managed time coordination for scheduled broadcasts
+- **State Synchronization**: Real-time playback state updates across all connected clients
+- **Control Restrictions**: Disabled seeking in broadcast mode to maintain synchronization
 
 ## Video Processing Pipeline
 1. **Upload**: Original video files stored locally (D:/videos_demo)
@@ -120,6 +123,26 @@ Frontend (Next.js) ←→ Backend (Spring Boot) ←→ Database (SQL Server)
 - **Schema Evolution**: Add new columns with NULL defaults to avoid breaking existing data
 - **Migration Rollback**: Proper migration design to allow rollback if needed
 - **Column Addition Pattern**: ALTER TABLE ADD COLUMN with appropriate defaults and constraints
+
+## Broadcast Scheduling Patterns
+- **Server-Managed Time Architecture**: Centralized time calculation for synchronized playback across multiple clients
+- **Broadcast Status Management**: Lifecycle management with "scheduled", "live", and "completed" states
+- **Time Calculation Algorithm**: Server-side calculation of current playback position based on scheduled start time and playback state
+- **Control Restriction Pattern**: Disabled seeking in broadcast mode, allowing only pause/resume functionality
+- **WebSocket State Synchronization**: Real-time broadcast state updates to all connected clients
+- **Frontend-Backend Integration**: Seamless integration between broadcast time selection UI and backend scheduling APIs
+- **Room Management Enhancement**: Complete CRUD operations with broadcast scheduling capabilities
+- **Time Synchronization Interval**: Periodic server time checks to maintain playback synchronization
+- **Broadcast Time Selection UI**: Intuitive user interface for selecting broadcast start times with countdown display
+- **Status Indicator Pattern**: Visual indicators showing broadcast status and time remaining until start
+
+## Database Integration Patterns
+- **Type Safety Pattern**: Proper handling of Java type mappings for SQL Server data types (TINYINT → Short, VARCHAR → String)
+- **Unique Constraint Management**: Generation of unique identifiers for fields with UNIQUE constraints to avoid null value violations
+- **Cross-Origin Resource Sharing**: CORS configuration for all controllers that need to handle frontend API requests
+- **Password Hashing Pattern**: Consistent use of BCrypt for all password operations with proper salt generation
+- **UUID Validation**: Frontend validation of UUID format before sending to backend to prevent conversion errors
+- **Database Logging**: Comprehensive logging for database operations to facilitate debugging and monitoring
 
 ## Project Structure Patterns
 - **Frontend Directory**: nicephim-frontend (renamed from rophim-frontend)

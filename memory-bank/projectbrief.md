@@ -6,7 +6,8 @@
 ## Core Requirements
 - **Movie Streaming**: High-quality video streaming with multiple quality options and HLS adaptive streaming
 - **User Management**: Complete registration, authentication, and user preferences system
-- **Watch Together**: Real-time collaborative viewing with WebSocket synchronization
+- **Watch Together**: Real-time collaborative viewing with WebSocket synchronization and broadcast scheduling
+- **Broadcast Scheduling**: Server-managed time coordination for scheduled video broadcasts with synchronized playback
 - **Admin Panel**: Comprehensive movie and genre management interface
 - **Responsive Design**: Mobile-first approach with modern cinematic UI/UX
 
@@ -22,6 +23,11 @@
    - Synchronized playback across users
    - WebSocket-based communication with STOMP protocol
    - Room administration features
+   - Broadcast scheduling with server-managed time synchronization
+   - Scheduled start times with countdown displays
+   - Broadcast status management (scheduled, live, completed)
+   - Video player control restrictions in broadcast mode (pause/resume only)
+   - Real-time state synchronization across all connected clients
 
 3. **Content Management**
    - Movie catalog with genres, ratings, and metadata
@@ -47,9 +53,11 @@
 ## Success Criteria
 - Seamless video streaming experience with adaptive quality
 - Real-time synchronization in watch-together mode
-- Intuitive user interface with cinematic design
+- Broadcast scheduling functionality with server-managed time coordination
+- Intuitive user interface with cinematic design and broadcast time selection
 - Scalable architecture for future growth
 - Mobile-responsive design with modern UI patterns
+- Complete room management with broadcast scheduling capabilities
 
 ## Technology Stack
 - **Frontend**: Next.js 15, React 19, TypeScript, Tailwind CSS

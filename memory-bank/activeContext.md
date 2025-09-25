@@ -1,7 +1,7 @@
 # Active Context: NicePhim Development Focus
 
-## Current Sprint: Video Player Enhancement & User Experience
-**Goal**: Complete video player functionality with intuitive controls and smooth user interaction
+## Current Sprint: Broadcast Scheduling Feature Completion ✅
+**Goal**: Successfully implemented complete broadcast scheduling functionality for watch-together rooms with real-time synchronization
 
 ## Codebase Analysis Update
 **Recent comprehensive analysis completed**:
@@ -12,6 +12,12 @@
 - **Database**: SQL Server with proper relationships and video metadata integration
 
 ## Recent Changes
+- ✅ **Database Type Casting Fixes**: Resolved ClassCastException between Short and Integer types for TINYINT database columns (playback_state)
+- ✅ **Unique Constraint Resolution**: Fixed UNIQUE KEY constraint violations on invite_code field by generating unique 8-character codes for all rooms
+- ✅ **CORS Configuration**: Added @CrossOrigin annotation to RoomController to enable frontend API calls from localhost:3000
+- ✅ **BCrypt Password Hashing**: Fixed user creation in createOrUpdateSimpleUser method to use proper BCrypt hashing instead of empty byte arrays
+- ✅ **Frontend UUID Validation**: Added validation to only send movieId when it's in proper UUID format to backend
+- ✅ **Enhanced Error Logging**: Added comprehensive console logging throughout room creation process for better debugging
 - ✅ **Video Upload Size Limit Fix**: Increased Spring Boot upload limits to 500MB for large video files
 - ✅ **Backend Controller Conflicts Resolved**: Fixed TestController naming conflicts by renaming to VideoTestController
 - ✅ **Backend Startup Stability**: Application starts successfully after resolving bean definition conflicts
@@ -124,21 +130,35 @@
 - ✅ **Watch Together Room Display**: Updated room management page to show "Chưa có phòng nào" when no rooms exist, removed fallback mock data
 - ✅ **Watch Together User Experience**: Enhanced room creation flow with username validation and proper redirect handling
 
-## Current Focus
-1. ✅ **Video Player State Update Issue**: RESOLVED - Quality and speed selection buttons now display selected values correctly
-2. ✅ **HLS Adaptive Quality Switching**: RESOLVED - Quality selection now changes actual video quality (360p, 480p, 720p, 1080p)
-3. ✅ **Movie Slug API Implementation**: RESOLVED - Movie watching pages now fetch real data from database instead of using mock data
-4. ✅ **Image Upload System**: RESOLVED - Complete image upload functionality for movie posters and banners
-5. ✅ **Environment Configuration**: RESOLVED - Created .env file for flexible directory URL management, allowing developers to easily change paths without modifying source code
-6. ✅ **Windows Path Configuration**: RESOLVED - Updated media directory paths and ffmpeg path for Windows environment
-7. ✅ **Authentication State Management**: RESOLVED - Fixed header user icon requiring page reload after login
-8. ✅ **Video Upload Path Error**: RESOLVED - Fixed file path error with proper directory creation
-9. ✅ **Movie Detail Page Redesign**: RESOLVED - Updated /phim/ page to match homepage cinematic style
-10. ✅ **Button Styling Consistency**: RESOLVED - Made all buttons consistent with homepage styling
-11. ✅ **Homepage Auto-play Carousel**: RESOLVED - Implemented auto-changing movies with user controls
-12. ✅ **Movie Carousel Optimization**: RESOLVED - Enhanced transitions and repositioned mini movie cards
-13. **Content Population**: Continue creating movies with real videos and assigning them to genres
-14. **End-to-End Testing**: Complete video workflow from upload to playback
+## Current Focus: Broadcast Scheduling Implementation ✅ COMPLETE
+1. ✅ **Database Schema Enhancement**: Added broadcast scheduling fields to watch_rooms table (V3 migration)
+2. ✅ **Backend API Implementation**: Complete REST API endpoints for room CRUD operations with broadcast support
+3. ✅ **Broadcast Service Layer**: Enhanced WatchRoomService with scheduling and time synchronization logic
+4. ✅ **Frontend UI Enhancement**: Updated room creation and management interfaces with broadcast time selection
+5. ✅ **Server-Side Time Synchronization**: Implemented server-managed time for broadcast coordination
+6. ✅ **Video Player Controls Restriction**: Disabled seeking in broadcast mode, allowing only pause/resume
+7. ✅ **Real-Time WebSocket Updates**: Enhanced WebSocket communication for broadcast state synchronization
+8. ✅ **Room Management Functionality**: Complete room creation, editing, deletion with broadcast scheduling
+9. ✅ **All Services Running and Tested**: Backend, frontend, and WebSocket services fully operational
+10. ✅ **Type Casting Issues Resolved**: Fixed ClassCastException between Short (TINYINT) and Integer types for playback_state field
+11. ✅ **Database Constraint Issues Fixed**: Resolved UNIQUE KEY constraint violations by generating unique invite codes for all rooms
+12. ✅ **CORS Configuration Added**: Enabled cross-origin requests for RoomController to allow frontend API calls
+13. ✅ **User Creation Fixed**: Resolved BCrypt password hashing issues in createOrUpdateSimpleUser method
+14. ✅ **Frontend Error Handling Enhanced**: Added comprehensive logging and validation for room creation process
+
+## Previous Completed Features
+10. ✅ **Video Player State Update Issue**: RESOLVED - Quality and speed selection buttons now display selected values correctly
+11. ✅ **HLS Adaptive Quality Switching**: RESOLVED - Quality selection now changes actual video quality (360p, 480p, 720p, 1080p)
+12. ✅ **Movie Slug API Implementation**: RESOLVED - Movie watching pages now fetch real data from database instead of using mock data
+13. ✅ **Image Upload System**: RESOLVED - Complete image upload functionality for movie posters and banners
+14. ✅ **Environment Configuration**: RESOLVED - Created .env file for flexible directory URL management, allowing developers to easily change paths without modifying source code
+15. ✅ **Windows Path Configuration**: RESOLVED - Updated media directory paths and ffmpeg path for Windows environment
+16. ✅ **Authentication State Management**: RESOLVED - Fixed header user icon requiring page reload after login
+17. ✅ **Video Upload Path Error**: RESOLVED - Fixed file path error with proper directory creation
+18. ✅ **Movie Detail Page Redesign**: RESOLVED - Updated /phim/ page to match homepage cinematic style
+19. ✅ **Button Styling Consistency**: RESOLVED - Made all buttons consistent with homepage styling
+20. ✅ **Homepage Auto-play Carousel**: RESOLVED - Implemented auto-changing movies with user controls
+21. ✅ **Movie Carousel Optimization**: RESOLVED - Enhanced transitions and repositioned mini movie cards
 
 ## Next Steps
 1. ✅ **Video Player State Update Issue**: RESOLVED - Quality and speed selection buttons now display selected values correctly
@@ -173,6 +193,13 @@
 24. Implement advanced search and filtering for movies and genres
 
 ## Technical Decisions
+- **Broadcast Scheduling Architecture**: Implemented server-managed time synchronization for coordinated video playback across multiple users
+- **Database Schema Design**: Added V3 migration with broadcast scheduling fields (scheduled_start_time, broadcast_start_time_type, broadcast_status, actual_start_time, server_managed_time)
+- **Video Player Control Restriction**: Disabled seeking in broadcast mode to maintain synchronization, allowing only pause/resume functionality
+- **WebSocket Communication Enhancement**: Updated WebSocket handlers to support broadcast state synchronization and server time coordination
+- **Frontend-Backend Integration**: Seamless integration between frontend UI (broadcast time selection) and backend API for room creation and management
+- **Time Synchronization Algorithm**: Server-side calculation of current playback position based on scheduled start time and playback state
+- **Room Management API**: Complete REST API endpoints for room CRUD operations with broadcast scheduling support
 - **Environment Configuration Management**: Implemented .env file support for flexible directory URL management, allowing developers to easily change paths without modifying source code
 - **Video Upload Configuration**: Increased Spring Boot upload limits to 500MB for large video files
 - **Controller Conflict Resolution**: Renamed TestController to VideoTestController to resolve bean definition conflicts
@@ -212,7 +239,28 @@
 ## Blockers
 - None currently identified
 
-## Notes
+## Recent Issues Resolved
+1. **ClassCastException in BroadcastSchedulerService** - Fixed casting issues where database TINYINT columns return Short but code expected Integer
+2. **Unique Key Constraint Violations** - Resolved by generating unique invite codes for all rooms instead of NULL values
+3. **CORS Errors** - Fixed by adding @CrossOrigin annotation to RoomController
+4. **BCrypt Password Hashing Issues** - Fixed user creation that was using empty byte arrays instead of proper BCrypt hashes
+5. **Frontend-Backend Integration** - Enhanced error handling and validation for room creation API calls
+
+## Notes: Broadcast Scheduling Implementation Complete ✅
+- **Broadcast Scheduling Feature Fully Implemented** - Complete broadcast scheduling functionality for watch-together rooms with server-managed time synchronization
+- **Database Schema Enhanced** - V3 migration added broadcast scheduling fields: scheduled_start_time, broadcast_start_time_type, broadcast_status, actual_start_time, server_managed_time
+- **Backend APIs Complete** - REST API endpoints for room CRUD operations with broadcast scheduling support (create, read, update, delete rooms)
+- **Frontend UI Enhanced** - Updated room creation and management interfaces with broadcast time selection (now, 5min, 10min, 15min, 30min, 1hour)
+- **Server-Side Time Synchronization** - Implemented server-managed time calculation for coordinated video playback across multiple users
+- **Video Player Controls Restricted** - Disabled seeking in broadcast mode, allowing only pause/resume functionality to maintain synchronization
+- **Real-Time WebSocket Updates** - Enhanced WebSocket communication for broadcast state synchronization and server time coordination
+- **Room Management Complete** - Full room creation, editing, deletion with broadcast scheduling capabilities
+- **All Services Operational** - Backend, frontend, and WebSocket services fully tested and running
+- **Time Calculation Algorithm** - Server-side calculation of current playback position based on scheduled start time and playback state
+- **Broadcast Status Management** - Support for "scheduled", "live", and "completed" broadcast states
+- **User Experience Enhanced** - Intuitive broadcast time selection with countdown display and status indicators
+
+## Previous System Status
 - **Video Upload System Operational** - Backend successfully processing large video files (400MB+) with FFmpeg HLS conversion
 - **Video Processing Pipeline Active** - FFmpeg creating multiple quality variants (360p, 720p, 1080p) with proper HLS streaming
 - **Movie Creation with Video Data** - Movies being created with video_id, hls_url, and video_status fields populated
