@@ -23,6 +23,7 @@ export default function TaoPhongXemChungPage({ searchParams }: TaoPhongXemChungP
   const [autoStart, setAutoStart] = useState<boolean>(false);
   const [privateOnly, setPrivateOnly] = useState<boolean>(false);
   const [isCreating, setIsCreating] = useState<boolean>(false);
+  const [username, setUsername] = useState<string>('');
 
   // Convert MovieResponse to Movie type for compatibility
   const convertToMovie = (movieResponse: MovieResponse): Movie => {
@@ -55,11 +56,17 @@ export default function TaoPhongXemChungPage({ searchParams }: TaoPhongXemChungP
     };
   };
 
-  // Load movie data
+  // Load user and movie data
   useEffect(() => {
-    const loadMovie = async () => {
+    const loadData = async () => {
       try {
         setIsLoading(true);
+
+        // Check if user already exists in localStorage
+        const savedUser = localStorage.getItem('watchTogetherUser');
+        if (savedUser) {
+          setUsername(savedUser);
+        }
 
         // Create realistic fallback movie
         const createFallbackMovie = (): Movie => ({
@@ -136,8 +143,18 @@ export default function TaoPhongXemChungPage({ searchParams }: TaoPhongXemChungP
       }
     };
 
-    loadMovie();
+    loadData();
   }, [resolvedSearchParams.movie]);
+
+  const handleUsernameSubmit = () => {
+    if (!username || username.trim().length < 2) {
+      alert('Vui lòng nhập tên người dùng có ít nhất 2 ký tự');
+      return;
+    }
+
+    localStorage.setItem('watchTogetherUser', username.trim());
+    alert('Đã lưu tên người dùng: ' + username.trim());
+  };
 
   // Generate posters from available movies in database
   const posters = movies.length > 0 ? movies.slice(0, 6).map((m) => ({
@@ -184,31 +201,61 @@ export default function TaoPhongXemChungPage({ searchParams }: TaoPhongXemChungP
       return;
     }
 
+    if (!movie) {
+      alert('Vui lòng chọn phim để tạo phòng');
+      return;
+    }
+
     setIsCreating(true);
 
     try {
-      // TODO: integrate API create room
-      // const roomData = {
-      //   name: roomName,
-      //   movie: movie?.title,
-      //   poster: posters[activePoster].src,
-      //   autoStart,
-      //   isPrivate: privateOnly,
-      //   createdAt: new Date().toISOString()
-      // };
+      // Get current user from localStorage
+      const currentUser = localStorage.getItem('watchTogetherUser');
+      if (!currentUser) {
+        alert('Vui lòng nhập tên người dùng trước khi tạo phòng');
+        setIsCreating(false);
+        return;
+      }
+
+      // Create room data structure
+      const roomId = 'room_' + Date.now();
+      const selectedPoster = posters[activePoster];
+
+      const roomData = {
+        id: roomId,
+        name: roomName,
+        movie: movie,
+        poster: selectedPoster.src,
+        autoStart,
+        isPrivate: privateOnly,
+        createdBy: currentUser,
+        createdAt: new Date().toISOString(),
+        hlsUrl: movie.hlsUrl || `http://localhost:8080/videos/${movie.id}/master.m3u8`
+      };
+
+      // Save room to localStorage
+      try {
+        const existingRooms = JSON.parse(localStorage.getItem('watchTogetherRooms') || '[]');
+        existingRooms.push(roomData);
+        localStorage.setItem('watchTogetherRooms', JSON.stringify(existingRooms));
+        console.log('Room saved to localStorage:', roomData);
+      } catch (error) {
+        console.error('Error saving room to localStorage:', error);
+      }
 
       // Simulate API call
       await new Promise(resolve => setTimeout(resolve, 1000));
 
-      // Simulate successful room creation
+      // Show success message
       alert('Đã tạo phòng "' + roomName + '" thành công!' +
-            '\n\nPhim: ' + (movie?.title || 'Unknown') +
+            '\n\nPhim: ' + movie.title +
             '\nLoại phòng: ' + (privateOnly ? 'Riêng tư' : 'Công khai') +
-            '\nBắt đầu: ' + (autoStart ? 'Tự động' : 'Thủ công'));
+            '\nBắt đầu: ' + (autoStart ? 'Tự động' : 'Thủ công') +
+            '\nMã phòng: ' + roomId);
 
-      // Redirect to room management after successful creation
+      // Redirect to the newly created room
       setTimeout(() => {
-        router.push('/xem-chung/quan-ly');
+        router.push(`/xem-chung/phong/${roomId}`);
       }, 500);
 
     } catch (error) {
@@ -408,11 +455,67 @@ export default function TaoPhongXemChungPage({ searchParams }: TaoPhongXemChungP
                   </div>
                 </div>
 
-                {/* 2. Poster Selection */}
+                {/* 1.5 Username Input */}
+                <div className="group">
+                  <div className="flex items-center gap-3 mb-4">
+                    <div className="w-8 h-8 rounded-full bg-gradient-to-r from-blue-500/20 to-blue-600/20 border border-blue-500/30 flex items-center justify-center">
+                      <span className="text-blue-400 font-bold text-sm">1.5</span>
+                    </div>
+                    <h3 className="text-white font-semibold text-lg">Tên người dùng</h3>
+                    {!username && (
+                      <span className="text-red-400 text-sm ml-auto">Bắt buộc</span>
+                    )}
+                  </div>
+                  <div className="flex gap-3">
+                    <div className="relative flex-1">
+                      <input
+                        className={`w-full px-4 py-4 rounded-xl bg-black/30 border-2 text-white placeholder:text-gray-400 outline-none transition-all duration-300 text-lg ${
+                          username.length > 0 && username.length < 2
+                            ? 'border-red-500/50 focus:border-red-500/70'
+                            : 'border-gray-400/30 focus:border-red-500/50'
+                        } focus:bg-black/40`}
+                        placeholder="Nhập tên của bạn..."
+                        maxLength={30}
+                        type="text"
+                        value={username}
+                        onChange={(e) => setUsername(e.target.value)}
+                      />
+                      <div className={`absolute right-3 top-1/2 -translate-y-1/2 text-sm ${
+                        username.length > 0 && username.length < 2
+                          ? 'text-red-400'
+                          : 'text-gray-400'
+                      }`}>
+                        {username.length}/30
+                      </div>
+                      {username.length > 0 && username.length < 2 && (
+                        <div className="absolute -bottom-6 left-0 text-red-400 text-sm">
+                          Tên cần ít nhất 2 ký tự
+                        </div>
+                      )}
+                    </div>
+                    <button
+                      onClick={handleUsernameSubmit}
+                      disabled={!username || username.trim().length < 2}
+                      className="px-6 py-4 bg-blue-500/20 hover:bg-blue-500/30 border border-blue-500/50 text-white rounded-xl transition-all duration-300 disabled:opacity-50 disabled:cursor-not-allowed font-medium whitespace-nowrap"
+                    >
+                      Lưu tên
+                    </button>
+                  </div>
+                  {username && (
+                    <div className="text-green-400 text-sm flex items-center gap-2 mt-2">
+                      <svg className="w-4 h-4" fill="currentColor" viewBox="0 0 20 20">
+                        <path fillRule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zm3.707-9.293a1 1 0 00-1.414-1.414L9 10.586 7.707 9.293a1 1 0 00-1.414 1.414l2 2a1 1 0 001.414 0l4-4z" clipRule="evenodd" />
+                      </svg>
+                      Đã đăng nhập với tên: {username}
+                    </div>
+                  )}
+                </div>
+
+                {/* 3. Poster Selection */}
                 <div className="group">
                   <div className="flex items-center gap-3 mb-4">
                     <div className="w-8 h-8 rounded-full bg-gradient-to-r from-purple-500/20 to-purple-600/20 border border-purple-500/30 flex items-center justify-center">
-                      <span className="text-purple-400 font-bold text-sm">2</span>
+                      <span className="text-purple-400 font-bold text-sm">3</span>
                     </div>
                     <h3 className="text-white font-semibold text-lg">Chọn poster hiển thị</h3>
                   </div>
@@ -455,11 +558,11 @@ export default function TaoPhongXemChungPage({ searchParams }: TaoPhongXemChungP
                   </div>
                 </div>
 
-                {/* 3. Auto Start */}
+                {/* 4. Auto Start */}
                 <div className="group">
                   <div className="flex items-center gap-3 mb-3">
                     <div className="w-8 h-8 rounded-full bg-gradient-to-r from-blue-500/20 to-blue-600/20 border border-blue-500/30 flex items-center justify-center">
-                      <span className="text-blue-400 font-bold text-sm">3</span>
+                      <span className="text-blue-400 font-bold text-sm">4</span>
                     </div>
                     <h3 className="text-white font-semibold text-lg">Cài đặt thời gian</h3>
                   </div>
@@ -485,11 +588,11 @@ export default function TaoPhongXemChungPage({ searchParams }: TaoPhongXemChungP
                   </button>
                 </div>
 
-                {/* 4. Privacy */}
+                {/* 5. Privacy */}
                 <div className="group">
                   <div className="flex items-center gap-3 mb-3">
                     <div className="w-8 h-8 rounded-full bg-gradient-to-r from-green-500/20 to-green-600/20 border border-green-500/30 flex items-center justify-center">
-                      <span className="text-green-400 font-bold text-sm">4</span>
+                      <span className="text-green-400 font-bold text-sm">5</span>
                     </div>
                     <h3 className="text-white font-semibold text-lg">Quyền riêng tư</h3>
                   </div>
