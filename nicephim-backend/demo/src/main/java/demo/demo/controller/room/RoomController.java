@@ -63,12 +63,10 @@ public class RoomController {
 				}
 			}
 
-			// Generate user ID for username
-			UUID userId = UUID.nameUUIDFromBytes(username.getBytes());
-			System.out.println("🔍 Creating room - Username: " + username + ", Generated UUID: " + userId);
-
-			// Create user if not exists
-			watchRoomService.createOrUpdateSimpleUser(username);
+			// Get or create user ID for username
+			System.out.println("🔍 Creating room - Username: " + username);
+			UUID userId = watchRoomService.createOrUpdateSimpleUser(username);
+			System.out.println("👤 Using User ID for room creation: " + userId);
 
 			// Generate room ID
 			String roomId = UUID.randomUUID().toString();
