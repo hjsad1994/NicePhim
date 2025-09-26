@@ -964,67 +964,7 @@ const WatchTogetherPlayer: React.FC<WatchTogetherPlayerProps> = ({
           }}
         />
 
-        {/* Connection Status */}
-        <div className={`absolute top-2 right-2 px-2 py-1 rounded text-xs font-medium ${
-          stompClient?.connected ? 'bg-green-500/80 text-white' : 'bg-red-500/80 text-white'
-        }`}>
-          {stompClient?.connected ? '🟢 Đã kết nối' : '🔴 Mất kết nối'}
-        </div>
-
-        {/* Broadcast Status */}
-        {broadcastMode && (
-          <div className={`absolute top-2 left-2 px-2 py-1 rounded text-xs font-medium ${
-            broadcastActive ? 'bg-blue-500/80 text-white' : 'bg-yellow-500/80 text-white'
-          }`}>
-            {broadcastActive ? '📺 Đang phát' : '⏰ Chờ phát'}
-          </div>
-        )}
-
-        {/* User Status */}
-        <div className={`absolute top-2 left-2 px-2 py-1 rounded text-xs font-medium ${
-          currentUser === roomCreator ? 'bg-blue-500/80 text-white' : 'bg-gray-500/80 text-white'
-        }`}>
-          {editingUsername ? (
-            <div className="flex items-center space-x-2">
-              <input
-                type="text"
-                value={tempUsername}
-                onChange={(e) => setTempUsername(e.target.value)}
-                className="bg-black/50 text-white px-2 py-1 rounded text-xs border border-white/30 focus:border-white/60 focus:outline-none"
-                placeholder="Nhập tên..."
-                autoFocus
-                onBlur={() => {
-                  if (tempUsername.trim()) {
-                    // Update localStorage
-                    try {
-                      localStorage.setItem('watchTogetherUser', tempUsername.trim());
-                      // Force page reload to update currentUser
-                      window.location.reload();
-                    } catch (error) {
-                      console.error('Error updating username:', error);
-                    }
-                  }
-                  setEditingUsername(false);
-                }}
-                onKeyDown={(e) => {
-                  if (e.key === 'Enter') {
-                    e.currentTarget.blur();
-                  } else if (e.key === 'Escape') {
-                    setTempUsername(currentUser);
-                    setEditingUsername(false);
-                  }
-                }}
-              />
-            </div>
-          ) : (
-            <div className="flex items-center space-x-2 cursor-pointer" onClick={() => setEditingUsername(true)}>
-              <span>{currentUser === roomCreator ? '👑' : '👥'}</span>
-              <span className="truncate max-w-32">{currentUser}</span>
-              <span className="text-xs opacity-70">(✏️)</span>
-            </div>
-          )}
-        </div>
-
+  
         {/* Controls Overlay */}
         {showControls && (
           <div className="absolute inset-0 bg-gradient-to-t from-black/80 via-transparent to-transparent pointer-events-none">
@@ -1333,11 +1273,21 @@ const WatchTogetherPlayer: React.FC<WatchTogetherPlayerProps> = ({
 
       {/* Chat Panel */}
       {showChat && (
-        <div className="absolute bottom-20 right-4 w-80 bg-black/90 rounded-lg border border-gray-400/30 flex flex-col" style={{ maxHeight: '300px' }}>
+        <div className="absolute bottom-20 right-4 w-80 bg-black/40 backdrop-blur-sm border border-gray-700/50 rounded-xl flex flex-col" style={{ maxHeight: '300px' }}>
           {/* Chat Header */}
-          <div className="flex items-center justify-between p-3 border-b border-gray-400/30">
-            <h3 className="text-white font-medium text-sm">Chat phòng</h3>
-            <span className="text-gray-400 text-xs">{chatMessages.length} tin nhắn</span>
+          <div className="group inline-flex items-center justify-between p-4 border-b border-gray-700/50">
+            <div className="flex items-center">
+              <svg className="w-5 h-5 mr-2" fill="currentColor" viewBox="0 0 20 20">
+                <path fillRule="evenodd" d="M18 5v8a2 2 0 01-2 2h-5l-5 4v-4H4a2 2 0 01-2-2V5a2 2 0 012-2h12a2 2 0 012 2zM7 8H5v2h2V8zm2 0h2v2H9V8zm6 0h-2v2h2V8z" clipRule="evenodd" />
+              </svg>
+              <h3 className="text-white font-semibold text-sm">Chat phòng</h3>
+            </div>
+            <div className="flex items-center">
+              <span className="text-gray-400 text-xs mr-2">{chatMessages.length} tin nhắn</span>
+              <svg className="w-4 h-4 group-hover:translate-x-1 transition-transform" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M9 5l7 7-7 7"></path>
+              </svg>
+            </div>
           </div>
 
           {/* Chat Messages */}
@@ -1357,7 +1307,7 @@ const WatchTogetherPlayer: React.FC<WatchTogetherPlayerProps> = ({
           </div>
 
           {/* Chat Input */}
-          <div className="p-3 border-t border-gray-400/30">
+          <div className="p-4 border-t border-gray-700/50">
             <div className="flex gap-2">
               <input
                 type="text"
@@ -1366,12 +1316,12 @@ const WatchTogetherPlayer: React.FC<WatchTogetherPlayerProps> = ({
                 onKeyPress={(e) => e.key === 'Enter' && sendChatMessage()}
                 placeholder="Nhập tin nhắn..."
                 maxLength={500}
-                className="flex-1 px-3 py-2 bg-white/10 border border-gray-400/30 rounded text-white text-sm placeholder:text-gray-400 outline-none focus:border-blue-500/50"
+                className="flex-1 px-4 py-3 bg-white/10 backdrop-blur-sm border border-gray-700/50 rounded-lg text-white text-sm placeholder:text-gray-400 outline-none focus:border-gray-600/50 transition-all duration-500"
               />
               <button
                 onClick={sendChatMessage}
                 disabled={!newChatMessage.trim()}
-                className="px-3 py-2 bg-blue-500/20 hover:bg-blue-500/30 disabled:bg-gray-500/20 text-white rounded text-sm font-medium transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
+                className="group inline-flex items-center px-3 py-3 bg-white/10 backdrop-blur-sm border border-gray-700/50 text-white font-medium rounded-lg hover:bg-white/20 hover:border-gray-600/50 disabled:bg-gray-500/20 disabled:opacity-50 disabled:cursor-not-allowed transition-all duration-500 whitespace-nowrap"
               >
                 Gửi
               </button>
@@ -1384,3 +1334,4 @@ const WatchTogetherPlayer: React.FC<WatchTogetherPlayerProps> = ({
 };
 
 export default WatchTogetherPlayer;
+

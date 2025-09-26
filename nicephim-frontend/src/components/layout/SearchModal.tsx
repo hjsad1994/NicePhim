@@ -103,9 +103,9 @@ export function SearchModal({ isOpen, onClose }: SearchModalProps) {
 
       {/* Full-screen container */}
       <div className="fixed inset-0 flex items-start justify-center p-4 pt-16">
-        <DialogPanel className="w-full max-w-2xl bg-gray-900 rounded-lg shadow-xl border border-gray-700">
+        <DialogPanel className="w-full max-w-2xl bg-black/40 backdrop-blur-sm rounded-2xl shadow-xl border border-gray-700/50">
           {/* Search Input */}
-          <div className="flex items-center border-b border-gray-700 p-4">
+          <div className="flex items-center border-b border-gray-700/50 p-4 rounded-t-2xl">
             <MagnifyingGlassIcon className="h-5 w-5 text-gray-400 mr-3" />
             <input
               type="text"
@@ -184,7 +184,7 @@ export function SearchModal({ isOpen, onClose }: SearchModalProps) {
                     <button
                       key={term}
                       onClick={() => setQuery(term)}
-                      className="px-3 py-1 bg-gray-800 text-gray-300 rounded-full text-sm hover:bg-gray-700 hover:text-white transition-colors"
+                      className="px-3 py-1 bg-black/40 backdrop-blur-sm border border-gray-700/50 text-gray-300 rounded-full text-sm hover:bg-gray-800/60 hover:border-gray-600/50 hover:text-white transition-all duration-500"
                     >
                       {term}
                     </button>

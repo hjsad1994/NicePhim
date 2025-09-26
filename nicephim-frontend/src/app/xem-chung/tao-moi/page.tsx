@@ -3,6 +3,15 @@
 import Link from 'next/link';
 import Image from 'next/image';
 import { useState, useEffect, use } from 'react';
+
+// Add particle state type
+interface Particle {
+  key: number;
+  left: number;
+  top: number;
+  delay: number;
+  duration: number;
+}
 import { useRouter } from 'next/navigation';
 import { ApiService, MovieResponse } from '@/lib/api';
 import { Movie } from '@/types/movie';
@@ -18,6 +27,7 @@ export default function TaoPhongXemChungPage({ searchParams }: TaoPhongXemChungP
   const router = useRouter();
   const resolvedSearchParams = use(searchParams);
   const { user, isLoggedIn } = useAuth();
+  const [particles, setParticles] = useState<Particle[]>([]);
   const [movie, setMovie] = useState<Movie | null>(null);
   const [movies, setMovies] = useState<Movie[]>([]); // Store all movies for poster selection
   const [isLoading, setIsLoading] = useState(true);
@@ -26,6 +36,18 @@ export default function TaoPhongXemChungPage({ searchParams }: TaoPhongXemChungP
   const [privateOnly, setPrivateOnly] = useState<boolean>(false);
   const [isCreating, setIsCreating] = useState<boolean>(false);
   const [broadcastStartTimeType, setBroadcastStartTimeType] = useState<string>('now');
+
+  useEffect(() => {
+    // Create particles only on client side to avoid hydration mismatch
+    const newParticles = [...Array(15)].map((_, i) => ({
+      key: i,
+      left: Math.random() * 100,
+      top: Math.random() * 100,
+      delay: Math.random() * 3,
+      duration: 2 + Math.random() * 3
+    }));
+    setParticles(newParticles);
+  }, []);
 
   // Convert MovieResponse to Movie type for compatibility
   const convertToMovie = (movieResponse: MovieResponse): Movie => {
@@ -345,10 +367,29 @@ export default function TaoPhongXemChungPage({ searchParams }: TaoPhongXemChungP
   }
 
   return (
-    <div className="min-h-screen bg-black">
-      <div className="relative w-[90%] mx-auto px-4 sm:px-6 lg:px-8 py-8">
+    <div className="min-h-screen bg-black relative overflow-hidden">
+      {/* Animated Glow Orbs Background */}
+      <div className="absolute top-0 left-1/4 w-96 h-96 bg-red-600/10 rounded-full blur-3xl animate-pulse"></div>
+      <div className="absolute bottom-0 right-1/4 w-96 h-96 bg-blue-600/10 rounded-full blur-3xl animate-pulse delay-1000"></div>
+      <div className="absolute top-1/2 left-1/2 transform -translate-x-1/2 -translate-y-1/2 w-80 h-80 bg-purple-600/5 rounded-full blur-3xl animate-pulse delay-2000"></div>
+
+      {/* Floating Particles */}
+      {particles.map((particle) => (
+        <div
+          key={particle.key}
+          className="absolute w-1 h-1 bg-white/20 rounded-full animate-pulse"
+          style={{
+            left: `${particle.left}%`,
+            top: `${particle.top}%`,
+            animationDelay: `${particle.delay}s`,
+            animationDuration: `${particle.duration}s`
+          }}
+        />
+      ))}
+
+      <div className="relative w-[90%] mx-auto px-4 sm:px-6 lg:px-8 py-8 z-10">
         {/* Enhanced Header */}
-        <div className="mb-8">
+        <div className="mb-8 pt-20">
           <nav className="flex items-center space-x-2 text-sm text-gray-400 mb-4">
             <Link href="/" className="hover:text-red-400 transition-colors">
               Trang chủ
@@ -621,23 +662,22 @@ export default function TaoPhongXemChungPage({ searchParams }: TaoPhongXemChungP
 
                   <div className="grid grid-cols-3 gap-3">
                     {[
-                      { value: 'now', label: 'Bắt đầu ngay', icon: '⚡' },
-                      { value: '5', label: 'Sau 5 phút', icon: '5️⃣' },
-                      { value: '10', label: 'Sau 10 phút', icon: '🔟' },
-                      { value: '15', label: 'Sau 15 phút', icon: '🕒' },
-                      { value: '30', label: 'Sau 30 phút', icon: '⏰' },
+                      { value: 'now', label: 'Bắt đầu ngay' },
+                      { value: '5', label: 'Sau 5 phút' },
+                      { value: '10', label: 'Sau 10 phút' },
+                      { value: '15', label: 'Sau 15 phút' },
+                      { value: '30', label: 'Sau 30 phút' },
                     ].map((option) => (
                       <button
                         key={option.value}
                         type="button"
                         onClick={() => setBroadcastStartTimeType(option.value)}
-                        className={`p-4 rounded-xl border-2 transition-all duration-300 text-center ${
+                        className={`p-4 rounded-xl border-2 transition-all duration-300 text-center h-full ${
                           broadcastStartTimeType === option.value
                             ? 'border-red-500/50 bg-red-500/10'
                             : 'border-gray-400/30 bg-black/20 hover:border-white/50 hover:bg-white/5'
                         }`}
                       >
-                        <div className="text-2xl mb-2">{option.icon}</div>
                         <div className="text-white font-medium text-sm">{option.label}</div>
                         {broadcastStartTimeType === option.value && (
                           <div className="mt-2">

@@ -489,7 +489,7 @@ function RoomContent() {
     <div className="min-h-screen bg-black">
       <div className="relative w-full">
         {/* Header with back button and room info */}
-        <div className="absolute top-0 left-0 right-0 z-20 bg-gradient-to-b from-black/80 via-black/50 to-transparent p-4">
+        <div className="absolute top-0 left-0 right-0 z-20 bg-gradient-to-b from-black/80 via-black/50 to-transparent p-4 pt-20">
           <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4">
             {/* Left Section - Back button and room info */}
             <div className="flex items-center space-x-4 flex-1 min-w-0">
@@ -508,22 +508,8 @@ function RoomContent() {
                 <p className="text-gray-300 text-sm truncate">{roomData.movie.title}</p>
               </div>
             </div>
-
-            {/* Room Status */}
-          <div className="text-right sm:text-left">
-              <div className="text-white text-sm font-medium">
-                {roomData.isPrivate ? '🔒 Phòng riêng tư' : '🌐 Phòng công khai'}
-              </div>
-              <div className="text-gray-400 text-xs">
-                Người tạo: {roomData.createdBy}
-              </div>
-              <div className="text-gray-400 text-xs">
-                Mọi người đều có thể điều khiển video
-              </div>
-            </div>
           </div>
         </div>
-
         {/* Main Video Player */}
         <div className="pt-20">
           {(() => {
@@ -718,3 +704,4 @@ function RoomContent() {
 export default function RoomPage() {
   return <RoomContent />;
 }
+

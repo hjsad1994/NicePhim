@@ -237,7 +237,27 @@ export default function MovieDetailPage({ params }: MovieDetailPageProps) {
   }
 
   return (
-    <div className="min-h-screen bg-black">
+    <div className="min-h-screen bg-black relative overflow-hidden">
+      {/* Animated Glow Orbs Background */}
+      <div className="absolute top-0 left-1/4 w-96 h-96 bg-red-600/10 rounded-full blur-3xl animate-pulse"></div>
+      <div className="absolute bottom-0 right-1/4 w-96 h-96 bg-blue-600/10 rounded-full blur-3xl animate-pulse delay-1000"></div>
+      <div className="absolute top-1/2 left-1/2 transform -translate-x-1/2 -translate-y-1/2 w-80 h-80 bg-purple-600/5 rounded-full blur-3xl animate-pulse delay-2000"></div>
+
+      {/* Floating Particles */}
+      {[...Array(15)].map((_, i) => (
+        <div
+          key={i}
+          className="absolute w-1 h-1 bg-white/20 rounded-full animate-pulse"
+          style={{
+            left: `${Math.random() * 100}%`,
+            top: `${Math.random() * 100}%`,
+            animationDelay: `${Math.random() * 3}s`,
+            animationDuration: `${2 + Math.random() * 3}s`
+          }}
+        />
+      ))}
+
+      <div className="relative z-10">
       {/* Hero Section with Banner */}
       <div className="relative w-full h-[80vh] min-h-[600px] overflow-hidden">
         {/* Background with blur and gradient overlay */}
@@ -254,7 +274,7 @@ export default function MovieDetailPage({ params }: MovieDetailPageProps) {
         <div className="absolute inset-0 bg-black/20" />
 
         {/* Back to home button */}
-        <div className="absolute top-4 left-4 z-20">
+        <div className="absolute top-24 left-4 z-20">
           <Link
             href="/"
             className="flex items-center gap-2 bg-black/50 backdrop-blur-md text-white px-4 py-2 rounded-full hover:bg-black/70 transition-all duration-300"
@@ -530,6 +550,7 @@ export default function MovieDetailPage({ params }: MovieDetailPageProps) {
           </div>
         </div>
       </div>
+      </div> {/* Closing the relative z-10 div */}
     </div>
   );
 }
