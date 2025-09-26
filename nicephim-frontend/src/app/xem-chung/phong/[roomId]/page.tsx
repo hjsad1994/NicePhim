@@ -29,71 +29,22 @@ function RoomContent() {
   const [isHost, setIsHost] = useState(false);
   const [currentUser, setCurrentUser] = useState('');
 
-  // Helper function to convert UUID to username
-  const getCreatorUsername = async (creatorId: string): Promise<string> => {
-    // Check if it looks like a UUID
-    const uuidRegex = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i;
-    if (!uuidRegex.test(creatorId)) {
-      return creatorId; // Not a UUID, return as-is
-    }
-
-    try {
-      const response = await fetch(`http://localhost:8080/api/auth/users/${creatorId}/username`);
-      if (response.ok) {
-        const data = await response.json();
-        if (data.success && data.username) {
-          return data.username;
-        }
-      }
-    } catch (error) {
-      console.warn('Failed to fetch username for creator:', creatorId, error);
-    }
-
-    // Fallback: return a truncated version
-    return `User_${creatorId.substring(0, 8)}`;
-  };
-
   // Initialize current user on client side only
   useEffect(() => {
-    const initUser = () => {
-      try {
-        // First check for authenticated user
-        const authUser = localStorage.getItem('user');
-        if (authUser) {
-          const parsedUser = JSON.parse(authUser);
-          setCurrentUser(parsedUser.username);
-          // Also set watchTogetherUser for consistency
-          localStorage.setItem('watchTogetherUser', parsedUser.username);
-          return;
-        }
-
-        // Fallback to watchTogetherUser for non-authenticated users
-        const savedUser = localStorage.getItem('watchTogetherUser');
-        if (savedUser) {
-          setCurrentUser(savedUser);
-        } else {
-          const newUser = 'User_' + Math.random().toString(36).substr(2, 9);
-          localStorage.setItem('watchTogetherUser', newUser);
-          setCurrentUser(newUser);
-        }
-      } catch (error) {
-        // Fallback for when localStorage is not available
+    try {
+      const savedUser = localStorage.getItem('watchTogetherUser');
+      if (savedUser) {
+        setCurrentUser(savedUser);
+      } else {
         const newUser = 'User_' + Math.random().toString(36).substr(2, 9);
+        localStorage.setItem('watchTogetherUser', newUser);
         setCurrentUser(newUser);
       }
-    };
-
-    initUser();
-
-    // Listen for auth changes
-    const handleAuthChange = () => {
-      initUser();
-    };
-
-    window.addEventListener('auth-change', handleAuthChange);
-    return () => {
-      window.removeEventListener('auth-change', handleAuthChange);
-    };
+    } catch (error) {
+      // Fallback for when localStorage is not available
+      const newUser = 'User_' + Math.random().toString(36).substr(2, 9);
+      setCurrentUser(newUser);
+    }
   }, []);
 
   // Load room data (only after currentUser is set)
@@ -140,11 +91,6 @@ function RoomContent() {
                   if (movieData.success && movieData.data) {
                     // Create room data with the fetched movie
                     const movie = movieData.data;
-                    const backendCreatorId = backendRoomData.created_by || 'Unknown';
-
-                    // Resolve creator username - use the username from backend if available, otherwise resolve from UUID
-                    const creatorUsername = backendRoomData.creator_username || await getCreatorUsername(backendCreatorId);
-
                     room = {
                       id: backendRoomData.room_id,
                       name: backendRoomData.name,
@@ -184,15 +130,11 @@ function RoomContent() {
                         `http://localhost:8080/videos/be36685a-0dcb-45bf-8b63-e1ca0157be98/master.m3u8`),
                       autoStart: false,
                       isPrivate: backendRoomData.is_private || false,
-                      createdBy: creatorUsername,
+                      createdBy: backendRoomData.created_by || 'Unknown',
                       createdAt: backendRoomData.created_at || new Date().toISOString()
                     };
 
                     console.log('🎬 Created room with backend movie data:', room.movie.title);
-                    console.log('👤 Room creator resolved:', {
-                      originalId: backendCreatorId,
-                      resolvedUsername: creatorUsername
-                    });
                   }
                 }
               } catch (movieError) {

@@ -358,43 +358,25 @@ const WatchTogetherPlayer: React.FC<WatchTogetherPlayerProps> = ({
           message: (messageData as ChatMessage).message,
           timestamp: (messageData as ChatMessage).timestamp
         });
-        // Handle async username resolution
-        (async () => {
-          const receivedUsername = (messageData as ChatMessage).username || 'Anonymous';
-          const displayUsername = await getDisplayUsername(receivedUsername);
-
-          console.log('💬 Processing chat message:', {
-            receivedUsername,
-            displayUsername,
-            isUUID: receivedUsername !== displayUsername
-          });
-
-          setChatMessages(prev => {
-            const newMessages = [...prev, {
-              username: displayUsername,
-              message: (messageData as ChatMessage).message,
-              timestamp: (messageData as ChatMessage).timestamp,
-              type: 'chat'
-            }];
-            console.log('💬 Updated chat messages:', newMessages);
-            return newMessages;
-          });
-        })();
+        setChatMessages(prev => {
+          const newMessages = [...prev, {
+            username: (messageData as ChatMessage).username || 'Anonymous',
+            message: (messageData as ChatMessage).message,
+            timestamp: (messageData as ChatMessage).timestamp,
+            type: 'chat'
+          }];
+          console.log('💬 Updated chat messages:', newMessages);
+          return newMessages;
+        });
         break;
       case 'user_join':
         console.log('👋 User join message received');
-        // Handle async username resolution for join messages
-        (async () => {
-          const joinUsername = (messageData as ChatMessage).username || 'Anonymous';
-          const displayJoinUsername = await getDisplayUsername(joinUsername);
-
-          setChatMessages(prev => [...prev, {
-            username: 'system',
-            message: `${displayJoinUsername} đã tham gia phòng`,
-            timestamp: (messageData as ChatMessage).timestamp,
-            type: 'user_join'
-          }]);
-        })();
+        setChatMessages(prev => [...prev, {
+          username: 'system',
+          message: `${(messageData as ChatMessage).username} đã tham gia phòng`,
+          timestamp: (messageData as ChatMessage).timestamp,
+          type: 'user_join'
+        }]);
         break;
       default:
         console.log('❓ Unknown message type:', messageData.type);
@@ -423,42 +405,6 @@ const WatchTogetherPlayer: React.FC<WatchTogetherPlayerProps> = ({
       });
     }
   }, [stompClient, isConnected, roomId, currentUser]);
-
-  // Cache for UUID to username mappings to avoid repeated API calls
-  const [usernameCache, setUsernameCache] = useState<Map<string, string>>(new Map());
-
-  // Helper function to convert UUID to username if needed
-  const getDisplayUsername = useCallback(async (username: string): Promise<string> => {
-    // Check if the username looks like a UUID
-    const uuidRegex = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i;
-
-    if (!uuidRegex.test(username)) {
-      return username; // Not a UUID, return as-is
-    }
-
-    // Check cache first
-    if (usernameCache.has(username)) {
-      return usernameCache.get(username)!;
-    }
-
-    try {
-      // Try to get username from backend API
-      const response = await fetch(`http://localhost:8080/api/auth/users/${username}/username`);
-      if (response.ok) {
-        const data = await response.json();
-        if (data.success && data.username) {
-          // Update cache
-          setUsernameCache(prev => new Map(prev).set(username, data.username));
-          return data.username;
-        }
-      }
-    } catch (error) {
-      console.warn('Failed to fetch username for UUID:', username, error);
-    }
-
-    // Fallback: return a truncated version of the UUID
-    return `User_${username.substring(0, 8)}`;
-  }, [usernameCache]);
 
   const sendChat = useCallback((message: string) => {
     console.log('💬 sendChat called:', {
