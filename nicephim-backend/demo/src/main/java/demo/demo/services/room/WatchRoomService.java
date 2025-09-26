@@ -39,6 +39,7 @@ public class WatchRoomService {
         room.put("room_id", rs.getString("room_id"));
         room.put("name", rs.getString("name"));
         room.put("created_by", UUID.fromString(rs.getString("created_by")));
+        room.put("creator_username", rs.getString("creator_username"));
         room.put("movie_id", rs.getString("movie_id"));
         room.put("episode_id", rs.getString("episode_id"));
         room.put("is_private", rs.getBoolean("is_private"));
@@ -58,7 +59,8 @@ public class WatchRoomService {
     public Map<String, Object> getOrCreateRoom(String roomId) {
         try {
             // Try to get existing room
-            String sql = "SELECT * FROM dbo.watch_rooms WHERE room_id = ?";
+            String sql = "SELECT wr.*, u.username as creator_username FROM dbo.watch_rooms wr " +
+                        "LEFT JOIN dbo.users u ON wr.created_by = u.user_id WHERE wr.room_id = ?";
             List<Map<String, Object>> rooms = jdbcTemplate.query(sql, watchRoomRowMapper, UUID.fromString(roomId));
 
             if (!rooms.isEmpty()) {
@@ -161,7 +163,8 @@ public class WatchRoomService {
   
     public Map<String, Object> getRoom(String roomId) {
         try {
-            String sql = "SELECT * FROM dbo.watch_rooms WHERE room_id = ?";
+            String sql = "SELECT wr.*, u.username as creator_username FROM dbo.watch_rooms wr " +
+                        "LEFT JOIN dbo.users u ON wr.created_by = u.user_id WHERE wr.room_id = ?";
             List<Map<String, Object>> rooms = jdbcTemplate.query(sql, watchRoomRowMapper, UUID.fromString(roomId));
 
             if (rooms.isEmpty()) {
@@ -184,7 +187,8 @@ public class WatchRoomService {
             UUID userId = UUID.nameUUIDFromBytes(username.getBytes());
             System.out.println("🔍 Getting rooms for user: " + username + " (ID: " + userId + ")");
 
-            String sql = "SELECT * FROM dbo.watch_rooms WHERE created_by = ? ORDER BY created_at DESC";
+            String sql = "SELECT wr.*, u.username as creator_username FROM dbo.watch_rooms wr " +
+                        "LEFT JOIN dbo.users u ON wr.created_by = u.user_id WHERE wr.created_by = ? ORDER BY wr.created_at DESC";
             List<Map<String, Object>> rooms = jdbcTemplate.query(sql, watchRoomRowMapper, userId);
             System.out.println("📋 Found " + rooms.size() + " rooms for user " + username);
             return rooms;
@@ -390,7 +394,8 @@ public class WatchRoomService {
      */
     public List<Map<String, Object>> getRoomsByStatus(String status) {
         try {
-            String sql = "SELECT * FROM dbo.watch_rooms WHERE broadcast_status = ?";
+            String sql = "SELECT wr.*, u.username as creator_username FROM dbo.watch_rooms wr " +
+                        "LEFT JOIN dbo.users u ON wr.created_by = u.user_id WHERE wr.broadcast_status = ?";
             return jdbcTemplate.query(sql, watchRoomRowMapper, status);
         } catch (Exception e) {
             System.err.println("Error getting rooms by status: " + e.getMessage());

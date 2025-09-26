@@ -67,4 +67,12 @@ public class AuthService {
 		
 		return userInfo;
 	}
+
+	public String getUsernameById(UUID userId) {
+		Map<String, Object> user = userRepository.findUserById(userId);
+		if (user == null) {
+			return null;
+		}
+		return (String) user.get("username");
+	}
 }
