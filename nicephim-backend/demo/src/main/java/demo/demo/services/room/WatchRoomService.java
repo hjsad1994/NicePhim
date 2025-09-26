@@ -543,12 +543,21 @@ public class WatchRoomService {
 
     /**
      * Add user to room for tracking
+     * Returns true if user was added, false if already in room
      */
-    public void addUserToRoom(String roomId, String username) {
+    public boolean addUserToRoom(String roomId, String username) {
         roomUsers.putIfAbsent(roomId, ConcurrentHashMap.newKeySet());
         Set<String> users = roomUsers.get(roomId);
+
+        // Check if user is already in the room to prevent duplicate notifications
+        if (users.contains(username)) {
+            System.out.println("🔄 User " + username + " already in room " + roomId + ", skipping duplicate join notification");
+            return false; // User already exists
+        }
+
         users.add(username);
         System.out.println("👥 User " + username + " joined room " + roomId + ". Total users: " + users.size());
+        return true; // User added successfully
     }
 
     /**

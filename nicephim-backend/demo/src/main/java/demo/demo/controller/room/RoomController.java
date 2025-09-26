@@ -361,13 +361,22 @@ public class RoomController {
 
 		String username = (String) message.get("username");
 
-		// Use service for user tracking
-		watchRoomService.addUserToRoom(roomId, username);
+		// Use service for user tracking with duplicate prevention
+		boolean userAdded = watchRoomService.addUserToRoom(roomId, username);
 
-		// Create join notification
-		message.put("timestamp", System.currentTimeMillis());
-		message.put("type", "user_join");
-		return message;
+		// Only send join notification if user was actually added
+		if (userAdded) {
+			message.put("timestamp", System.currentTimeMillis());
+			message.put("type", "user_join");
+			return message;
+		} else {
+			// Return empty message to prevent broadcasting duplicate notification
+			Map<String, Object> emptyMessage = new HashMap<>();
+			emptyMessage.put("type", "system");
+			emptyMessage.put("message", "duplicate_join");
+			emptyMessage.put("timestamp", System.currentTimeMillis());
+			return emptyMessage;
+		}
 	}
 
 	/**

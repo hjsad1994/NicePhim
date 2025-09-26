@@ -105,6 +105,9 @@ const WatchTogetherPlayer: React.FC<WatchTogetherPlayerProps> = ({
   const [tempUsername, setTempUsername] = useState(currentUser);
   const processedMessages = useRef<Set<string>>(new Set());
 
+  // Track if we've already joined the room
+  const hasJoinedRoom = useRef(false);
+
   // Backend position tracking (only for host)
   useEffect(() => {
     if (!isPlaying || !roomId || !isHost) return;
@@ -164,12 +167,8 @@ const WatchTogetherPlayer: React.FC<WatchTogetherPlayerProps> = ({
 
                 console.log('🔄 Auto-synced on join:', positionSeconds, 's');
 
-                setChatMessages(prev => [...prev, {
-                  username: 'system',
-                  message: `${currentUser} đã tham gia và tự động đồng bộ (${formatTime(positionSeconds)})`,
-                  timestamp: Date.now(),
-                  type: 'user_join'
-                }]);
+                // Don't show auto-sync message here to avoid duplication
+                // The WebSocket join notification will show the join message
               }
             }
           }, 1000); // Wait 1 second before auto-sync
@@ -420,6 +419,7 @@ const WatchTogetherPlayer: React.FC<WatchTogetherPlayerProps> = ({
         setIsConnected(false);
       }
       connectionAttempted.current = false;
+      hasJoinedRoom.current = false; // Reset join flag on cleanup
       setStompClient(null);
       processedMessages.current.clear(); // Clear processed messages on cleanup
     };
@@ -562,6 +562,12 @@ const WatchTogetherPlayer: React.FC<WatchTogetherPlayerProps> = ({
   }, [stompClient, isConnected, roomId, currentUser]);
 
   const sendJoin = useCallback((client: Client) => {
+    // Prevent duplicate joins
+    if (hasJoinedRoom.current) {
+      console.log('🔄 Already joined room, skipping duplicate join');
+      return;
+    }
+
     console.log('📋 Sending join message...');
     console.log('📋 Username:', currentUser);
     console.log('📋 Room ID:', roomId);
@@ -575,6 +581,7 @@ const WatchTogetherPlayer: React.FC<WatchTogetherPlayerProps> = ({
             username: currentUser
           })
         });
+        hasJoinedRoom.current = true; // Mark as joined
         console.log('✅ Join message sent successfully');
       } catch (error) {
         console.error('❌ Error sending join message:', error);
@@ -912,9 +919,10 @@ const WatchTogetherPlayer: React.FC<WatchTogetherPlayerProps> = ({
     }
   }, [stompClient, isConnected]);
 
-  // Reset connection attempt when room or user changes
+  // Reset connection attempt and join flag when room or user changes
   useEffect(() => {
     connectionAttempted.current = false;
+    hasJoinedRoom.current = false;
   }, [roomId, currentUser]);
 
   // Close menus when clicking outside
