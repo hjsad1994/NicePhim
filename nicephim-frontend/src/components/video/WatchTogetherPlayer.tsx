@@ -81,6 +81,9 @@ const WatchTogetherPlayer: React.FC<WatchTogetherPlayerProps> = ({
   // WebSocket state
   const [stompClient, setStompClient] = useState<Client | null>(null);
   const [isConnected, setIsConnected] = useState(false);
+  const [roomSubscription, setRoomSubscription] = useState<any>(null);
+  const connectionAttempted = useRef(false);
+  const reconnectTimeout = useRef<NodeJS.Timeout | null>(null);
 
   
   // Broadcast mode state
@@ -93,6 +96,7 @@ const WatchTogetherPlayer: React.FC<WatchTogetherPlayerProps> = ({
   const [showChat, setShowChat] = useState(true);
   const [editingUsername, setEditingUsername] = useState(false);
   const [tempUsername, setTempUsername] = useState(currentUser);
+  const processedMessages = useRef<Set<string>>(new Set());
 
   // Log props in useEffect to avoid accessing currentUser before initialization
   useEffect(() => {
@@ -228,11 +232,16 @@ const WatchTogetherPlayer: React.FC<WatchTogetherPlayerProps> = ({
 
   
   
-  // Initialize WebSocket connection
+  // Initialize WebSocket connection - SINGLE CONNECTION
   useEffect(() => {
+    if (!roomId || !currentUser || connectionAttempted.current) {
+      return;
+    }
+
     console.log('🔌 Initializing WebSocket connection...');
     console.log('📍 Backend URL: http://localhost:8080/ws');
     console.log('📋 Room ID:', roomId);
+    connectionAttempted.current = true;
 
     const socket = new SockJS('http://localhost:8080/ws');
     const client = new Client({
@@ -247,12 +256,15 @@ const WatchTogetherPlayer: React.FC<WatchTogetherPlayerProps> = ({
 
     client.onConnect = () => {
       console.log('✅ WebSocket connected successfully');
-      console.log('📡 Subscribing to room topic:', `/topic/room.${roomId}`);
-      console.log('📋 Client state before setting connected:', isConnected);
-
-      // Set connected state immediately
       setIsConnected(true);
-      console.log('📋 Client state after setting connected:', true);
+      setStompClient(client);
+
+      // Unsubscribe from previous subscription if exists
+      if (roomSubscription) {
+        console.log('🔄 Unsubscribing from previous room subscription:', roomSubscription.id);
+        roomSubscription.unsubscribe();
+        setRoomSubscription(null);
+      }
 
       // Subscribe to room messages
       try {
@@ -260,31 +272,26 @@ const WatchTogetherPlayer: React.FC<WatchTogetherPlayerProps> = ({
         console.log('📨 Subscribing to topic:', topic);
         const subscription = client.subscribe(topic, (message) => {
           console.log('📨 Received message from room topic:', topic);
-          console.log('📋 Message body:', message.body);
-          console.log('📋 Message headers:', message.headers);
           try {
             const data = JSON.parse(message.body);
             console.log('📋 Parsed message data:', data);
             handleRoomMessage(data);
           } catch (error) {
             console.error('❌ Error parsing WebSocket message:', error);
-            console.log('Raw message:', message.body);
           }
         });
-        console.log('✅ Subscription successful:', subscription);
-        console.log('✅ Subscription ID:', subscription.id);
+        console.log('✅ Subscription successful:', subscription.id);
+        setRoomSubscription(subscription);
       } catch (error) {
         console.error('❌ Error subscribing to room topic:', error);
       }
 
       // Join room
-      console.log('📋 Sending join message...');
       sendJoin(client);
     };
 
     client.onStompError = (frame) => {
       console.error('❌ WebSocket STOMP error:', frame);
-      console.error('Error details:', frame.headers, frame.body);
       setIsConnected(false);
     };
 
@@ -298,10 +305,6 @@ const WatchTogetherPlayer: React.FC<WatchTogetherPlayerProps> = ({
       setIsConnected(false);
     };
 
-    client.beforeConnect = () => {
-      console.log('🔄 WebSocket about to connect...');
-    };
-
     client.onDisconnect = () => {
       console.log('🔌 WebSocket disconnected');
       setIsConnected(false);
@@ -310,25 +313,68 @@ const WatchTogetherPlayer: React.FC<WatchTogetherPlayerProps> = ({
     console.log('🚀 Activating STOMP client...');
     try {
       client.activate();
-      setStompClient(client);
       console.log('✅ STOMP client activated successfully');
     } catch (error) {
       console.error('❌ Error activating STOMP client:', error);
     }
 
     return () => {
+      console.log('🧹 Cleaning up WebSocket connection...');
       if (client && client.connected) {
         console.log('🔌 Deactivating STOMP client...');
+        if (roomSubscription) {
+          console.log('🔄 Unsubscribing from room subscription on cleanup:', roomSubscription.id);
+          roomSubscription.unsubscribe();
+          setRoomSubscription(null);
+        }
+
+        // Send leave message before disconnecting
+        if (isConnected && roomId && currentUser) {
+          try {
+            client.publish({
+              destination: `/app/room/${roomId}/leave`,
+              body: JSON.stringify({
+                username: currentUser,
+                timestamp: Date.now()
+              })
+            });
+            console.log('👋 Sent leave message for user:', currentUser);
+          } catch (error) {
+            console.error('❌ Error sending leave message:', error);
+          }
+        }
+
         client.deactivate();
         setIsConnected(false);
       }
+      connectionAttempted.current = false;
+      setStompClient(null);
+      processedMessages.current.clear(); // Clear processed messages on cleanup
     };
-  }, [roomId]);
+  }, [roomId, currentUser]);
 
   const handleRoomMessage = useCallback((data: unknown) => {
     console.log('📨 Received WebSocket message:', data);
 
     const messageData = data as ControlMessage | ChatMessage | { type: string; [key: string]: unknown };
+
+    // Create message ID for deduplication
+    const messageId = `${messageData.type}_${(messageData as any).timestamp}_${(messageData as any).username}_${(messageData as any).message || ''}`;
+
+    // Check if message already processed
+    if (processedMessages.current.has(messageId)) {
+      console.log('🔄 Duplicate message detected, skipping:', messageId);
+      return;
+    }
+
+    // Add to processed messages
+    processedMessages.current.add(messageId);
+
+    // Clean up old message IDs (keep last 100)
+    if (processedMessages.current.size > 100) {
+      const oldestMessage = Array.from(processedMessages.current)[0];
+      processedMessages.current.delete(oldestMessage);
+    }
 
     switch(messageData.type) {
       case 'control':
@@ -350,6 +396,13 @@ const WatchTogetherPlayer: React.FC<WatchTogetherPlayerProps> = ({
           timestamp: Date.now(),
           type: 'system'
         }]);
+        break;
+      case 'system':
+        // Handle system messages like duplicate_join prevention
+        if ((messageData as any).message === 'duplicate_join') {
+          console.log('🔄 Duplicate join notification prevented');
+          return; // Don't add to chat messages
+        }
         break;
       case 'chat':
         console.log('💬 Chat message received:', messageData);
@@ -381,7 +434,7 @@ const WatchTogetherPlayer: React.FC<WatchTogetherPlayerProps> = ({
       default:
         console.log('❓ Unknown message type:', messageData.type);
     }
-  }, [currentUser, stompClient, isConnected, roomId, roomCreator]);
+  }, []); // Empty dependency array to prevent recreation
 
   
   
@@ -649,17 +702,10 @@ const WatchTogetherPlayer: React.FC<WatchTogetherPlayerProps> = ({
     };
   }, [controlsTimeout]);
 
-  // WebSocket connection state monitoring
+  // Simple connection state monitoring
   useEffect(() => {
     if (stompClient) {
       const actualConnected = stompClient.connected;
-      console.log('🔍 WebSocket state monitoring:');
-      console.log('📋 stompClient.connected:', stompClient.connected);
-      console.log('📋 stompClient.connected:', stompClient.connected);
-      console.log('📋 isConnected state:', isConnected);
-      console.log('📋 actualConnected:', actualConnected);
-
-      // Update state if there's a mismatch (use more comprehensive check)
       if (actualConnected !== isConnected) {
         console.log('🔄 Updating WebSocket connection state:', actualConnected);
         setIsConnected(actualConnected);
@@ -667,82 +713,10 @@ const WatchTogetherPlayer: React.FC<WatchTogetherPlayerProps> = ({
     }
   }, [stompClient, isConnected]);
 
-  // Connection retry mechanism
+  // Reset connection attempt when room or user changes
   useEffect(() => {
-    const actualConnected = stompClient && stompClient.connected;
-    if (!actualConnected) {
-      console.log('🔄 WebSocket not connected, checking if reconnection needed...');
-      console.log('📋 Reconnection check:', {
-        stompClient: !!stompClient,
-        actualConnected,
-        roomId: !!roomId,
-        currentUser: !!currentUser
-      });
-
-      // Only attempt reconnection if we have a room ID and user, and client doesn't exist
-      if (roomId && currentUser && !stompClient) {
-        console.log('🔄 Attempting to reconnect WebSocket...');
-
-        const reconnectTimer = setTimeout(() => {
-          console.log('🔄 Reconnecting WebSocket...');
-          const socket = new SockJS('http://localhost:8080/ws');
-          const client = new Client({
-            webSocketFactory: () => socket,
-            reconnectDelay: 5000,
-            heartbeatIncoming: 4000,
-            heartbeatOutgoing: 4000,
-            debug: (str) => {
-              console.log('🔌 STOMP Debug (reconnect):', str);
-            }
-          });
-
-          client.onConnect = () => {
-            console.log('✅ WebSocket reconnected successfully');
-            setIsConnected(true);
-            setStompClient(client);
-
-            // Subscribe to room messages
-            client.subscribe(`/topic/room.${roomId}`, (message) => {
-              console.log('📨 Received message from room topic (reconnect)');
-              try {
-                const data = JSON.parse(message.body);
-                handleRoomMessage(data);
-              } catch (error) {
-                console.error('❌ Error parsing WebSocket message (reconnect):', error);
-              }
-            });
-
-            // Join room
-            sendJoin(client);
-          };
-
-          client.onStompError = (frame) => {
-            console.error('❌ WebSocket STOMP error (reconnect):', frame);
-            setIsConnected(false);
-          };
-
-          client.onWebSocketError = (error) => {
-            console.error('❌ WebSocket connection error (reconnect):', error);
-            setIsConnected(false);
-          };
-
-          client.onWebSocketClose = () => {
-            console.log('🔌 WebSocket connection closed (reconnect)');
-            setIsConnected(false);
-          };
-
-          try {
-            client.activate();
-            console.log('✅ STOMP client activated (reconnect)');
-          } catch (error) {
-            console.error('❌ Error activating STOMP client (reconnect):', error);
-          }
-        }, 3000);
-
-        return () => clearTimeout(reconnectTimer);
-      }
-    }
-  }, [stompClient, isConnected, roomId, currentUser]);
+    connectionAttempted.current = false;
+  }, [roomId, currentUser]);
 
   // Close menus when clicking outside
   useEffect(() => {
