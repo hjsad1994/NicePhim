@@ -134,17 +134,10 @@
 - ✅ **Broadcast Time Selection UI**: Intuitive user interface for selecting broadcast start times with countdown display
 - ✅ **Broadcast Status Indicators**: Visual indicators showing broadcast status and time remaining until start
 - ✅ **Backend-Frontend Integration Fixes**: Resolved multiple integration issues including CORS, type casting, and database constraints for robust room creation
+- ✅ **Automatic Username Implementation**: Complete removal of manual username input from room creation form with automatic authenticated username detection and real-time auth-change event listeners
 
 ## In Progress 🔄
-- ✅ **Video Player Testing**: RESOLVED - Quality and speed selection button display updates now work correctly
-- ✅ **HLS Adaptive Quality Switching**: RESOLVED - Quality selection now changes actual video quality (360p, 480p, 720p, 1080p)
-- ✅ **Windows Path Configuration**: RESOLVED - Updated .env file media paths and ffmpeg path for Windows environment
-- ✅ **Authentication State Issue**: RESOLVED - Fixed header user icon requiring page reload after login
-- ✅ **Video Upload Path Error**: RESOLVED - Fixed file path error with proper directory creation
-- ✅ **Movie Detail Page Styling**: RESOLVED - Updated /phim/ page to match homepage cinematic style
-- ✅ **Button Styling Consistency**: RESOLVED - Made all buttons consistent with homepage styling
-- ✅ **Homepage Auto-play Feature**: RESOLVED - Implemented auto-changing movies with progress indicator
-- ✅ **Movie Carousel Positioning**: RESOLVED - Optimized mini movie card positioning and transitions
+- ✅ **Automatic Username Implementation**: RESOLVED - Complete removal of manual username input with automatic authenticated username usage
 - **Frontend Upload Connection**: Resolving "Failed to fetch" error when frontend connects to video upload API
 - **MovieRepository Restoration**: Re-enabling video field access after V2 migration confirmation
 - **Backend API Testing**: Verifying all movie endpoints work correctly with video fields
