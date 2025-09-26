@@ -361,24 +361,8 @@ public class RoomController {
 
 		String username = (String) message.get("username");
 
-		// Initialize user set for this room if it doesn't exist
-		roomUsers.putIfAbsent(roomId, ConcurrentHashMap.newKeySet());
-		Set<String> usersInRoom = roomUsers.get(roomId);
-
-		// Check if user is already in the room to prevent duplicate notifications
-		if (usersInRoom.contains(username)) {
-			System.out.println("🔄 User " + username + " already in room " + roomId + ", skipping duplicate join notification");
-			// Return null or empty message to prevent broadcasting duplicate notification
-			Map<String, Object> emptyMessage = new HashMap<>();
-			emptyMessage.put("type", "system");
-			emptyMessage.put("message", "duplicate_join");
-			emptyMessage.put("timestamp", System.currentTimeMillis());
-			return emptyMessage;
-		}
-
-		// Add user to room
-		usersInRoom.add(username);
-		System.out.println("✅ User " + username + " joined room " + roomId + ". Total users: " + usersInRoom.size());
+		// Use service for user tracking
+		watchRoomService.addUserToRoom(roomId, username);
 
 		// Create join notification
 		message.put("timestamp", System.currentTimeMillis());
@@ -395,17 +379,8 @@ public class RoomController {
 			Map<String, Object> message) {
 
 		String username = (String) message.get("username");
-		Set<String> usersInRoom = roomUsers.get(roomId);
-
-		if (usersInRoom != null && usersInRoom.remove(username)) {
-			System.out.println("👋 User " + username + " left room " + roomId + ". Remaining users: " + usersInRoom.size());
-
-			// Clean up empty rooms
-			if (usersInRoom.isEmpty()) {
-				roomUsers.remove(roomId);
-				System.out.println("🧹 Cleaned up empty room: " + roomId);
-			}
-		}
+		// Use service for user tracking and state saving
+		watchRoomService.removeUserFromRoom(roomId, username);
 	}
 
 	/**
@@ -419,6 +394,94 @@ public class RoomController {
 				roomUsers.remove(roomId);
 				System.out.println("🧹 Cleaned up empty room: " + roomId);
 			}
+		}
+	}
+
+	/**
+	 * Get server-controlled video position for manual sync
+	 */
+	@GetMapping("/api/rooms/{roomId}/server-position")
+	public ResponseEntity<Map<String, Object>> getServerPosition(@PathVariable String roomId) {
+		try {
+			Long serverPosition = watchRoomService.getServerVideoPosition(roomId);
+			Integer playbackState = watchRoomService.getRoomPlaybackState(roomId);
+			int activeUsers = watchRoomService.getActiveUserCount(roomId);
+
+			return ResponseEntity.ok(Map.of(
+				"success", true,
+				"positionMs", serverPosition,
+				"playbackState", playbackState,
+				"activeUsers", activeUsers,
+				"timestamp", System.currentTimeMillis()
+			));
+		} catch (Exception e) {
+			return ResponseEntity.internalServerError().body(Map.of(
+				"success", false,
+				"error", e.getMessage()
+			));
+		}
+	}
+
+	/**
+	 * Handle user pause action (only action users can perform)
+	 */
+	@PostMapping("/api/rooms/{roomId}/pause")
+	public ResponseEntity<Map<String, Object>> handleUserPause(
+			@PathVariable String roomId,
+			@RequestBody Map<String, Object> request) {
+		try {
+			String username = (String) request.get("username");
+			Long positionMs = ((Number) request.get("positionMs")).longValue();
+
+			if (username == null || positionMs == null) {
+				return ResponseEntity.badRequest().body(Map.of(
+					"success", false,
+					"error", "Username and position are required"
+				));
+			}
+
+			watchRoomService.handleUserPause(roomId, positionMs);
+
+			return ResponseEntity.ok(Map.of(
+				"success", true,
+				"message", "Video paused successfully"
+			));
+		} catch (Exception e) {
+			return ResponseEntity.internalServerError().body(Map.of(
+				"success", false,
+				"error", e.getMessage()
+			));
+		}
+	}
+
+	/**
+	 * Update server video position (called periodically when video is playing)
+	 */
+	@PostMapping("/api/rooms/{roomId}/update-position")
+	public ResponseEntity<Map<String, Object>> updateVideoPosition(
+			@PathVariable String roomId,
+			@RequestBody Map<String, Object> request) {
+		try {
+			Long positionMs = ((Number) request.get("positionMs")).longValue();
+
+			if (positionMs == null) {
+				return ResponseEntity.badRequest().body(Map.of(
+					"success", false,
+					"error", "Position is required"
+				));
+			}
+
+			watchRoomService.updateServerVideoPosition(roomId, positionMs);
+
+			return ResponseEntity.ok(Map.of(
+				"success", true,
+				"message", "Position updated successfully"
+			));
+		} catch (Exception e) {
+			return ResponseEntity.internalServerError().body(Map.of(
+				"success", false,
+				"error", e.getMessage()
+			));
 		}
 	}
 }

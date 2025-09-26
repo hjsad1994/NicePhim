@@ -90,6 +90,13 @@ const WatchTogetherPlayer: React.FC<WatchTogetherPlayerProps> = ({
   const [serverTime, setServerTime] = useState(0);
   const [broadcastActive, setBroadcastActive] = useState(false);
 
+  // Backend-controlled video state
+  const [serverPosition, setServerPosition] = useState(0);
+  const [playbackState, setPlaybackState] = useState(0);
+  const [lastSyncTime, setLastSyncTime] = useState(0);
+  const [isSyncing, setIsSyncing] = useState(false);
+  const positionUpdateInterval = useRef<NodeJS.Timeout | null>(null);
+
   // Chat state
   const [chatMessages, setChatMessages] = useState<ChatMessage[]>([]);
   const [newChatMessage, setNewChatMessage] = useState('');
@@ -98,17 +105,78 @@ const WatchTogetherPlayer: React.FC<WatchTogetherPlayerProps> = ({
   const [tempUsername, setTempUsername] = useState(currentUser);
   const processedMessages = useRef<Set<string>>(new Set());
 
-  // Log props in useEffect to avoid accessing currentUser before initialization
+  // Backend position tracking
   useEffect(() => {
-    console.log('🎬 WatchTogetherPlayer props:', {
-      hlsUrl,
-      title,
-      roomId,
-      isHost,
-      roomCreator,
-      currentUser
-    });
-  }, [hlsUrl, title, roomId, isHost, roomCreator, currentUser]);
+    if (!isPlaying || !roomId) return;
+
+    // Start sending position updates to backend
+    positionUpdateInterval.current = setInterval(async () => {
+      const video = videoRef.current;
+      if (video && !video.paused && !video.seeking) {
+        try {
+          const positionMs = Math.floor(video.currentTime * 1000);
+          await fetch(`http://localhost:8080/api/rooms/${roomId}/update-position`, {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ positionMs })
+          });
+        } catch (error) {
+          console.error('❌ Error updating server position:', error);
+        }
+      }
+    }, 2000); // Update every 2 seconds
+
+    return () => {
+      if (positionUpdateInterval.current) {
+        clearInterval(positionUpdateInterval.current);
+      }
+    };
+  }, [isPlaying, roomId]);
+
+  // Auto-sync when joining room
+  useEffect(() => {
+    if (roomId) {
+      const autoSync = async () => {
+        try {
+          await loadServerPosition();
+
+          // Auto-sync to server position after a short delay
+          setTimeout(async () => {
+            const response = await fetch(`http://localhost:8080/api/rooms/${roomId}/server-position`);
+            const data = await response.json();
+
+            if (data.success && data.positionMs > 0) {
+              const video = videoRef.current;
+              if (video) {
+                const positionSeconds = data.positionMs / 1000;
+                video.currentTime = positionSeconds;
+                setServerPosition(positionSeconds);
+                setPlaybackState(data.playbackState);
+
+                // Auto-play if server state is playing
+                if (data.playbackState === 1) {
+                  await video.play();
+                }
+
+                console.log('🔄 Auto-synced on join:', positionSeconds, 's');
+
+                setChatMessages(prev => [...prev, {
+                  username: 'system',
+                  message: `${currentUser} đã tham gia và tự động đồng bộ (${formatTime(positionSeconds)})`,
+                  timestamp: Date.now(),
+                  type: 'user_join'
+                }]);
+              }
+            }
+          }, 1000); // Wait 1 second before auto-sync
+        } catch (error) {
+          console.error('❌ Error in auto-sync:', error);
+        }
+      };
+
+      autoSync();
+    }
+  }, [roomId]);
 
   // Initialize HLS
   useEffect(() => {
@@ -512,6 +580,110 @@ const WatchTogetherPlayer: React.FC<WatchTogetherPlayerProps> = ({
     }
   }, [roomId, currentUser]);
 
+  // Handle video pause with backend notification
+  const handlePause = async () => {
+    const video = videoRef.current;
+    if (!video) return;
+
+    setIsPlaying(false);
+
+    // Notify backend about pause
+    try {
+      const positionMs = Math.floor(video.currentTime * 1000);
+      await fetch(`http://localhost:8080/api/rooms/${roomId}/pause`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          username: currentUser,
+          positionMs
+        })
+      });
+      console.log('⏸️ Pause sent to backend');
+    } catch (error) {
+      console.error('❌ Error sending pause to backend:', error);
+    }
+  };
+
+  // Load server position
+  const loadServerPosition = async () => {
+    try {
+      const response = await fetch(`http://localhost:8080/api/rooms/${roomId}/server-position`);
+      const data = await response.json();
+
+      if (data.success) {
+        setServerPosition(data.positionMs / 1000); // Convert to seconds
+        setPlaybackState(data.playbackState);
+        console.log('📡 Loaded server position:', data.positionMs, 'ms, state:', data.playbackState);
+      }
+    } catch (error) {
+      console.error('❌ Error loading server position:', error);
+    }
+  };
+
+  // Manual sync to server position
+  const syncToServer = async () => {
+    if (isSyncing) return;
+
+    setIsSyncing(true);
+    try {
+      // Get fresh data from server
+      const response = await fetch(`http://localhost:8080/api/rooms/${roomId}/server-position`);
+      const data = await response.json();
+
+      if (data.success) {
+        const positionMs = data.positionMs;
+        const state = data.playbackState;
+        const positionSeconds = positionMs / 1000;
+
+        // Update local state
+        setServerPosition(positionSeconds);
+        setPlaybackState(state);
+
+        const video = videoRef.current;
+        if (video && positionSeconds > 0) {
+          // Sync video position
+          video.currentTime = positionSeconds;
+
+          // Handle playback state
+          if (state === 2) { // Paused
+            video.pause();
+          } else if (state === 1) { // Playing
+            await video.play();
+          }
+
+          setLastSyncTime(Date.now());
+          console.log('🔄 Synced to server position:', positionSeconds, 's, state:', state);
+
+          // Show sync notification in chat
+          setChatMessages(prev => [...prev, {
+            username: 'system',
+            message: `${currentUser} đã đồng bộ với máy chủ (${formatTime(positionSeconds)})`,
+            timestamp: Date.now(),
+            type: 'system'
+          }]);
+        }
+      } else {
+        console.error('❌ Server returned error:', data.error);
+        setChatMessages(prev => [...prev, {
+          username: 'system',
+          message: `❌ Lỗi đồng bộ: ${data.error || 'Không thể kết nối đến máy chủ'}`,
+          timestamp: Date.now(),
+          type: 'system'
+        }]);
+      }
+    } catch (error) {
+      console.error('❌ Error syncing to server:', error);
+      setChatMessages(prev => [...prev, {
+        username: 'system',
+        message: `❌ Lỗi đồng bộ: không thể kết nối đến máy chủ`,
+        timestamp: Date.now(),
+        type: 'system'
+      }]);
+    } finally {
+      setIsSyncing(false);
+    }
+  };
+
   // Video event handlers
   useEffect(() => {
     const video = videoRef.current;
@@ -522,20 +694,24 @@ const WatchTogetherPlayer: React.FC<WatchTogetherPlayerProps> = ({
     };
     const handleDurationChange = () => setDuration(video.duration);
     const handlePlay = () => setIsPlaying(true);
-    const handlePause = () => setIsPlaying(false);
+
+    // Use custom pause handler
+    const handlePauseWrapper = () => {
+      handlePause();
+    };
 
     video.addEventListener('timeupdate', handleTimeUpdate);
     video.addEventListener('durationchange', handleDurationChange);
     video.addEventListener('play', handlePlay);
-    video.addEventListener('pause', handlePause);
+    video.addEventListener('pause', handlePauseWrapper);
 
     return () => {
       video.removeEventListener('timeupdate', handleTimeUpdate);
       video.removeEventListener('durationchange', handleDurationChange);
       video.removeEventListener('play', handlePlay);
-      video.removeEventListener('pause', handlePause);
+      video.removeEventListener('pause', handlePauseWrapper);
     };
-  }, [currentUser, roomCreator]);
+  }, [currentUser, roomCreator, roomId]);
 
   // Helper function to convert HLS level to quality text
   const getQualityTextFromLevel = (level: Level) => {
@@ -559,36 +735,31 @@ const WatchTogetherPlayer: React.FC<WatchTogetherPlayerProps> = ({
     return availableLevels.findIndex(level => level.height === targetHeight);
   };
 
-  // Control functions
+  // Control functions - allow play/pause but disable seeking
   const togglePlay = () => {
     const video = videoRef.current;
     if (!video) return;
 
-    // Just control local video, don't broadcast to others
     if (video.paused) {
       video.play().catch(err => console.error('Error playing video:', err));
     } else {
-      video.pause();
+      video.pause(); // This will trigger handlePause
     }
   };
 
-  
   const handleSeek = (time: number) => {
-    const video = videoRef.current;
-    if (!video) return;
-    video.currentTime = time;
+    // Disable seeking - users must sync with server
+    console.log('🚫 Seeking disabled - use sync button instead');
   };
 
   const seekForward = () => {
-    const video = videoRef.current;
-    if (!video) return;
-    video.currentTime = Math.min(video.currentTime + 10, video.duration);
+    // Disable seeking - users must sync with server
+    console.log('🚫 Seeking disabled - use sync button instead');
   };
 
   const seekBackward = () => {
-    const video = videoRef.current;
-    if (!video) return;
-    video.currentTime = Math.max(video.currentTime - 10, 0);
+    // Disable seeking - users must sync with server
+    console.log('🚫 Seeking disabled - use sync button instead');
   };
 
   
@@ -823,23 +994,34 @@ const WatchTogetherPlayer: React.FC<WatchTogetherPlayerProps> = ({
           <div className="absolute inset-0 bg-gradient-to-t from-black/80 via-transparent to-transparent pointer-events-none">
             {/* Bottom Controls */}
             <div className="absolute bottom-4 left-4 right-4">
-              {/* Time Display and Progress Bar */}
+              {/* Time Display and Progress Bar - Disabled */}
               <div className="mb-4 pointer-events-auto">
                 <div className="flex items-center justify-between text-white text-sm mb-2">
                   <span>{formatTime(currentTime)}</span>
                   <span>{formatTime(duration)}</span>
+                  <span className="text-xs text-gray-400">
+                    {lastSyncTime > 0 ? `Đồng bộ: ${new Date(lastSyncTime).toLocaleTimeString()}` : 'Chưa đồng bộ'}
+                  </span>
                 </div>
-                <input
-                  type="range"
-                  min="0"
-                  max={duration || 0}
-                  value={currentTime}
-                  onChange={(e) => handleSeek(parseFloat(e.target.value))}
-                  className="w-full h-1 bg-white/30 rounded-lg appearance-none cursor-pointer"
-                  style={{
-                    background: `linear-gradient(to right, #3b82f6 0%, #3b82f6 ${(currentTime / duration) * 100}%, rgba(255,255,255,0.3) ${(currentTime / duration) * 100}%, rgba(255,255,255,0.3) 100%)`
-                  }}
-                />
+                <div className="relative">
+                  <input
+                    type="range"
+                    min="0"
+                    max={duration || 0}
+                    value={currentTime}
+                    onChange={(e) => handleSeek(parseFloat(e.target.value))}
+                    disabled
+                    className="w-full h-1 bg-gray-500/20 rounded-lg appearance-none cursor-not-allowed opacity-50"
+                    style={{
+                      background: `linear-gradient(to right, #6b7280 0%, #6b7280 ${(currentTime / duration) * 100}%, rgba(107,114,128,0.2) ${(currentTime / duration) * 100}%, rgba(107,114,128,0.2) 100%)`
+                    }}
+                  />
+                  <div className="absolute inset-0 flex items-center justify-center pointer-events-none">
+                    <span className="text-xs text-gray-400 bg-black/50 px-2 py-1 rounded">
+                      Thanh tua đã bị vô hiệu hóa - dùng nút đồng bộ
+                    </span>
+                  </div>
+                </div>
               </div>
 
               {/* Control Buttons */}
@@ -862,27 +1044,60 @@ const WatchTogetherPlayer: React.FC<WatchTogetherPlayerProps> = ({
                     )}
                   </button>
 
-                  {/* Seek Backward Button */}
+                  {/* Seek Backward Button - Disabled */}
+                  <div className="relative group">
+                    <button
+                      disabled
+                      className="w-10 h-10 bg-gray-500/20 rounded-full flex items-center justify-center text-gray-400 cursor-not-allowed opacity-50"
+                      title="Tua lại đã bị vô hiệu hóa"
+                    >
+                      <svg className="w-4 h-4" fill="currentColor" viewBox="0 0 20 20">
+                        <path d="M8.445 14.832A1 1 0 0010 14v-2.798l5.445 3.63A1 1 0 0017 14V6a1 1 0 00-1.555-.832L10 8.798V6a1 1 0 00-1.555-.832l-6 4a1 1 0 000 1.664l6 4z"/>
+                      </svg>
+                    </button>
+                    <div className="absolute bottom-full left-1/2 transform -translate-x-1/2 mb-2 px-2 py-1 bg-black/80 text-white text-xs rounded whitespace-nowrap opacity-0 group-hover:opacity-100 transition-opacity pointer-events-none">
+                      Vui lòng đồng bộ với máy chủ
+                    </div>
+                  </div>
+
+                  {/* Sync Button */}
                   <button
-                    onClick={seekBackward}
-                    className="w-10 h-10 bg-white/20 rounded-full flex items-center justify-center text-white hover:bg-white/30 transition-colors"
-                    title="Tua lại 10 giây"
+                    onClick={syncToServer}
+                    disabled={isSyncing}
+                    className={`w-10 h-10 rounded-full flex items-center justify-center text-white transition-colors ${
+                      isSyncing
+                        ? 'bg-blue-500/50 cursor-not-allowed'
+                        : 'bg-blue-500/20 hover:bg-blue-500/30'
+                    }`}
+                    title="Đồng bộ với máy chủ"
                   >
-                    <svg className="w-4 h-4" fill="currentColor" viewBox="0 0 20 20">
-                      <path d="M8.445 14.832A1 1 0 0010 14v-2.798l5.445 3.63A1 1 0 0017 14V6a1 1 0 00-1.555-.832L10 8.798V6a1 1 0 00-1.555-.832l-6 4a1 1 0 000 1.664l6 4z"/>
-                    </svg>
+                    {isSyncing ? (
+                      <svg className="w-4 h-4 animate-spin" fill="none" viewBox="0 0 24 24">
+                        <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4"></circle>
+                        <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
+                      </svg>
+                    ) : (
+                      <svg className="w-4 h-4" fill="currentColor" viewBox="0 0 20 20">
+                        <path fillRule="evenodd" d="M4 2a1 1 0 011 1v2.101a7.002 7.002 0 0111.601 2.566 1 1 0 11-1.885.666A5.002 5.002 0 005.999 7H9a1 1 0 010 2H4a1 1 0 01-1-1V3a1 1 0 011-1zm.008 9.057a1 1 0 011.276.61A5.002 5.002 0 0014.001 13H11a1 1 0 110-2h5a1 1 0 011 1v5a1 1 0 11-2 0v-2.101a7.002 7.002 0 01-11.601-2.566 1 1 0 01.61-1.276z" clipRule="evenodd" />
+                      </svg>
+                    )}
                   </button>
 
-                  {/* Seek Forward Button */}
-                  <button
-                    onClick={seekForward}
-                    className="w-10 h-10 bg-white/20 rounded-full flex items-center justify-center text-white hover:bg-white/30 transition-colors"
-                    title="Tua tới 10 giây"
-                  >
-                    <svg className="w-4 h-4" fill="currentColor" viewBox="0 0 20 20">
-                      <path d="M4.555 5.168A1 1 0 003 6v8a1 1 0 001.555.832L10 11.202V14a1 1 0 001.555.832l6-4a1 1 0 000-1.664l-6-4A1 1 0 0010 6v2.798L4.555 5.168z"/>
-                    </svg>
-                  </button>
+                  {/* Seek Forward Button - Disabled */}
+                  <div className="relative group">
+                    <button
+                      disabled
+                      className="w-10 h-10 bg-gray-500/20 rounded-full flex items-center justify-center text-gray-400 cursor-not-allowed opacity-50"
+                      title="Tua tới đã bị vô hiệu hóa"
+                    >
+                      <svg className="w-4 h-4" fill="currentColor" viewBox="0 0 20 20">
+                        <path d="M4.555 5.168A1 1 0 003 6v8a1 1 0 001.555.832L10 11.202V14a1 1 0 001.555.832l6-4a1 1 0 000-1.664l-6-4A1 1 0 0010 6v2.798L4.555 5.168z"/>
+                      </svg>
+                    </button>
+                    <div className="absolute bottom-full left-1/2 transform -translate-x-1/2 mb-2 px-2 py-1 bg-black/80 text-white text-xs rounded whitespace-nowrap opacity-0 group-hover:opacity-100 transition-opacity pointer-events-none">
+                      Vui lòng đồng bộ với máy chủ
+                    </div>
+                  </div>
 
                   {/* Volume Control */}
                   <div className="flex items-center space-x-2">
