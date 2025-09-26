@@ -67,12 +67,12 @@ function RoomContent() {
             const backendRoomData = await roomResponse.json();
             console.log('✅ Got room data from backend:', backendRoomData);
 
-            // If room has movie_id, fetch the movie details
+            // If room has movie_id, fetch the movie details using our new endpoint
             if (backendRoomData.movie_id) {
               console.log('🎬 Room has movie_id, fetching movie details:', backendRoomData.movie_id);
               try {
                 const movieResponse = await Promise.race([
-                  fetch(`http://localhost:8080/api/admin/movies/${backendRoomData.movie_id}`),
+                  fetch(`http://localhost:8080/api/rooms/${roomId}/movie`),
                   new Promise((_, reject) =>
                     setTimeout(() => reject(new Error('Movie API timeout')), 5000)
                   )
@@ -80,7 +80,7 @@ function RoomContent() {
 
                 if (movieResponse.ok) {
                   const movieData = await movieResponse.json();
-                  console.log('✅ Got movie data:', movieData);
+                  console.log('✅ Got movie data from room endpoint:', movieData);
 
                   if (movieData.success && movieData.data) {
                     // Create room data with the fetched movie
@@ -89,38 +89,34 @@ function RoomContent() {
                       id: backendRoomData.room_id,
                       name: backendRoomData.name,
                       movie: {
-                        id: movie.movieId,
+                        id: movie.movie_id,
                         title: movie.title,
-                        slug: movie.aliasTitle || movie.title.toLowerCase().split(' ').join('-'),
+                        slug: movie.alias_title || movie.title.toLowerCase().split(' ').join('-'),
                         description: movie.description || '',
-                        poster: movie.posterUrl || '/placeholder-movie.jpg',
-                        banner: movie.bannerUrl,
+                        poster: movie.poster_url || '/placeholder-movie.jpg',
+                        banner: movie.banner_url,
                         releaseYear: movie.releaseYear,
                         duration: 120,
                         imdbRating: movie.imdbRating,
-                        genres: (movie.genres || []).map((genre: any) => ({
-                          id: genre.genreId,
-                          name: genre.name,
-                          slug: genre.name.toLowerCase().split(' ').join('-')
-                        })),
+                        genres: [], // Genre data not included in room movie endpoint
                         country: 'Vietnam',
                         status: 'completed' as const,
                         quality: 'HD',
                         language: 'vi',
-                        createdAt: movie.createdAt,
-                        updatedAt: movie.updatedAt || movie.createdAt,
+                        createdAt: new Date().toISOString(),
+                        updatedAt: new Date().toISOString(),
                         viewCount: 0,
                         likeCount: 0,
                         isHot: false,
                         isFeatured: false,
-                        videoId: movie.videoId,
-                        hlsUrl: movie.hlsUrl,
-                        videoStatus: movie.videoStatus
+                        videoId: movie.video_id,
+                        hlsUrl: movie.hls_url,
+                        videoStatus: movie.video_status
                       },
-                      poster: movie.posterUrl || '/placeholder-movie.jpg',
-                      hlsUrl: movie.hlsUrl ?
-                        (movie.hlsUrl.startsWith('http') ? movie.hlsUrl : `http://localhost:8080${movie.hlsUrl}`) :
-                        (movie.videoId ? `http://localhost:8080/videos/${movie.videoId}/master.m3u8` :
+                      poster: movie.poster_url || '/placeholder-movie.jpg',
+                      hlsUrl: movie.hls_url ?
+                        (movie.hls_url.startsWith('http') ? movie.hls_url : `http://localhost:8080${movie.hls_url}`) :
+                        (movie.video_id ? `http://localhost:8080/videos/${movie.video_id}/master.m3u8` :
                         `http://localhost:8080/videos/be36685a-0dcb-45bf-8b63-e1ca0157be98/master.m3u8`),
                       autoStart: false,
                       isPrivate: backendRoomData.is_private || false,
@@ -231,8 +227,8 @@ function RoomContent() {
                     status: 'completed' as const,
                     quality: 'HD',
                     language: 'vi',
-                    createdAt: selectedMovie.createdAt,
-                    updatedAt: selectedMovie.updatedAt || selectedMovie.createdAt,
+                    createdAt: new Date().toISOString(),
+                    updatedAt: new Date().toISOString(),
                     viewCount: 0,
                     likeCount: 0,
                     isHot: false,

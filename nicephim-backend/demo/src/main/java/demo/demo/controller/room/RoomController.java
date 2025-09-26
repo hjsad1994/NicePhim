@@ -254,6 +254,29 @@ public class RoomController {
 	}
 
 	/**
+	 * Get movie details for a room
+	 */
+	@GetMapping("/api/rooms/{roomId}/movie")
+	public ResponseEntity<Map<String, Object>> getRoomMovie(@PathVariable String roomId) {
+		try {
+			Map<String, Object> movieDetails = watchRoomService.getMovieDetailsForRoom(roomId);
+			if (movieDetails == null) {
+				return ResponseEntity.notFound().build();
+			}
+
+			return ResponseEntity.ok(Map.of(
+				"success", true,
+				"data", movieDetails
+			));
+		} catch (Exception e) {
+			return ResponseEntity.internalServerError().body(Map.of(
+				"success", false,
+				"error", e.getMessage()
+			));
+		}
+	}
+
+	/**
 	 * Get current playback position for all users to sync to
 	 */
 	@GetMapping("/api/rooms/{roomId}/current-position")
