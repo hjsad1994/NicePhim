@@ -28,6 +28,9 @@
    - Broadcast status management (scheduled, live, completed)
    - Full video player controls (play/pause/seek) for all users
    - Simplified state management without sync complexity
+   - **Automatic Username Integration**: Seamless username usage from authenticated accounts without manual input
+   - Real-time chat with proper username display instead of UUIDs
+   - Enhanced user identification with consistent identity across all features
 
 3. **Content Management**
    - Movie catalog with genres, ratings, and metadata

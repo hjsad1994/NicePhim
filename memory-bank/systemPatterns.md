@@ -26,6 +26,9 @@ Frontend (Next.js) ←→ Backend (Spring Boot) ←→ Database (SQL Server)
 - **Image Handling**: Next.js Image component with domain configuration
 - **Layout Adjustments**: Negative margin utilities (-ml-*, -mt-*) for precise component positioning
 - **Typography Scaling**: Responsive text sizing with consistent breakpoints (text-4xl, lg:text-6xl, etc.)
+- **Authentication Management**: localStorage-based session management with automatic username detection from authenticated user accounts
+- **Event-Driven Updates**: Custom 'auth-change' events for real-time username updates across components
+- **Username Resolution**: Automatic UUID-to-username resolution with backend API integration and caching
 
 ## Backend Patterns
 - **MVC Architecture**: Controllers, Services, Repositories, DTOs with proper separation
@@ -36,6 +39,8 @@ Frontend (Next.js) ←→ Backend (Spring Boot) ←→ Database (SQL Server)
 - **Error Handling**: Comprehensive exception handling with proper HTTP responses
 - **UUID Architecture**: All entities use UUID primary keys for better security
 - **Service Layer**: Business logic separated from data access and presentation
+- **Username Resolution**: JOIN operations between watch_rooms and users tables to include creator_username in all room responses
+- **Authentication Services**: Username lookup endpoints for UUID-to-username resolution with proper error handling
 
 ## Database Patterns
 - **UUID Primary Keys**: Unique identifiers for all entities (movies, users, genres)
