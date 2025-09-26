@@ -9,11 +9,19 @@ import org.springframework.security.crypto.bcrypt.BCrypt;
 
 import java.util.*;
 import java.util.UUID;
+import java.util.concurrent.ConcurrentHashMap;
 
 @Service
 public class WatchRoomService {
 
     private final JdbcTemplate jdbcTemplate;
+
+    // Track active users in each room
+    private Map<String, Set<String>> roomUsers = new ConcurrentHashMap<>();
+
+    // Track last update time for each room to prevent frequent database writes
+    private Map<String, Long> lastUpdateTime = new ConcurrentHashMap<>();
+    private static final long MIN_UPDATE_INTERVAL = 1000; // 1 second minimum between updates
 
     public WatchRoomService(JdbcTemplate jdbcTemplate) {
         this.jdbcTemplate = jdbcTemplate;
@@ -530,6 +538,184 @@ public class WatchRoomService {
             UUID fallbackUserId = UUID.randomUUID();
             System.out.println("🔄 Using fallback UUID for user: " + username + " -> " + fallbackUserId);
             return fallbackUserId;
+        }
+    }
+
+    /**
+     * Add user to room for tracking
+     * Returns true if user was added, false if already in room
+     */
+    public boolean addUserToRoom(String roomId, String username) {
+        roomUsers.putIfAbsent(roomId, ConcurrentHashMap.newKeySet());
+        Set<String> users = roomUsers.get(roomId);
+
+        // Check if user is already in the room to prevent duplicate notifications
+        if (users.contains(username)) {
+            System.out.println("🔄 User " + username + " already in room " + roomId + ", skipping duplicate join notification");
+            return false; // User already exists
+        }
+
+        users.add(username);
+        System.out.println("👥 User " + username + " joined room " + roomId + ". Total users: " + users.size());
+        return true; // User added successfully
+    }
+
+    /**
+     * Remove user from room and save room state if empty
+     */
+    public void removeUserFromRoom(String roomId, String username) {
+        Set<String> users = roomUsers.get(roomId);
+        if (users != null) {
+            users.remove(username);
+            System.out.println("👋 User " + username + " left room " + roomId + ". Remaining users: " + users.size());
+
+            // Save room state when room becomes empty
+            if (users.isEmpty()) {
+                saveRoomStateOnEmpty(roomId);
+                roomUsers.remove(roomId);
+                System.out.println("🧹 Room " + roomId + " is empty, state saved and cleaned up");
+            }
+        }
+    }
+
+    /**
+     * Get number of active users in room
+     */
+    public int getActiveUserCount(String roomId) {
+        Set<String> users = roomUsers.get(roomId);
+        return users != null ? users.size() : 0;
+    }
+
+    /**
+     * Save room state when room becomes empty
+     */
+    @Transactional
+    private void saveRoomStateOnEmpty(String roomId) {
+        try {
+            Map<String, Object> room = getRoom(roomId);
+            if (room != null) {
+                Long currentPosition = calculateCurrentPosition(roomId);
+                Integer playbackState = room.get("playback_state") instanceof Short ?
+                    ((Short) room.get("playback_state")).intValue() : 0;
+
+                String sql = """
+                    UPDATE dbo.watch_rooms
+                    SET current_time_ms = ?, playback_state = ?, updated_at = GETDATE()
+                    WHERE room_id = ?
+                    """;
+
+                int rowsUpdated = jdbcTemplate.update(sql, currentPosition, playbackState.shortValue(), UUID.fromString(roomId));
+                System.out.println("💾 Saved room state for empty room " + roomId + ": position=" + currentPosition + "ms, state=" + playbackState);
+            }
+        } catch (Exception e) {
+            System.err.println("❌ Error saving room state for empty room " + roomId + ": " + e.getMessage());
+        }
+    }
+
+    /**
+     * Update server-managed video position (called when video is playing)
+     * Only host should call this method
+     */
+    @Transactional
+    public void updateServerVideoPosition(String roomId, Long positionMs, Boolean isHost) {
+        try {
+            // Only accept updates from host
+            if (isHost == null || !isHost) {
+                System.out.println("⚠️ Ignoring position update from non-host in room " + roomId);
+                return;
+            }
+
+            // Rate limiting to prevent database spam
+            long now = System.currentTimeMillis();
+            Long lastUpdate = lastUpdateTime.get(roomId);
+
+            if (lastUpdate != null && (now - lastUpdate) < MIN_UPDATE_INTERVAL) {
+                return; // Skip update if too recent
+            }
+
+            Map<String, Object> room = getRoom(roomId);
+            if (room == null) {
+                return;
+            }
+
+            String sql = """
+                UPDATE dbo.watch_rooms
+                SET current_time_ms = ?, playback_state = 1, updated_at = GETDATE()
+                WHERE room_id = ?
+                """;
+
+            int rowsUpdated = jdbcTemplate.update(sql, positionMs, UUID.fromString(roomId));
+            lastUpdateTime.put(roomId, now);
+
+            // Only log significant updates
+            if (positionMs % 5000 < 1000) { // Log every 5 seconds
+                System.out.println("👑 Host updated position for room " + roomId + ": " + positionMs + "ms");
+            }
+        } catch (Exception e) {
+            System.err.println("❌ Error updating host video position for room " + roomId + ": " + e.getMessage());
+        }
+    }
+
+    /**
+     * Handle user pause action - only update state, don't change position
+     */
+    @Transactional
+    public void handleUserPause(String roomId, Long positionMs) {
+        try {
+            String sql = """
+                UPDATE dbo.watch_rooms
+                SET playback_state = 2, current_time_ms = ?, updated_at = GETDATE()
+                WHERE room_id = ?
+                """;
+
+            int rowsUpdated = jdbcTemplate.update(sql, positionMs, UUID.fromString(roomId));
+            System.out.println("⏸️ User paused video in room " + roomId + " at " + positionMs + "ms");
+        } catch (Exception e) {
+            System.err.println("❌ Error handling user pause for room " + roomId + ": " + e.getMessage());
+        }
+    }
+
+    /**
+     * Get current server-controlled video position for sync
+     */
+    public Long getServerVideoPosition(String roomId) {
+        try {
+            Map<String, Object> room = getRoom(roomId);
+            if (room == null) {
+                return 0L;
+            }
+
+            Long storedPosition = (Long) room.get("current_time_ms");
+            Integer playbackState = room.get("playback_state") instanceof Short ?
+                ((Short) room.get("playback_state")).intValue() : 0;
+
+            // If video is playing and has a stored position, return it
+            if (playbackState == 1 && storedPosition != null && storedPosition > 0) {
+                return storedPosition;
+            }
+
+            return storedPosition != null ? storedPosition : 0L;
+        } catch (Exception e) {
+            System.err.println("❌ Error getting server video position for room " + roomId + ": " + e.getMessage());
+            return 0L;
+        }
+    }
+
+    /**
+     * Get room playback state
+     */
+    public Integer getRoomPlaybackState(String roomId) {
+        try {
+            Map<String, Object> room = getRoom(roomId);
+            if (room == null) {
+                return 0; // stopped
+            }
+
+            return room.get("playback_state") instanceof Short ?
+                ((Short) room.get("playback_state")).intValue() : 0;
+        } catch (Exception e) {
+            System.err.println("❌ Error getting room playback state for room " + roomId + ": " + e.getMessage());
+            return 0;
         }
     }
 }
