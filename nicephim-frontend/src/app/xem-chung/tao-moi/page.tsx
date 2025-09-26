@@ -231,10 +231,26 @@ export default function TaoPhongXemChungPage({ searchParams }: TaoPhongXemChungP
 
       // Check if movie ID is a valid UUID format, if not, don't send movieId
       let movieIdToSend = null;
-      if (movie.id && movie.id.match(/^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i)) {
-        movieIdToSend = movie.id;
-      } else {
-        console.log('Movie ID is not a valid UUID, creating room without movie association:', movie.id);
+      console.log('🎬 Movie ID validation:', { id: movie.id, type: typeof movie.id });
+
+      if (movie.id) {
+        // Try to validate as UUID (accept both with and without hyphens)
+        const uuidWithHyphens = movie.id.match(/^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i);
+        const uuidWithoutHyphens = movie.id.match(/^[0-9a-f]{32}$/i);
+
+        if (uuidWithHyphens) {
+          movieIdToSend = movie.id;
+          console.log('✅ Movie ID is valid UUID with hyphens:', movie.id);
+        } else if (uuidWithoutHyphens) {
+          // Format UUID without hyphens to proper format
+          movieIdToSend = movie.id.match(/([0-9a-f]{8})([0-9a-f]{4})([0-9a-f]{4})([0-9a-f]{4})([0-9a-f]{12})/i);
+          if (movieIdToSend) {
+            movieIdToSend = `${movieIdToSend[1]}-${movieIdToSend[2]}-${movieIdToSend[3]}-${movieIdToSend[4]}-${movieIdToSend[5]}`;
+            console.log('✅ Formatted UUID without hyphens to:', movieIdToSend);
+          }
+        } else {
+          console.log('❌ Movie ID is not a valid UUID format:', movie.id);
+        }
       }
 
       // Call backend API to create room

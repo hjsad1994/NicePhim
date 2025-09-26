@@ -19,7 +19,7 @@ interface FullscreenDocument extends Document {
 }
 
 interface WatchTogetherPlayerProps {
-  hlsUrl: string;
+  hlsUrl?: string | null;
   title?: string;
   roomId: string;
   isHost: boolean;
