@@ -180,8 +180,13 @@ public class WatchRoomService {
      */
     public List<Map<String, Object>> getRoomsByUser(String username) {
         try {
-            // Generate user ID from username
-            UUID userId = UUID.nameUUIDFromBytes(username.getBytes());
+            // Get actual user ID from database
+            UUID userId = getUserIdByUsername(username);
+            if (userId == null) {
+                System.out.println("🔍 User not found: " + username);
+                return new ArrayList<>();
+            }
+
             System.out.println("🔍 Getting rooms for user: " + username + " (ID: " + userId + ")");
 
             String sql = "SELECT * FROM dbo.watch_rooms WHERE created_by = ? ORDER BY created_at DESC";
@@ -207,19 +212,25 @@ public class WatchRoomService {
                 return false;
             }
 
-            // Generate user ID from username
-            UUID userId = UUID.nameUUIDFromBytes(username.getBytes());
+            // Get actual user ID from database
+            UUID userId = getUserIdByUsername(username);
+            if (userId == null) {
+                System.err.println("❌ User not found for deletion: " + username);
+                return false;
+            }
 
             // Check if user owns the room
             UUID createdBy = (UUID) room.get("created_by");
 
             if (!createdBy.equals(userId)) {
+                System.err.println("❌ Permission denied - User " + username + " does not own room " + roomId);
                 return false; // User doesn't own the room
             }
 
             // Delete the room
             String sql = "DELETE FROM dbo.watch_rooms WHERE room_id = ?";
             int rowsDeleted = jdbcTemplate.update(sql, UUID.fromString(roomId));
+            System.out.println("✅ Room deleted successfully: " + roomId + ", rows affected: " + rowsDeleted);
             return rowsDeleted > 0;
         } catch (Exception e) {
             System.err.println("❌ Error deleting room: " + e.getMessage());

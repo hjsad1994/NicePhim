@@ -20,9 +20,22 @@ export function useAuth() {
         const userData = localStorage.getItem('user');
         if (userData) {
           const parsedUser = JSON.parse(userData);
-          setUser(parsedUser);
+          console.log('Found user data in localStorage:', parsedUser);
+
+          // Map the user object to match the expected interface
+          // API returns user_id, but frontend expects id
+          const mappedUser = {
+            id: parsedUser.user_id || parsedUser.id,
+            username: parsedUser.username,
+            display_name: parsedUser.display_name,
+            email: parsedUser.email
+          };
+
+          console.log('Mapped user object:', mappedUser);
+          setUser(mappedUser);
           setIsLoggedIn(true);
         } else {
+          console.log('No user data found in localStorage');
           setUser(null);
           setIsLoggedIn(false);
         }
@@ -60,9 +73,21 @@ export function useAuth() {
     };
   }, []);
 
-  const login = (userData: User) => {
-    localStorage.setItem('user', JSON.stringify(userData));
-    setUser(userData);
+  const login = (userData: any) => {
+    console.log('Login function called with userData:', userData);
+
+    // Map the user object to match the expected interface
+    // API returns user_id, but frontend expects id
+    const mappedUser = {
+      id: userData.user_id || userData.id,
+      username: userData.username,
+      display_name: userData.display_name,
+      email: userData.email
+    };
+
+    console.log('Storing mapped user in localStorage:', mappedUser);
+    localStorage.setItem('user', JSON.stringify(mappedUser));
+    setUser(mappedUser);
     setIsLoggedIn(true);
 
     // Dispatch custom event to notify other components
