@@ -1,0 +1,141 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>WebSocket Chat Test</title>
+    <style>
+        body { font-family: Arial, sans-serif; margin: 20px; }
+        #messages { height: 300px; overflow-y: scroll; border: 1px solid #ccc; padding: 10px; margin-bottom: 10px; }
+        .message { margin: 5px 0; padding: 5px; border-radius: 3px; }
+        .chat { background: #e3f2fd; }
+        .join { background: #e8f5e8; font-style: italic; }
+        .system { background: #fff3e0; font-style: italic; }
+        input { padding: 5px; margin-right: 5px; }
+        button { padding: 5px 10px; }
+        .status { padding: 10px; margin: 10px 0; border-radius: 5px; }
+        .connected { background: #d4edda; color: #155724; }
+        .disconnected { background: #f8d7da; color: #721c24; }
+    </style>
+</head>
+<body>
+    <h1>WebSocket Chat Test for Room: E9E3582B-E6C1-45F5-9F5D-80FA1F465059</h1>
+
+    <div id="status" class="status disconnected">Disconnected</div>
+
+    <div>
+        <input type="text" id="username" placeholder="Enter username" value="TestUser">
+        <button onclick="connect()">Connect</button>
+        <button onclick="disconnect()">Disconnect</button>
+    </div>
+
+    <div id="messages"></div>
+
+    <div>
+        <input type="text" id="messageInput" placeholder="Type a message..." onkeypress="if(event.key==='Enter') sendMessage()">
+        <button onclick="sendMessage()">Send Chat</button>
+    </div>
+
+    <script src="https://cdn.jsdelivr.net/npm/sockjs-client@1.6.1/dist/sockjs.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/@stomp/stompjs@7.0.0/bundles/stomp.umd.min.js"></script>
+
+    <script>
+        let stompClient = null;
+        const roomId = 'E9E3582B-E6C1-45F5-9F5D-80FA1F465059';
+
+        function connect() {
+            const username = document.getElementById('username').value;
+            if (!username) {
+                alert('Please enter a username');
+                return;
+            }
+
+            const socket = new SockJS('http://localhost:8080/ws');
+            stompClient = Stomp.over(socket);
+
+            stompClient.connect({}, function (frame) {
+                console.log('Connected: ' + frame);
+                updateStatus(true);
+
+                // Subscribe to room messages
+                stompClient.subscribe('/topic/room.' + roomId, function (message) {
+                    console.log('Received message:', message);
+                    const data = JSON.parse(message.body);
+                    displayMessage(data);
+                });
+
+                // Send join message
+                stompClient.send("/app/room/" + roomId + "/join", {}, JSON.stringify({
+                    username: username
+                }));
+
+            }, function (error) {
+                console.log('Error: ' + error);
+                updateStatus(false);
+            });
+        }
+
+        function disconnect() {
+            if (stompClient !== null) {
+                stompClient.disconnect();
+            }
+            updateStatus(false);
+            console.log("Disconnected");
+        }
+
+        function sendMessage() {
+            const input = document.getElementById('messageInput');
+            const message = input.value.trim();
+            const username = document.getElementById('username').value;
+
+            if (message && stompClient && stompClient.connected) {
+                stompClient.send("/app/room/" + roomId + "/chat", {}, JSON.stringify({
+                    type: 'chat',
+                    message: message,
+                    username: username,
+                    timestamp: Date.now()
+                }));
+                input.value = '';
+            }
+        }
+
+        function displayMessage(data) {
+            const messagesDiv = document.getElementById('messages');
+            const messageDiv = document.createElement('div');
+            messageDiv.className = 'message ' + data.type;
+
+            let content = '';
+            if (data.type === 'chat') {
+                content = '<strong>' + data.username + ':</strong> ' + data.message;
+            } else if (data.type === 'user_join') {
+                content = data.username + ' joined the room';
+            } else if (data.type === 'system') {
+                content = data.message;
+            } else {
+                content = JSON.stringify(data);
+            }
+
+            messageDiv.innerHTML = content;
+            messagesDiv.appendChild(messageDiv);
+            messagesDiv.scrollTop = messagesDiv.scrollHeight;
+        }
+
+        function updateStatus(connected) {
+            const statusDiv = document.getElementById('status');
+            if (connected) {
+                statusDiv.className = 'status connected';
+                statusDiv.textContent = 'Connected to WebSocket';
+            } else {
+                statusDiv.className = 'status disconnected';
+                statusDiv.textContent = 'Disconnected from WebSocket';
+            }
+        }
+
+        // Auto-connect on page load
+        window.onload = function() {
+            console.log('Page loaded, auto-connecting...');
+            connect();
+        };
+    </script>
+</body>
+</html>

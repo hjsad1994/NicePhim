@@ -46,6 +46,17 @@ public class UserRepository {
 			return null;
 		}
 	}
+
+	public Map<String, Object> findUserById(UUID userId) {
+		try {
+			return jdbcTemplate.queryForMap(
+				"SELECT user_id, username, email, password_hash, display_name, created_at FROM dbo.users WHERE user_id = ?",
+				userId
+			);
+		} catch (Exception e) {
+			return null;
+		}
+	}
 }
 
 

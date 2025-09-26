@@ -23,6 +23,8 @@ export default function TaoPhongXemChungPage({ searchParams }: TaoPhongXemChungP
   const [autoStart, setAutoStart] = useState<boolean>(false);
   const [privateOnly, setPrivateOnly] = useState<boolean>(false);
   const [isCreating, setIsCreating] = useState<boolean>(false);
+  const [broadcastStartTimeType, setBroadcastStartTimeType] = useState<string>('now');
+  const [user, setUser] = useState<any>(null);
 
   // Convert MovieResponse to Movie type for compatibility
   const convertToMovie = (movieResponse: MovieResponse): Movie => {
@@ -55,11 +57,45 @@ export default function TaoPhongXemChungPage({ searchParams }: TaoPhongXemChungP
     };
   };
 
-  // Load movie data
+  // Load user and movie data
   useEffect(() => {
-    const loadMovie = async () => {
+    const loadData = async () => {
       try {
         setIsLoading(true);
+
+        // Check for authenticated user
+        try {
+          const userData = localStorage.getItem('user');
+          if (userData) {
+            const parsedUser = JSON.parse(userData);
+            setUser(parsedUser);
+            // Also set watchTogetherUser for consistency with existing logic
+            localStorage.setItem('watchTogetherUser', parsedUser.username);
+          }
+        } catch (error) {
+          console.error('Error parsing user data:', error);
+        }
+
+        // Listen for auth changes
+        const handleAuthChange = () => {
+          try {
+            const userData = localStorage.getItem('user');
+            if (userData) {
+              const parsedUser = JSON.parse(userData);
+              setUser(parsedUser);
+              localStorage.setItem('watchTogetherUser', parsedUser.username);
+            } else {
+              setUser(null);
+            }
+          } catch (error) {
+            console.error('Error handling auth change:', error);
+          }
+        };
+
+        window.addEventListener('auth-change', handleAuthChange);
+        return () => {
+          window.removeEventListener('auth-change', handleAuthChange);
+        };
 
         // Create realistic fallback movie
         const createFallbackMovie = (): Movie => ({
@@ -136,8 +172,9 @@ export default function TaoPhongXemChungPage({ searchParams }: TaoPhongXemChungP
       }
     };
 
-    loadMovie();
+    loadData();
   }, [resolvedSearchParams.movie]);
+
 
   // Generate posters from available movies in database
   const posters = movies.length > 0 ? movies.slice(0, 6).map((m) => ({
@@ -179,36 +216,124 @@ export default function TaoPhongXemChungPage({ searchParams }: TaoPhongXemChungP
   };
 
   const handleCreate = async () => {
+    if (!user) {
+      alert('Vui lòng đăng nhập để tạo phòng');
+      return;
+    }
+
     if (!roomName || roomName.length < 10) {
       alert('Vui lòng nhập tên phòng có ít nhất 10 ký tự');
+      return;
+    }
+
+    if (!movie) {
+      alert('Vui lòng chọn phim để tạo phòng');
+      return;
+    }
+
+    console.log('Selected movie:', movie);
+    console.log('Movie ID:', movie.id);
+    if (!movie.id) {
+      alert('Phim được chọn không có ID hợp lệ');
       return;
     }
 
     setIsCreating(true);
 
     try {
-      // TODO: integrate API create room
-      // const roomData = {
-      //   name: roomName,
-      //   movie: movie?.title,
-      //   poster: posters[activePoster].src,
-      //   autoStart,
-      //   isPrivate: privateOnly,
-      //   createdAt: new Date().toISOString()
-      // };
+      // Get current username from authenticated user
+      const currentUser = user.username;
+      if (!currentUser) {
+        alert('Không thể xác định người dùng');
+        setIsCreating(false);
+        return;
+      }
 
-      // Simulate API call
-      await new Promise(resolve => setTimeout(resolve, 1000));
+      // Create room data structure
+      const roomId = 'room_' + Date.now();
+      const selectedPoster = posters[activePoster];
 
-      // Simulate successful room creation
+      const roomData = {
+        id: roomId,
+        name: roomName,
+        movie: movie,
+        poster: selectedPoster.src,
+        autoStart,
+        isPrivate: privateOnly,
+        broadcastStartTimeType,
+        createdBy: currentUser,
+        createdAt: new Date().toISOString(),
+        hlsUrl: movie.hlsUrl || `http://localhost:8080/videos/${movie.id}/master.m3u8`
+      };
+
+      console.log('Creating room with user:', currentUser);
+
+      // Check if movie ID is a valid UUID format, if not, don't send movieId
+      let movieIdToSend = null;
+      if (movie.id && movie.id.match(/^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i)) {
+        movieIdToSend = movie.id;
+      } else {
+        console.log('Movie ID is not a valid UUID, creating room without movie association:', movie.id);
+      }
+
+      // Call backend API to create room
+      const requestData = {
+        name: roomName,
+        username: currentUser,
+        movieId: movieIdToSend,
+        broadcastStartTimeType: broadcastStartTimeType
+      };
+
+      console.log('Sending room creation request:', requestData);
+
+      const response = await fetch('http://localhost:8080/api/rooms', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify(requestData),
+      });
+
+      if (!response.ok) {
+        const errorData = await response.json();
+        console.error('Backend error response:', errorData);
+        throw new Error(errorData.error || 'Failed to create room');
+      }
+
+      const backendRoom = await response.json();
+
+      // Save room to localStorage with backend room ID
+      try {
+        const existingRooms = JSON.parse(localStorage.getItem('watchTogetherRooms') || '[]');
+        const roomWithBackendId = {
+          ...roomData,
+          id: backendRoom.room_id,
+          backendRoomId: backendRoom.room_id
+        };
+        existingRooms.push(roomWithBackendId);
+        localStorage.setItem('watchTogetherRooms', JSON.stringify(existingRooms));
+        console.log('Room saved to localStorage:', roomWithBackendId);
+      } catch (error) {
+        console.error('Error saving room to localStorage:', error);
+      }
+
+      // Calculate broadcast time for display
+      let broadcastTimeText = 'Bắt đầu ngay';
+      if (broadcastStartTimeType !== 'now') {
+        const minutes = parseInt(broadcastStartTimeType);
+        broadcastTimeText = `Bắt đầu sau ${minutes} phút`;
+      }
+
+      // Show success message
       alert('Đã tạo phòng "' + roomName + '" thành công!' +
-            '\n\nPhim: ' + (movie?.title || 'Unknown') +
+            '\n\nPhim: ' + movie.title +
             '\nLoại phòng: ' + (privateOnly ? 'Riêng tư' : 'Công khai') +
-            '\nBắt đầu: ' + (autoStart ? 'Tự động' : 'Thủ công'));
+            '\n' + broadcastTimeText +
+            '\nMã phòng: ' + backendRoom.room_id);
 
-      // Redirect to room management after successful creation
+      // Redirect to the newly created room
       setTimeout(() => {
-        router.push('/xem-chung/quan-ly');
+        router.push(`/xem-chung/phong/${backendRoom.room_id}`);
       }, 500);
 
     } catch (error) {
@@ -408,11 +533,11 @@ export default function TaoPhongXemChungPage({ searchParams }: TaoPhongXemChungP
                   </div>
                 </div>
 
-                {/* 2. Poster Selection */}
+                {/* 3. Poster Selection */}
                 <div className="group">
                   <div className="flex items-center gap-3 mb-4">
                     <div className="w-8 h-8 rounded-full bg-gradient-to-r from-purple-500/20 to-purple-600/20 border border-purple-500/30 flex items-center justify-center">
-                      <span className="text-purple-400 font-bold text-sm">2</span>
+                      <span className="text-purple-400 font-bold text-sm">3</span>
                     </div>
                     <h3 className="text-white font-semibold text-lg">Chọn poster hiển thị</h3>
                   </div>
@@ -455,41 +580,69 @@ export default function TaoPhongXemChungPage({ searchParams }: TaoPhongXemChungP
                   </div>
                 </div>
 
-                {/* 3. Auto Start */}
+                {/* 4. Broadcast Time */}
                 <div className="group">
                   <div className="flex items-center gap-3 mb-3">
                     <div className="w-8 h-8 rounded-full bg-gradient-to-r from-blue-500/20 to-blue-600/20 border border-blue-500/30 flex items-center justify-center">
-                      <span className="text-blue-400 font-bold text-sm">3</span>
+                      <span className="text-blue-400 font-bold text-sm">4</span>
                     </div>
-                    <h3 className="text-white font-semibold text-lg">Cài đặt thời gian</h3>
+                    <h3 className="text-white font-semibold text-lg">Thời gian bắt đầu phát</h3>
                   </div>
-                  <p className="text-gray-400 mb-4 text-sm">Có thể bắt đầu thủ công hoặc tự động theo thời gian cài đặt.</p>
-                  <button
-                    type="button"
-                    onClick={() => setAutoStart((v) => !v)}
-                    className="flex items-center gap-4 p-4 rounded-xl bg-black/20 border border-gray-400/30 hover:bg-black/30 transition-all duration-300 w-full"
-                  >
-                    <div className={`relative w-14 h-7 rounded-full transition-colors duration-300 ${
-                      autoStart ? 'bg-gradient-to-r from-red-500 to-red-600' : 'bg-gray-600'
-                    }`}>
-                      <span className={`absolute top-0.5 left-0.5 w-6 h-6 rounded-full bg-white transition-all duration-300 shadow-lg ${
-                        autoStart ? 'translate-x-7' : ''
-                      }`}></span>
-                    </div>
-                    <div className="flex-1 text-left">
-                      <div className="text-white font-medium">Bắt đầu tự động</div>
-                      <div className="text-gray-400 text-sm">
-                        {autoStart ? 'Phòng sẽ tự động bắt đầu khi có người tham gia' : 'Bạn sẽ chủ động bắt đầu phòng'}
+                  <p className="text-gray-400 mb-4 text-sm">Chọn thời gian để bắt đầu phát phim tự động. Tất cả người tham gia sẽ đồng bộ với thời gian phát này.</p>
+
+                  <div className="grid grid-cols-3 gap-3">
+                    {[
+                      { value: 'now', label: 'Bắt đầu ngay', icon: '⚡' },
+                      { value: '5', label: 'Sau 5 phút', icon: '5️⃣' },
+                      { value: '10', label: 'Sau 10 phút', icon: '🔟' },
+                      { value: '15', label: 'Sau 15 phút', icon: '🕒' },
+                      { value: '30', label: 'Sau 30 phút', icon: '⏰' },
+                    ].map((option) => (
+                      <button
+                        key={option.value}
+                        type="button"
+                        onClick={() => setBroadcastStartTimeType(option.value)}
+                        className={`p-4 rounded-xl border-2 transition-all duration-300 text-center ${
+                          broadcastStartTimeType === option.value
+                            ? 'border-red-500/50 bg-red-500/10'
+                            : 'border-gray-400/30 bg-black/20 hover:border-white/50 hover:bg-white/5'
+                        }`}
+                      >
+                        <div className="text-2xl mb-2">{option.icon}</div>
+                        <div className="text-white font-medium text-sm">{option.label}</div>
+                        {broadcastStartTimeType === option.value && (
+                          <div className="mt-2">
+                            <div className="w-6 h-6 rounded-full bg-red-500 flex items-center justify-center mx-auto">
+                              <svg className="w-3 h-3 text-white" fill="currentColor" viewBox="0 0 20 20">
+                                <path fillRule="evenodd" d="M16.707 5.293a1 1 0 010 1.414l-8 8a1 1 0 01-1.414 0l-4-4a1 1 0 011.414-1.414L8 12.586l7.293-7.293a1 1 0 011.414 0z" clipRule="evenodd" />
+                              </svg>
+                            </div>
+                          </div>
+                        )}
+                      </button>
+                    ))}
+                  </div>
+
+                  {broadcastStartTimeType !== 'now' && (
+                    <div className="mt-4 p-4 bg-yellow-500/10 border border-yellow-500/30 rounded-xl">
+                      <div className="flex items-center gap-2 text-yellow-400">
+                        <svg className="w-5 h-5" fill="currentColor" viewBox="0 0 20 20">
+                          <path fillRule="evenodd" d="M18 10a8 8 0 11-16 0 8 8 0 0116 0zm-7-4a1 1 0 11-2 0 1 1 0 012 0zM9 9a1 1 0 000 2v3a1 1 0 001 1h1a1 1 0 100-2v-3a1 1 0 00-1-1H9z" clipRule="evenodd" />
+                        </svg>
+                        <span className="font-medium">Phát trực tiếp theo lịch</span>
                       </div>
+                      <p className="text-yellow-300 text-sm mt-1">
+                        Phim sẽ tự động bắt đầu sau {broadcastStartTimeType} phút. Tất cả người tham gia sẽ được đồng bộ thời gian.
+                      </p>
                     </div>
-                  </button>
+                  )}
                 </div>
 
-                {/* 4. Privacy */}
+                {/* 5. Privacy */}
                 <div className="group">
                   <div className="flex items-center gap-3 mb-3">
                     <div className="w-8 h-8 rounded-full bg-gradient-to-r from-green-500/20 to-green-600/20 border border-green-500/30 flex items-center justify-center">
-                      <span className="text-green-400 font-bold text-sm">4</span>
+                      <span className="text-green-400 font-bold text-sm">5</span>
                     </div>
                     <h3 className="text-white font-semibold text-lg">Quyền riêng tư</h3>
                   </div>

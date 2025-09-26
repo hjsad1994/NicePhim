@@ -196,7 +196,8 @@ export default function NewMovie() {
       return;
     }
 
-    // Prepare movie data
+    try {
+      // Prepare movie data
       const movieData = {
         title: formData.title,
         aliasTitle: formData.title, // Use title as alias for now
@@ -211,10 +212,10 @@ export default function NewMovie() {
       };
 
       console.log('Submitting movie data:', movieData);
-      
+
       // Submit to API
       const response = await ApiService.createMovie(movieData);
-      
+
       if (response.success) {
         alert('Phim đã được thêm thành công!');
         router.push('/admin/movies');
@@ -505,18 +506,7 @@ export default function NewMovie() {
               onUpload={(url) => handleInputChange('bannerUrl', url)}
               onRemove={() => handleInputChange('bannerUrl', '')}
               required={false}
-            />                  id="banner-upload"
-                          type="file"
-                          accept="image/*"
-                          className="hidden"
-                          onChange={(e) => e.target.files && handleFileChange('banner', e.target.files[0])}
-                        />
-                      </label>
-                    </div>
-                  </div>
-                )}
-              </div>
-            </div>
+            />
 
             {/* Thumbnail */}
             <div>

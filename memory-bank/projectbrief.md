@@ -6,7 +6,8 @@
 ## Core Requirements
 - **Movie Streaming**: High-quality video streaming with multiple quality options and HLS adaptive streaming
 - **User Management**: Complete registration, authentication, and user preferences system
-- **Watch Together**: Real-time collaborative viewing with WebSocket synchronization
+- **Watch Together**: Real-time collaborative viewing with WebSocket synchronization and broadcast scheduling
+- **Broadcast Scheduling**: Server-managed time coordination for scheduled video broadcasts with synchronized playback
 - **Admin Panel**: Comprehensive movie and genre management interface
 - **Responsive Design**: Mobile-first approach with modern cinematic UI/UX
 
@@ -19,9 +20,14 @@
 
 2. **Watch Together**
    - Real-time room creation and management
-   - Synchronized playback across users
+   - Individual user control over video playback (no forced synchronization)
    - WebSocket-based communication with STOMP protocol
    - Room administration features
+   - Broadcast scheduling with time coordination (available but not enforced)
+   - Scheduled start times with countdown displays
+   - Broadcast status management (scheduled, live, completed)
+   - Full video player controls (play/pause/seek) for all users
+   - Simplified state management without sync complexity
 
 3. **Content Management**
    - Movie catalog with genres, ratings, and metadata
@@ -46,10 +52,13 @@
 
 ## Success Criteria
 - Seamless video streaming experience with adaptive quality
-- Real-time synchronization in watch-together mode
+- Smooth collaborative watching experience without performance issues
+- Individual user control over video playback in watch-together mode
+- Broadcast scheduling functionality with flexible time coordination options
 - Intuitive user interface with cinematic design
 - Scalable architecture for future growth
 - Mobile-responsive design with modern UI patterns
+- Complete room management with user-friendly controls
 
 ## Technology Stack
 - **Frontend**: Next.js 15, React 19, TypeScript, Tailwind CSS

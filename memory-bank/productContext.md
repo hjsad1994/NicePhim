@@ -1,20 +1,22 @@
 # Product Context: NicePhim Streaming Platform
 
 ## Problem Statement
-Users need a modern, feature-rich movie streaming platform that supports both individual viewing and social watching experiences, with high-quality video delivery, intuitive content discovery, and comprehensive content management capabilities.
+Users need a modern, feature-rich movie streaming platform that supports both individual viewing and social watching experiences, with high-quality video delivery, intuitive content discovery, comprehensive content management capabilities, and scheduled broadcast functionality for coordinated viewing events.
 
 ## Target Users
 - **Primary**: Movie enthusiasts seeking high-quality streaming with adaptive quality and modern UI
 - **Secondary**: Groups wanting to watch together remotely with real-time synchronization
-- **Tertiary**: Content administrators managing movies, genres, and platform content
-- **Quaternary**: Developers maintaining and extending the platform functionality
+- **Tertiary**: Event organizers wanting to schedule coordinated movie viewing sessions
+- **Quaternary**: Content administrators managing movies, genres, and platform content
+- **Quinary**: Developers maintaining and extending the platform functionality
 
 ## User Experience Goals
 1. **Seamless Streaming**: Buffer-free, high-quality video playback with HLS adaptive streaming
 2. **Social Interaction**: Easy sharing and collaborative viewing with real-time room synchronization
-3. **Content Discovery**: Intuitive browsing by genre, with movie cards, posters, and detailed information
-4. **Personalization**: User authentication, favorites, and watch history tracking
-5. **Accessibility**: Mobile-responsive design with cinematic UI optimized for all devices
+3. **Broadcast Scheduling**: Intuitive scheduling interface for coordinated viewing events with countdown displays
+4. **Content Discovery**: Intuitive browsing by genre, with movie cards, posters, and detailed information
+5. **Personalization**: User authentication, favorites, and watch history tracking
+6. **Accessibility**: Mobile-responsive design with cinematic UI optimized for all devices
 
 ## Key User Journeys
 1. **New User Registration**
@@ -44,6 +46,9 @@ Users need a modern, feature-rich movie streaming platform that supports both in
    - Create/join rooms with real-time synchronization
    - WebSocket-based communication with STOMP protocol
    - Movie context integration with room management
+   - Broadcast scheduling with time selection and countdown displays
+   - Server-managed time synchronization for coordinated playback
+   - Broadcast status management and visual indicators
 
 ## Technical Implementation
 - **Backend Architecture**: Spring Boot MVC with proper separation of concerns
@@ -55,6 +60,7 @@ Users need a modern, feature-rich movie streaming platform that supports both in
 ## Business Goals
 - Build a competitive streaming platform with modern technology stack
 - Foster community through social features and collaborative viewing
+- Enable event-based viewing experiences through broadcast scheduling
 - Provide high-quality user experience with cinematic UI design
 - Scale to support growing user base and content library
 - Maintain comprehensive content management system
@@ -62,8 +68,10 @@ Users need a modern, feature-rich movie streaming platform that supports both in
 
 ## Success Metrics
 - User engagement through watch-together features
+- Event participation through broadcast scheduling functionality
 - Content discovery effectiveness through genre-based organization
 - Streaming quality with adaptive HLS technology
+- Broadcast synchronization accuracy and reliability
 - Admin productivity through comprehensive management interface
 - Code maintainability through proper architecture and documentation
 

@@ -8,6 +8,12 @@
 - **Database Integration**: Confirmed proper SQL Server relationships and video metadata handling
 
 ## Completed Features ✅
+- **Database Type Casting Fixes**: Resolved ClassCastException between Short and Integer types for TINYINT database columns (playback_state)
+- **Unique Constraint Resolution**: Fixed UNIQUE KEY constraint violations on invite_code field by generating unique 8-character codes for all rooms
+- **CORS Configuration**: Added @CrossOrigin annotation to RoomController to enable frontend API calls from localhost:3000
+- **BCrypt Password Hashing**: Fixed user creation in createOrUpdateSimpleUser method to use proper BCrypt hashing instead of empty byte arrays
+- **Frontend UUID Validation**: Added validation to only send movieId when it's in proper UUID format to backend
+- **Enhanced Error Logging**: Added comprehensive console logging throughout room creation process for better debugging
 - **Video Upload Size Limit Fix**: Increased Spring Boot upload limits to 500MB for large video files
 - **Backend Controller Conflicts Resolved**: Fixed TestController naming conflicts by renaming to VideoTestController
 - **Video Processing Pipeline**: FFmpeg successfully converting videos to HLS format with multiple quality variants
@@ -105,6 +111,29 @@
 - ✅ **Video Upload Path Configuration Fix**: Fixed application.properties Windows path conflicts - updated default paths to use correct Mac paths (/Users/trantai/Documents/NicePhim/...)
 - ✅ **Hero Component Layout Adjustments**: Moved hero content left with negative margins (-ml-20 lg:-ml-30) and reduced heading text size from text-5xl to text-4xl for better layout
 - ✅ **Media Directory Structure**: Created required directories (videos_demo, media, poster_img, banner_img) for proper file storage and processing
+- ✅ **Watch Together Feature Completion**: Fully functional real-time collaborative viewing system with complete functionality
+- ✅ **Watch Together Username Management**: Implemented username input validation and localStorage-based session management
+- ✅ **Watch Together Room Creation**: Complete room creation flow with movie selection and user identification
+- ✅ **Watch Together Room Storage**: Fixed localStorage-based room persistence and retrieval system
+- ✅ **Watch Together Room Management**: Enhanced room management page with proper user filtering and refresh functionality
+- ✅ **Watch Together Video Synchronization**: Implemented sync button functionality to synchronize viewer playback with room host position
+- ✅ **Watch Together Error Resolution**: Fixed loadMovie function error and WebSocket connection issues with robust error handling
+- ✅ **Watch Together UI Enhancement**: Updated room management page to display "Chưa có phòng nào" when no rooms exist, removed fallback mock data
+- ✅ **Watch Together User Experience**: Enhanced room creation flow with proper redirects and user feedback
+- ✅ **Broadcast Scheduling Database Schema**: Added V3 migration with broadcast scheduling fields (scheduled_start_time, broadcast_start_time_type, broadcast_status, actual_start_time, server_managed_time)
+- ✅ **Broadcast Scheduling Backend APIs**: Complete REST API endpoints for room CRUD operations with broadcast scheduling support
+- ✅ **Broadcast Scheduling Service Layer**: Enhanced WatchRoomService with scheduling and time synchronization logic
+- ✅ **Broadcast Scheduling Frontend UI**: Updated room creation interface with broadcast time selection (now, 5min, 10min, 15min, 30min, 1hour)
+- ✅ **Server-Side Time Synchronization**: Implemented server-managed time calculation for coordinated video playback
+- ✅ **Video Player Controls Restriction**: Disabled seeking in broadcast mode, allowing only pause/resume functionality
+- ✅ **Broadcast Status Management**: Support for "scheduled", "live", and "completed" broadcast states
+- ✅ **Real-Time WebSocket Updates**: Enhanced WebSocket communication for broadcast state synchronization
+- ✅ **Room Management Enhancement**: Complete room creation, editing, deletion with broadcast scheduling capabilities
+- ✅ **All Services Operational**: Backend, frontend, and WebSocket services fully tested and running
+- ✅ **Time Calculation Algorithm**: Server-side calculation of current playback position based on scheduled start time and playback state
+- ✅ **Broadcast Time Selection UI**: Intuitive user interface for selecting broadcast start times with countdown display
+- ✅ **Broadcast Status Indicators**: Visual indicators showing broadcast status and time remaining until start
+- ✅ **Backend-Frontend Integration Fixes**: Resolved multiple integration issues including CORS, type casting, and database constraints for robust room creation
 
 ## In Progress 🔄
 - ✅ **Video Player Testing**: RESOLVED - Quality and speed selection button display updates now work correctly
@@ -141,6 +170,12 @@
 - **Movie Import/Export**: Bulk movie data management
 
 ## Known Issues 🐛
+- ✅ **Sync Message Spamming**: **RESOLVED** - Complete removal of sync functionality eliminated spammy "🔄 Đã đồng bộ đến thời gian hiện tại (0:00)" messages causing lag
+- ✅ **Database Type Casting Issues**: **RESOLVED** - Fixed ClassCastException between Short (TINYINT) and Integer types in BroadcastSchedulerService and related services
+- ✅ **Unique Key Constraint Violations**: **RESOLVED** - Fixed invite_code UNIQUE KEY constraint by generating unique 8-character codes for all rooms
+- ✅ **CORS Configuration Issues**: **RESOLVED** - Added @CrossOrigin annotation to RoomController to enable frontend API calls
+- ✅ **BCrypt Password Hashing Issues**: **RESOLVED** - Fixed user creation to use proper BCrypt hashing instead of empty byte arrays
+- ✅ **Frontend-Backend Integration Issues**: **RESOLVED** - Enhanced error handling, UUID validation, and logging for robust room creation
 - ✅ **Video Player State Update Issue**: **RESOLVED** - Fixed by correcting click outside handler (mousedown → click event) and simplifying state management
 - ✅ **HLS Adaptive Quality Switching Issue**: **RESOLVED** - Implemented actual HLS quality switching using hls.currentLevel API
 - ✅ **Movie Detail Page Mock Data Issue**: **RESOLVED** - Fixed slug matching between frontend and backend to properly fetch real movie data from database
@@ -181,7 +216,8 @@
 9. ✅ Implement genre-movie relationship management in admin interface
 10. ✅ **Memory Bank Documentation**: Comprehensive documentation system with cursor rules integration
 11. ✅ **Environment Configuration Management**: Implement .env file support for flexible directory URL management
-12. Add proper user session management (JWT/sessions)
+12. ✅ **Sync Functionality Removal**: Complete removal of sync functionality from watch-together rooms to eliminate performance issues and improve user experience
+13. Add proper user session management (JWT/sessions)
 13. Add user profile management
 14. Add logout functionality
 15. Add bulk genre operations for multiple movies

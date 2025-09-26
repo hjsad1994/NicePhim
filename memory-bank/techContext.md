@@ -14,6 +14,8 @@
 - **UI Components**: Headless UI, Heroicons, custom React components
 - **State Management**: React hooks with local state and API integration
 - **Video Player**: React Player, HLS.js for adaptive streaming, custom SimpleHLSPlayer
+- **Broadcast Scheduling UI**: Time selection interfaces with countdown displays and status indicators
+- **Real-time Updates**: WebSocket integration for broadcast state synchronization
 - **Image Handling**: Next.js Image component with external domain configuration
 
 ## Backend Stack
@@ -24,6 +26,8 @@
 - **Validation**: Jakarta Validation with Vietnamese error messages
 - **Migration**: Flyway 9.16.0 for database schema management
 - **WebSocket**: Spring WebSocket with STOMP protocol
+- **Broadcast Scheduling**: Server-managed time synchronization with room state management
+- **Time Calculation**: Server-side algorithms for synchronized playback position calculation
 - **Architecture**: Controllers, Services, Repositories, DTOs with proper separation
 - **Error Handling**: Comprehensive exception handling with HTTP responses
 - **Data Access**: Manual SQL queries with JdbcTemplate for performance
@@ -35,7 +39,7 @@
 - **Movie_Genres**: Many-to-many relationship between movies and genres
 - **Episodes**: Series episode management
 - **Assets**: Video file storage references
-- **Watch Rooms**: Collaborative viewing sessions
+- **Watch Rooms**: Collaborative viewing sessions with broadcast scheduling (includes scheduled_start_time, broadcast_start_time_type, broadcast_status, actual_start_time, server_managed_time fields)
 - **Comments**: User interactions and feedback
 - **Video Renditions**: HLS streaming quality variants
 - **Video Player Components**: SimpleHLSPlayer, HLSVideoPlayer, VideoPlayer wrapper
@@ -61,6 +65,10 @@
 - Spring JDBC for database operations
 - hls.js for adaptive video streaming
 - @types/hls.js for TypeScript support
+- STOMP WebSocket client for real-time communication
+- SockJS for WebSocket fallback support
+- Server-side time synchronization algorithms
+- Broadcast state management services
 
 ## Authentication System
 - **Registration**: Complete with validation and error handling
