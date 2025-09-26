@@ -456,6 +456,7 @@ public class RoomController {
 
 	/**
 	 * Update server video position (called periodically when video is playing)
+	 * Only host can update position
 	 */
 	@PostMapping("/api/rooms/{roomId}/update-position")
 	public ResponseEntity<Map<String, Object>> updateVideoPosition(
@@ -463,6 +464,7 @@ public class RoomController {
 			@RequestBody Map<String, Object> request) {
 		try {
 			Long positionMs = ((Number) request.get("positionMs")).longValue();
+			Boolean isHost = (Boolean) request.get("isHost");
 
 			if (positionMs == null) {
 				return ResponseEntity.badRequest().body(Map.of(
@@ -471,12 +473,19 @@ public class RoomController {
 				));
 			}
 
-			watchRoomService.updateServerVideoPosition(roomId, positionMs);
+			watchRoomService.updateServerVideoPosition(roomId, positionMs, isHost);
 
-			return ResponseEntity.ok(Map.of(
-				"success", true,
-				"message", "Position updated successfully"
-			));
+			if (isHost != null && isHost) {
+				return ResponseEntity.ok(Map.of(
+					"success", true,
+					"message", "Host position updated successfully"
+				));
+			} else {
+				return ResponseEntity.ok(Map.of(
+					"success", true,
+					"message", "Non-host position update ignored (as expected)"
+				));
+			}
 		} catch (Exception e) {
 			return ResponseEntity.internalServerError().body(Map.of(
 				"success", false,

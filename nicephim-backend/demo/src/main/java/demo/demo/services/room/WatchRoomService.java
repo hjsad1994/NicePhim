@@ -605,10 +605,17 @@ public class WatchRoomService {
 
     /**
      * Update server-managed video position (called when video is playing)
+     * Only host should call this method
      */
     @Transactional
-    public void updateServerVideoPosition(String roomId, Long positionMs) {
+    public void updateServerVideoPosition(String roomId, Long positionMs, Boolean isHost) {
         try {
+            // Only accept updates from host
+            if (isHost == null || !isHost) {
+                System.out.println("⚠️ Ignoring position update from non-host in room " + roomId);
+                return;
+            }
+
             // Rate limiting to prevent database spam
             long now = System.currentTimeMillis();
             Long lastUpdate = lastUpdateTime.get(roomId);
@@ -624,7 +631,7 @@ public class WatchRoomService {
 
             String sql = """
                 UPDATE dbo.watch_rooms
-                SET current_time_ms = ?, updated_at = GETDATE()
+                SET current_time_ms = ?, playback_state = 1, updated_at = GETDATE()
                 WHERE room_id = ?
                 """;
 
@@ -633,10 +640,10 @@ public class WatchRoomService {
 
             // Only log significant updates
             if (positionMs % 5000 < 1000) { // Log every 5 seconds
-                System.out.println("🎬 Server updated position for room " + roomId + ": " + positionMs + "ms");
+                System.out.println("👑 Host updated position for room " + roomId + ": " + positionMs + "ms");
             }
         } catch (Exception e) {
-            System.err.println("❌ Error updating server video position for room " + roomId + ": " + e.getMessage());
+            System.err.println("❌ Error updating host video position for room " + roomId + ": " + e.getMessage());
         }
     }
 

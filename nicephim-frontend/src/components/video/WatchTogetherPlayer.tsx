@@ -105,11 +105,11 @@ const WatchTogetherPlayer: React.FC<WatchTogetherPlayerProps> = ({
   const [tempUsername, setTempUsername] = useState(currentUser);
   const processedMessages = useRef<Set<string>>(new Set());
 
-  // Backend position tracking
+  // Backend position tracking (only for host)
   useEffect(() => {
-    if (!isPlaying || !roomId) return;
+    if (!isPlaying || !roomId || !isHost) return;
 
-    // Start sending position updates to backend
+    // Only host sends position updates to backend
     positionUpdateInterval.current = setInterval(async () => {
       const video = videoRef.current;
       if (video && !video.paused && !video.seeking) {
@@ -118,8 +118,12 @@ const WatchTogetherPlayer: React.FC<WatchTogetherPlayerProps> = ({
           await fetch(`http://localhost:8080/api/rooms/${roomId}/update-position`, {
             method: 'POST',
             headers: { 'Content-Type': 'application/json' },
-            body: JSON.stringify({ positionMs })
+            body: JSON.stringify({
+              positionMs,
+              isHost: true
+            })
           });
+          console.log('📡 Host updated position:', positionMs, 'ms');
         } catch (error) {
           console.error('❌ Error updating server position:', error);
         }
@@ -131,7 +135,7 @@ const WatchTogetherPlayer: React.FC<WatchTogetherPlayerProps> = ({
         clearInterval(positionUpdateInterval.current);
       }
     };
-  }, [isPlaying, roomId]);
+  }, [isPlaying, roomId, isHost]);
 
   // Auto-sync when joining room
   useEffect(() => {
@@ -620,9 +624,9 @@ const WatchTogetherPlayer: React.FC<WatchTogetherPlayerProps> = ({
     }
   };
 
-  // Manual sync to server position
+  // Manual sync to host position (viewers only)
   const syncToServer = async () => {
-    if (isSyncing) return;
+    if (isSyncing || isHost) return; // Host doesn't need to sync
 
     setIsSyncing(true);
     try {
@@ -641,23 +645,27 @@ const WatchTogetherPlayer: React.FC<WatchTogetherPlayerProps> = ({
 
         const video = videoRef.current;
         if (video && positionSeconds > 0) {
-          // Sync video position
+          const wasPlaying = !video.paused; // Remember current playback state
+
+          // Only sync position, don't change playback state
           video.currentTime = positionSeconds;
 
-          // Handle playback state
-          if (state === 2) { // Paused
-            video.pause();
-          } else if (state === 1) { // Playing
-            await video.play();
+          // Keep the user's current playback state (don't pause/play based on server state)
+          if (wasPlaying) {
+            // If video was playing before sync, ensure it keeps playing
+            await video.play().catch(err => {
+              console.log('Could not resume play after sync:', err);
+            });
           }
+          // If video was paused, keep it paused
 
           setLastSyncTime(Date.now());
-          console.log('🔄 Synced to server position:', positionSeconds, 's, state:', state);
+          console.log('🔄 Viewer synced to host position:', positionSeconds, 's (kept playback state:', wasPlaying, ')');
 
           // Show sync notification in chat
           setChatMessages(prev => [...prev, {
             username: 'system',
-            message: `${currentUser} đã đồng bộ với máy chủ (${formatTime(positionSeconds)})`,
+            message: `${currentUser} đã đồng bộ với chủ phòng (${formatTime(positionSeconds)})`,
             timestamp: Date.now(),
             type: 'system'
           }]);
@@ -672,10 +680,10 @@ const WatchTogetherPlayer: React.FC<WatchTogetherPlayerProps> = ({
         }]);
       }
     } catch (error) {
-      console.error('❌ Error syncing to server:', error);
+      console.error('❌ Error syncing to host:', error);
       setChatMessages(prev => [...prev, {
         username: 'system',
-        message: `❌ Lỗi đồng bộ: không thể kết nối đến máy chủ`,
+        message: `❌ Lỗi đồng bộ: không thể kết nối đến chủ phòng`,
         timestamp: Date.now(),
         type: 'system'
       }]);
@@ -735,7 +743,7 @@ const WatchTogetherPlayer: React.FC<WatchTogetherPlayerProps> = ({
     return availableLevels.findIndex(level => level.height === targetHeight);
   };
 
-  // Control functions - allow play/pause but disable seeking
+  // Control functions - different for host vs viewers
   const togglePlay = () => {
     const video = videoRef.current;
     if (!video) return;
@@ -748,18 +756,38 @@ const WatchTogetherPlayer: React.FC<WatchTogetherPlayerProps> = ({
   };
 
   const handleSeek = (time: number) => {
-    // Disable seeking - users must sync with server
-    console.log('🚫 Seeking disabled - use sync button instead');
+    const video = videoRef.current;
+    if (!video) return;
+
+    if (isHost) {
+      // Host can seek freely
+      video.currentTime = time;
+    } else {
+      // Viewers cannot seek
+      console.log('🚫 Viewers cannot seek - use sync button instead');
+    }
   };
 
   const seekForward = () => {
-    // Disable seeking - users must sync with server
-    console.log('🚫 Seeking disabled - use sync button instead');
+    const video = videoRef.current;
+    if (!video) return;
+
+    if (isHost) {
+      video.currentTime = Math.min(video.currentTime + 10, video.duration);
+    } else {
+      console.log('🚫 Viewers cannot seek - use sync button instead');
+    }
   };
 
   const seekBackward = () => {
-    // Disable seeking - users must sync with server
-    console.log('🚫 Seeking disabled - use sync button instead');
+    const video = videoRef.current;
+    if (!video) return;
+
+    if (isHost) {
+      video.currentTime = Math.max(video.currentTime - 10, 0);
+    } else {
+      console.log('🚫 Viewers cannot seek - use sync button instead');
+    }
   };
 
   
@@ -994,33 +1022,55 @@ const WatchTogetherPlayer: React.FC<WatchTogetherPlayerProps> = ({
           <div className="absolute inset-0 bg-gradient-to-t from-black/80 via-transparent to-transparent pointer-events-none">
             {/* Bottom Controls */}
             <div className="absolute bottom-4 left-4 right-4">
-              {/* Time Display and Progress Bar - Disabled */}
+              {/* Time Display and Progress Bar */}
               <div className="mb-4 pointer-events-auto">
                 <div className="flex items-center justify-between text-white text-sm mb-2">
                   <span>{formatTime(currentTime)}</span>
                   <span>{formatTime(duration)}</span>
-                  <span className="text-xs text-gray-400">
-                    {lastSyncTime > 0 ? `Đồng bộ: ${new Date(lastSyncTime).toLocaleTimeString()}` : 'Chưa đồng bộ'}
-                  </span>
+                  {isHost ? (
+                    <span className="text-xs text-blue-400">👑 Chủ phòng</span>
+                  ) : (
+                    <span className="text-xs text-gray-400">
+                      {lastSyncTime > 0 ? `Đồng bộ: ${new Date(lastSyncTime).toLocaleTimeString()}` : 'Chưa đồng bộ'}
+                    </span>
+                  )}
                 </div>
                 <div className="relative">
-                  <input
-                    type="range"
-                    min="0"
-                    max={duration || 0}
-                    value={currentTime}
-                    onChange={(e) => handleSeek(parseFloat(e.target.value))}
-                    disabled
-                    className="w-full h-1 bg-gray-500/20 rounded-lg appearance-none cursor-not-allowed opacity-50"
-                    style={{
-                      background: `linear-gradient(to right, #6b7280 0%, #6b7280 ${(currentTime / duration) * 100}%, rgba(107,114,128,0.2) ${(currentTime / duration) * 100}%, rgba(107,114,128,0.2) 100%)`
-                    }}
-                  />
-                  <div className="absolute inset-0 flex items-center justify-center pointer-events-none">
-                    <span className="text-xs text-gray-400 bg-black/50 px-2 py-1 rounded">
-                      Thanh tua đã bị vô hiệu hóa - dùng nút đồng bộ
-                    </span>
-                  </div>
+                  {isHost ? (
+                    // Host can use progress bar
+                    <input
+                      type="range"
+                      min="0"
+                      max={duration || 0}
+                      value={currentTime}
+                      onChange={(e) => handleSeek(parseFloat(e.target.value))}
+                      className="w-full h-1 bg-white/30 rounded-lg appearance-none cursor-pointer"
+                      style={{
+                        background: `linear-gradient(to right, #3b82f6 0%, #3b82f6 ${(currentTime / duration) * 100}%, rgba(255,255,255,0.3) ${(currentTime / duration) * 100}%, rgba(255,255,255,0.3) 100%)`
+                      }}
+                    />
+                  ) : (
+                    // Viewers see disabled progress bar
+                    <>
+                      <input
+                        type="range"
+                        min="0"
+                        max={duration || 0}
+                        value={currentTime}
+                        onChange={(e) => handleSeek(parseFloat(e.target.value))}
+                        disabled
+                        className="w-full h-1 bg-gray-500/20 rounded-lg appearance-none cursor-not-allowed opacity-50"
+                        style={{
+                          background: `linear-gradient(to right, #6b7280 0%, #6b7280 ${(currentTime / duration) * 100}%, rgba(107,114,128,0.2) ${(currentTime / duration) * 100}%, rgba(107,114,128,0.2) 100%)`
+                        }}
+                      />
+                      <div className="absolute inset-0 flex items-center justify-center pointer-events-none">
+                        <span className="text-xs text-gray-400 bg-black/50 px-2 py-1 rounded">
+                          Khán giả không thể tua - dùng nút đồng bộ
+                        </span>
+                      </div>
+                    </>
+                  )}
                 </div>
               </div>
 
@@ -1044,60 +1094,86 @@ const WatchTogetherPlayer: React.FC<WatchTogetherPlayerProps> = ({
                     )}
                   </button>
 
-                  {/* Seek Backward Button - Disabled */}
-                  <div className="relative group">
+                  {/* Seek Backward Button */}
+                  {isHost ? (
                     <button
-                      disabled
-                      className="w-10 h-10 bg-gray-500/20 rounded-full flex items-center justify-center text-gray-400 cursor-not-allowed opacity-50"
-                      title="Tua lại đã bị vô hiệu hóa"
+                      onClick={seekBackward}
+                      className="w-10 h-10 bg-white/20 rounded-full flex items-center justify-center text-white hover:bg-white/30 transition-colors"
+                      title="Tua lại 10 giây"
                     >
                       <svg className="w-4 h-4" fill="currentColor" viewBox="0 0 20 20">
                         <path d="M8.445 14.832A1 1 0 0010 14v-2.798l5.445 3.63A1 1 0 0017 14V6a1 1 0 00-1.555-.832L10 8.798V6a1 1 0 00-1.555-.832l-6 4a1 1 0 000 1.664l6 4z"/>
                       </svg>
                     </button>
-                    <div className="absolute bottom-full left-1/2 transform -translate-x-1/2 mb-2 px-2 py-1 bg-black/80 text-white text-xs rounded whitespace-nowrap opacity-0 group-hover:opacity-100 transition-opacity pointer-events-none">
-                      Vui lòng đồng bộ với máy chủ
+                  ) : (
+                    <div className="relative group">
+                      <button
+                        disabled
+                        className="w-10 h-10 bg-gray-500/20 rounded-full flex items-center justify-center text-gray-400 cursor-not-allowed opacity-50"
+                        title="Tua lại đã bị vô hiệu hóa"
+                      >
+                        <svg className="w-4 h-4" fill="currentColor" viewBox="0 0 20 20">
+                          <path d="M8.445 14.832A1 1 0 0010 14v-2.798l5.445 3.63A1 1 0 0017 14V6a1 1 0 00-1.555-.832L10 8.798V6a1 1 0 00-1.555-.832l-6 4a1 1 0 000 1.664l6 4z"/>
+                        </svg>
+                      </button>
+                      <div className="absolute bottom-full left-1/2 transform -translate-x-1/2 mb-2 px-2 py-1 bg-black/80 text-white text-xs rounded whitespace-nowrap opacity-0 group-hover:opacity-100 transition-opacity pointer-events-none">
+                        Khán giả không thể tua
+                      </div>
                     </div>
-                  </div>
+                  )}
 
-                  {/* Sync Button */}
-                  <button
-                    onClick={syncToServer}
-                    disabled={isSyncing}
-                    className={`w-10 h-10 rounded-full flex items-center justify-center text-white transition-colors ${
-                      isSyncing
-                        ? 'bg-blue-500/50 cursor-not-allowed'
-                        : 'bg-blue-500/20 hover:bg-blue-500/30'
-                    }`}
-                    title="Đồng bộ với máy chủ"
-                  >
-                    {isSyncing ? (
-                      <svg className="w-4 h-4 animate-spin" fill="none" viewBox="0 0 24 24">
-                        <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4"></circle>
-                        <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
-                      </svg>
-                    ) : (
-                      <svg className="w-4 h-4" fill="currentColor" viewBox="0 0 20 20">
-                        <path fillRule="evenodd" d="M4 2a1 1 0 011 1v2.101a7.002 7.002 0 0111.601 2.566 1 1 0 11-1.885.666A5.002 5.002 0 005.999 7H9a1 1 0 010 2H4a1 1 0 01-1-1V3a1 1 0 011-1zm.008 9.057a1 1 0 011.276.61A5.002 5.002 0 0014.001 13H11a1 1 0 110-2h5a1 1 0 011 1v5a1 1 0 11-2 0v-2.101a7.002 7.002 0 01-11.601-2.566 1 1 0 01.61-1.276z" clipRule="evenodd" />
-                      </svg>
-                    )}
-                  </button>
-
-                  {/* Seek Forward Button - Disabled */}
-                  <div className="relative group">
+                  {/* Sync Button - Only for viewers */}
+                  {!isHost && (
                     <button
-                      disabled
-                      className="w-10 h-10 bg-gray-500/20 rounded-full flex items-center justify-center text-gray-400 cursor-not-allowed opacity-50"
-                      title="Tua tới đã bị vô hiệu hóa"
+                      onClick={syncToServer}
+                      disabled={isSyncing}
+                      className={`w-10 h-10 rounded-full flex items-center justify-center text-white transition-colors ${
+                        isSyncing
+                          ? 'bg-blue-500/50 cursor-not-allowed'
+                          : 'bg-blue-500/20 hover:bg-blue-500/30'
+                      }`}
+                      title="Đồng bộ với chủ phòng"
+                    >
+                      {isSyncing ? (
+                        <svg className="w-4 h-4 animate-spin" fill="none" viewBox="0 0 24 24">
+                          <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4"></circle>
+                          <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
+                        </svg>
+                      ) : (
+                        <svg className="w-4 h-4" fill="currentColor" viewBox="0 0 20 20">
+                          <path fillRule="evenodd" d="M4 2a1 1 0 011 1v2.101a7.002 7.002 0 0111.601 2.566 1 1 0 11-1.885.666A5.002 5.002 0 005.999 7H9a1 1 0 010 2H4a1 1 0 01-1-1V3a1 1 0 011-1zm.008 9.057a1 1 0 011.276.61A5.002 5.002 0 0014.001 13H11a1 1 0 110-2h5a1 1 0 011 1v5a1 1 0 11-2 0v-2.101a7.002 7.002 0 01-11.601-2.566 1 1 0 01.61-1.276z" clipRule="evenodd" />
+                        </svg>
+                      )}
+                    </button>
+                  )}
+
+                  {/* Seek Forward Button */}
+                  {isHost ? (
+                    <button
+                      onClick={seekForward}
+                      className="w-10 h-10 bg-white/20 rounded-full flex items-center justify-center text-white hover:bg-white/30 transition-colors"
+                      title="Tua tới 10 giây"
                     >
                       <svg className="w-4 h-4" fill="currentColor" viewBox="0 0 20 20">
                         <path d="M4.555 5.168A1 1 0 003 6v8a1 1 0 001.555.832L10 11.202V14a1 1 0 001.555.832l6-4a1 1 0 000-1.664l-6-4A1 1 0 0010 6v2.798L4.555 5.168z"/>
                       </svg>
                     </button>
-                    <div className="absolute bottom-full left-1/2 transform -translate-x-1/2 mb-2 px-2 py-1 bg-black/80 text-white text-xs rounded whitespace-nowrap opacity-0 group-hover:opacity-100 transition-opacity pointer-events-none">
-                      Vui lòng đồng bộ với máy chủ
+                  ) : (
+                    <div className="relative group">
+                      <button
+                        disabled
+                        className="w-10 h-10 bg-gray-500/20 rounded-full flex items-center justify-center text-gray-400 cursor-not-allowed opacity-50"
+                        title="Tua tới đã bị vô hiệu hóa"
+                      >
+                        <svg className="w-4 h-4" fill="currentColor" viewBox="0 0 20 20">
+                          <path d="M4.555 5.168A1 1 0 003 6v8a1 1 0 001.555.832L10 11.202V14a1 1 0 001.555.832l6-4a1 1 0 000-1.664l-6-4A1 1 0 0010 6v2.798L4.555 5.168z"/>
+                        </svg>
+                      </button>
+                      <div className="absolute bottom-full left-1/2 transform -translate-x-1/2 mb-2 px-2 py-1 bg-black/80 text-white text-xs rounded whitespace-nowrap opacity-0 group-hover:opacity-100 transition-opacity pointer-events-none">
+                        Khán giả không thể tua
+                      </div>
                     </div>
-                  </div>
+                  )}
 
                   {/* Volume Control */}
                   <div className="flex items-center space-x-2">
