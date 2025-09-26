@@ -7,6 +7,9 @@ import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 import org.springframework.security.crypto.bcrypt.BCrypt;
 
+import demo.demo.services.movie.MovieService;
+import demo.demo.dto.movie.MovieResponse;
+
 import java.util.*;
 import java.util.UUID;
 import java.util.concurrent.ConcurrentHashMap;
@@ -15,6 +18,7 @@ import java.util.concurrent.ConcurrentHashMap;
 public class WatchRoomService {
 
     private final JdbcTemplate jdbcTemplate;
+    private final MovieService movieService;
 
     // Track active users in each room
     private Map<String, Set<String>> roomUsers = new ConcurrentHashMap<>();
@@ -23,8 +27,9 @@ public class WatchRoomService {
     private Map<String, Long> lastUpdateTime = new ConcurrentHashMap<>();
     private static final long MIN_UPDATE_INTERVAL = 1000; // 1 second minimum between updates
 
-    public WatchRoomService(JdbcTemplate jdbcTemplate) {
+    public WatchRoomService(JdbcTemplate jdbcTemplate, MovieService movieService) {
         this.jdbcTemplate = jdbcTemplate;
+        this.movieService = movieService;
     }
 
     public JdbcTemplate getJdbcTemplate() {
@@ -132,7 +137,16 @@ public class WatchRoomService {
             System.out.println("🚀 Creating room with schedule: " + roomId + ", name: " + name + ", movieId: " + movieId);
             System.out.println("👤 User ID for room creation: " + createdBy);
 
-            // Use the provided createdBy UUID directly (already generated from username in controller)
+            // Validate movie ID if provided
+            UUID movieUUID = null;
+            if (movieId != null && !movieId.isEmpty() && !movieId.equals("null")) {
+                Map<String, Object> movieDetails = validateAndGetMovieDetails(movieId);
+                if (movieDetails == null) {
+                    throw new IllegalArgumentException("Invalid movie ID: " + movieId);
+                }
+                movieUUID = UUID.fromString(movieId);
+                System.out.println("✅ Valid movie found: " + movieDetails.get("title"));
+            }
 
             String sql = """
                 INSERT INTO dbo.watch_rooms (room_id, name, created_by, movie_id, scheduled_start_time, broadcast_start_time_type,
@@ -147,7 +161,7 @@ public class WatchRoomService {
                 UUID.fromString(roomId),
                 name,
                 createdBy,
-                movieId != null && !movieId.isEmpty() && !movieId.equals("null") && isValidUUID(movieId) ? UUID.fromString(movieId) : null,
+                movieUUID,
                 scheduledStartTime,
                 broadcastStartTimeType != null ? broadcastStartTimeType : "now",
                 scheduledStartTime != null ? "scheduled" : "live",
@@ -179,6 +193,71 @@ public class WatchRoomService {
             return rooms.get(0);
         } catch (Exception e) {
             System.err.println("Error getting room: " + e.getMessage());
+            return null;
+        }
+    }
+
+    /**
+     * Get movie details for room (including HLS URL for video playback)
+     */
+    public Map<String, Object> getMovieDetailsForRoom(String roomId) {
+        try {
+            Map<String, Object> room = getRoom(roomId);
+            if (room == null) {
+                System.out.println("❌ Room not found: " + roomId);
+                return null;
+            }
+
+            String movieId = (String) room.get("movie_id");
+            if (movieId == null || movieId.trim().isEmpty()) {
+                System.out.println("❌ No movie associated with room: " + roomId);
+                return null;
+            }
+
+            return validateAndGetMovieDetails(movieId);
+        } catch (Exception e) {
+            System.err.println("❌ Error getting movie details for room " + roomId + ": " + e.getMessage());
+            e.printStackTrace();
+            return null;
+        }
+    }
+
+    /**
+     * Validate and get movie details from database
+     */
+    public Map<String, Object> validateAndGetMovieDetails(String movieId) {
+        try {
+            if (movieId == null || movieId.trim().isEmpty() || !isValidUUID(movieId)) {
+                System.out.println("❌ Invalid movie ID: " + movieId);
+                return null;
+            }
+
+            System.out.println("🔍 Validating movie ID: " + movieId);
+            MovieResponse movie = movieService.getMovieById(UUID.fromString(movieId));
+
+            if (movie == null) {
+                System.out.println("❌ Movie not found with ID: " + movieId);
+                return null;
+            }
+
+            System.out.println("✅ Movie found: " + movie.title);
+
+            Map<String, Object> movieDetails = new HashMap<>();
+            movieDetails.put("movie_id", movie.movieId);
+            movieDetails.put("title", movie.title);
+            movieDetails.put("alias_title", movie.aliasTitle);
+            movieDetails.put("description", movie.description);
+            movieDetails.put("poster_url", movie.posterUrl);
+            movieDetails.put("banner_url", movie.bannerUrl);
+            movieDetails.put("video_id", movie.videoId);
+            movieDetails.put("hls_url", movie.hlsUrl);
+            movieDetails.put("video_status", movie.videoStatus);
+            movieDetails.put("is_series", movie.isSeries);
+
+            return movieDetails;
+        } catch (Exception e) {
+            System.err.println("❌ Error validating movie " + movieId + ": " + e.getMessage());
+            e.printStackTrace();
             return null;
         }
     }
