@@ -20,14 +20,14 @@
 
 2. **Watch Together**
    - Real-time room creation and management
-   - Synchronized playback across users
+   - Individual user control over video playback (no forced synchronization)
    - WebSocket-based communication with STOMP protocol
    - Room administration features
-   - Broadcast scheduling with server-managed time synchronization
+   - Broadcast scheduling with time coordination (available but not enforced)
    - Scheduled start times with countdown displays
    - Broadcast status management (scheduled, live, completed)
-   - Video player control restrictions in broadcast mode (pause/resume only)
-   - Real-time state synchronization across all connected clients
+   - Full video player controls (play/pause/seek) for all users
+   - Simplified state management without sync complexity
 
 3. **Content Management**
    - Movie catalog with genres, ratings, and metadata
@@ -52,12 +52,13 @@
 
 ## Success Criteria
 - Seamless video streaming experience with adaptive quality
-- Real-time synchronization in watch-together mode
-- Broadcast scheduling functionality with server-managed time coordination
-- Intuitive user interface with cinematic design and broadcast time selection
+- Smooth collaborative watching experience without performance issues
+- Individual user control over video playback in watch-together mode
+- Broadcast scheduling functionality with flexible time coordination options
+- Intuitive user interface with cinematic design
 - Scalable architecture for future growth
 - Mobile-responsive design with modern UI patterns
-- Complete room management with broadcast scheduling capabilities
+- Complete room management with user-friendly controls
 
 ## Technology Stack
 - **Frontend**: Next.js 15, React 19, TypeScript, Tailwind CSS

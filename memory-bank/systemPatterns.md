@@ -51,9 +51,10 @@ Frontend (Next.js) ←→ Backend (Spring Boot) ←→ Database (SQL Server)
 - **WebSocket**: STOMP protocol for watch-together features
 - **Event Broadcasting**: Real-time updates to connected clients
 - **Room Management**: User sessions and permissions
-- **Broadcast Synchronization**: Server-managed time coordination for scheduled broadcasts
-- **State Synchronization**: Real-time playback state updates across all connected clients
-- **Control Restrictions**: Disabled seeking in broadcast mode to maintain synchronization
+- **Broadcast Synchronization**: Server-managed time coordination for scheduled broadcasts (available but not enforced)
+- **User Freedom Model**: Individual user control over video playback without forced synchronization
+- **State Management**: Simplified WebSocket message handling without sync complexity
+- **Video Player Liberation**: Re-enabled seeking functionality and native video controls
 
 ## Video Processing Pipeline
 1. **Upload**: Original video files stored locally (D:/videos_demo)
@@ -125,14 +126,14 @@ Frontend (Next.js) ←→ Backend (Spring Boot) ←→ Database (SQL Server)
 - **Column Addition Pattern**: ALTER TABLE ADD COLUMN with appropriate defaults and constraints
 
 ## Broadcast Scheduling Patterns
-- **Server-Managed Time Architecture**: Centralized time calculation for synchronized playback across multiple clients
+- **Server-Managed Time Architecture**: Centralized time calculation for synchronized playback across multiple clients (available but not enforced)
 - **Broadcast Status Management**: Lifecycle management with "scheduled", "live", and "completed" states
 - **Time Calculation Algorithm**: Server-side calculation of current playback position based on scheduled start time and playback state
-- **Control Restriction Pattern**: Disabled seeking in broadcast mode, allowing only pause/resume functionality
-- **WebSocket State Synchronization**: Real-time broadcast state updates to all connected clients
-- **Frontend-Backend Integration**: Seamless integration between broadcast time selection UI and backend scheduling APIs
-- **Room Management Enhancement**: Complete CRUD operations with broadcast scheduling capabilities
-- **Time Synchronization Interval**: Periodic server time checks to maintain playback synchronization
+- **User Freedom Pattern**: Individual control over video playback without forced synchronization
+- **Simplified State Management**: Removal of complex sync state variables and periodic polling
+- **WebSocket Streamlining**: Simplified message handling without sync-related complexity
+- **Performance Optimization**: Reduced logging and eliminated spammy sync messages
+- **Video Player Liberation**: Re-enabled seeking functionality and native video controls
 - **Broadcast Time Selection UI**: Intuitive user interface for selecting broadcast start times with countdown display
 - **Status Indicator Pattern**: Visual indicators showing broadcast status and time remaining until start
 

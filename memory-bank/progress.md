@@ -136,7 +136,6 @@
 - ✅ **Backend-Frontend Integration Fixes**: Resolved multiple integration issues including CORS, type casting, and database constraints for robust room creation
 
 ## In Progress 🔄
-- ✅ **Broadcast Scheduling Implementation**: RESOLVED - Complete broadcast scheduling functionality for watch-together rooms with server-managed time synchronization
 - ✅ **Video Player Testing**: RESOLVED - Quality and speed selection button display updates now work correctly
 - ✅ **HLS Adaptive Quality Switching**: RESOLVED - Quality selection now changes actual video quality (360p, 480p, 720p, 1080p)
 - ✅ **Windows Path Configuration**: RESOLVED - Updated .env file media paths and ffmpeg path for Windows environment
@@ -171,6 +170,7 @@
 - **Movie Import/Export**: Bulk movie data management
 
 ## Known Issues 🐛
+- ✅ **Sync Message Spamming**: **RESOLVED** - Complete removal of sync functionality eliminated spammy "🔄 Đã đồng bộ đến thời gian hiện tại (0:00)" messages causing lag
 - ✅ **Database Type Casting Issues**: **RESOLVED** - Fixed ClassCastException between Short (TINYINT) and Integer types in BroadcastSchedulerService and related services
 - ✅ **Unique Key Constraint Violations**: **RESOLVED** - Fixed invite_code UNIQUE KEY constraint by generating unique 8-character codes for all rooms
 - ✅ **CORS Configuration Issues**: **RESOLVED** - Added @CrossOrigin annotation to RoomController to enable frontend API calls
@@ -216,7 +216,7 @@
 9. ✅ Implement genre-movie relationship management in admin interface
 10. ✅ **Memory Bank Documentation**: Comprehensive documentation system with cursor rules integration
 11. ✅ **Environment Configuration Management**: Implement .env file support for flexible directory URL management
-12. ✅ **Broadcast Scheduling Implementation**: Complete broadcast scheduling functionality for watch-together rooms with server-managed time synchronization
+12. ✅ **Sync Functionality Removal**: Complete removal of sync functionality from watch-together rooms to eliminate performance issues and improve user experience
 13. Add proper user session management (JWT/sessions)
 13. Add user profile management
 14. Add logout functionality

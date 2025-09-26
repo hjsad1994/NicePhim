@@ -55,17 +55,108 @@ function RoomContent() {
         console.log('⏳ Waiting for currentUser to be set...');
         return;
       }
+      let room: RoomData | null = null;
       try {
         setIsLoading(true);
 
-        // First, try to get room data from localStorage
-        let rooms: RoomData[] = [];
+        // First, try to get room data from backend API
         try {
-          rooms = JSON.parse(localStorage.getItem('watchTogetherRooms') || '[]');
-        } catch (error) {
-          console.error('Error reading rooms from localStorage:', error);
+          console.log('🔄 Fetching room data from backend API:', roomId);
+          const roomResponse = await Promise.race([
+            fetch(`http://localhost:8080/api/rooms/${roomId}`),
+            new Promise((_, reject) =>
+              setTimeout(() => reject(new Error('API timeout')), 5000)
+            )
+          ]) as Response;
+
+          if (roomResponse.ok) {
+            const backendRoomData = await roomResponse.json();
+            console.log('✅ Got room data from backend:', backendRoomData);
+
+            // If room has movie_id, fetch the movie details
+            if (backendRoomData.movie_id) {
+              console.log('🎬 Room has movie_id, fetching movie details:', backendRoomData.movie_id);
+              try {
+                const movieResponse = await Promise.race([
+                  fetch(`http://localhost:8080/api/admin/movies/${backendRoomData.movie_id}`),
+                  new Promise((_, reject) =>
+                    setTimeout(() => reject(new Error('Movie API timeout')), 5000)
+                  )
+                ]) as Response;
+
+                if (movieResponse.ok) {
+                  const movieData = await movieResponse.json();
+                  console.log('✅ Got movie data:', movieData);
+
+                  if (movieData.success && movieData.data) {
+                    // Create room data with the fetched movie
+                    const movie = movieData.data;
+                    room = {
+                      id: backendRoomData.room_id,
+                      name: backendRoomData.name,
+                      movie: {
+                        id: movie.movieId,
+                        title: movie.title,
+                        slug: movie.aliasTitle || movie.title.toLowerCase().split(' ').join('-'),
+                        description: movie.description || '',
+                        poster: movie.posterUrl || '/placeholder-movie.jpg',
+                        banner: movie.bannerUrl,
+                        releaseYear: movie.releaseYear,
+                        duration: 120,
+                        imdbRating: movie.imdbRating,
+                        genres: (movie.genres || []).map((genre: any) => ({
+                          id: genre.genreId,
+                          name: genre.name,
+                          slug: genre.name.toLowerCase().split(' ').join('-')
+                        })),
+                        country: 'Vietnam',
+                        status: 'completed' as const,
+                        quality: 'HD',
+                        language: 'vi',
+                        createdAt: movie.createdAt,
+                        updatedAt: movie.updatedAt || movie.createdAt,
+                        viewCount: 0,
+                        likeCount: 0,
+                        isHot: false,
+                        isFeatured: false,
+                        videoId: movie.videoId,
+                        hlsUrl: movie.hlsUrl,
+                        videoStatus: movie.videoStatus
+                      },
+                      poster: movie.posterUrl || '/placeholder-movie.jpg',
+                      hlsUrl: movie.hlsUrl ?
+                        (movie.hlsUrl.startsWith('http') ? movie.hlsUrl : `http://localhost:8080${movie.hlsUrl}`) :
+                        (movie.videoId ? `http://localhost:8080/videos/${movie.videoId}/master.m3u8` :
+                        `http://localhost:8080/videos/be36685a-0dcb-45bf-8b63-e1ca0157be98/master.m3u8`),
+                      autoStart: false,
+                      isPrivate: backendRoomData.is_private || false,
+                      createdBy: backendRoomData.created_by || 'Unknown',
+                      createdAt: backendRoomData.created_at || new Date().toISOString()
+                    };
+
+                    console.log('🎬 Created room with backend movie data:', room.movie.title);
+                  }
+                }
+              } catch (movieError) {
+                console.error('❌ Error fetching movie data:', movieError);
+              }
+            }
+          }
+        } catch (apiError) {
+          console.error('❌ Error fetching room from backend:', apiError);
         }
-        let room = rooms.find((r: RoomData) => r.id === roomId);
+
+        // If backend fetch failed or no movie found, fall back to localStorage
+        if (!room) {
+          console.log('🔄 Falling back to localStorage...');
+          let rooms: RoomData[] = [];
+          try {
+            rooms = JSON.parse(localStorage.getItem('watchTogetherRooms') || '[]');
+          } catch (error) {
+            console.error('Error reading rooms from localStorage:', error);
+          }
+          room = rooms.find((r: RoomData) => r.id === roomId);
+        }
 
         if (!room) {
           // Check if this room was deleted by checking a list of deleted rooms

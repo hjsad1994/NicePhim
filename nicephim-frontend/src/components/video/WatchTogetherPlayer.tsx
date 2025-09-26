@@ -40,12 +40,13 @@ interface ChatMessage {
 }
 
 interface ControlMessage {
-  type: 'control' | 'sync_request' | 'sync_response';
-  action: 'play' | 'pause' | 'seek' | 'sync';
+  type: 'control' | 'global_control' | 'error';
+  action: 'play' | 'pause' | 'seek';
   time: number;
   username: string;
   timestamp: number;
-  targetUsername?: string; // For sync responses
+  error?: string; // For error messages
+  currentPosition?: number; // For global controls
 }
 
 const WatchTogetherPlayer: React.FC<WatchTogetherPlayerProps> = ({
@@ -81,14 +82,10 @@ const WatchTogetherPlayer: React.FC<WatchTogetherPlayerProps> = ({
   const [stompClient, setStompClient] = useState<Client | null>(null);
   const [isConnected, setIsConnected] = useState(false);
 
-  // Sync state
-  const [creatorCurrentTime, setCreatorCurrentTime] = useState(0);
-  const [lastSyncTime, setLastSyncTime] = useState(0);
-
+  
   // Broadcast mode state
   const [serverTime, setServerTime] = useState(0);
   const [broadcastActive, setBroadcastActive] = useState(false);
-  const [syncInterval, setSyncInterval] = useState<NodeJS.Timeout | null>(null);
 
   // Chat state
   const [chatMessages, setChatMessages] = useState<ChatMessage[]>([]);
@@ -123,7 +120,7 @@ const WatchTogetherPlayer: React.FC<WatchTogetherPlayerProps> = ({
         backBufferLength: 90,
         maxBufferLength: 30,
         maxMaxBufferLength: 600,
-        liveSyncDurationCount: 3,
+        liveSyncDurationCount: 0,
         liveMaxLatencyDurationCount: 5,
         // Add these for better browser compatibility
         debug: true,
@@ -222,72 +219,15 @@ const WatchTogetherPlayer: React.FC<WatchTogetherPlayerProps> = ({
     };
   }, [hlsUrl]);
 
-  // Initialize broadcast mode sync
-  useEffect(() => {
-    if (broadcastMode) {
-      console.log('📺 Broadcast mode enabled, starting sync interval...');
+  // Utility function to format time
+  const formatTime = (time: number) => {
+    const minutes = Math.floor(time / 60);
+    const seconds = Math.floor(time % 60);
+    return `${minutes}:${seconds.toString().padStart(2, '0')}`;
+  };
 
-      // Check if broadcast should be active
-      const checkBroadcastStatus = () => {
-        if (broadcastStartTime && broadcastStartTime <= Date.now()) {
-          setBroadcastActive(true);
-        } else {
-          setBroadcastActive(false);
-        }
-      };
-
-      // Initial check
-      checkBroadcastStatus();
-
-      // Set up periodic sync with server
-      const interval = setInterval(async () => {
-        try {
-          const response = await fetch(`http://localhost:8080/api/rooms/${roomId}/server-time`);
-          if (response.ok) {
-            const data = await response.json();
-            setServerTime(data.serverTime);
-
-            // Sync video to server time if broadcast is active
-            if (broadcastActive && data.broadcastStatus === 'live') {
-              syncToServerTime(data.serverTime);
-            }
-          }
-        } catch (error) {
-          console.error('Error fetching server time:', error);
-        }
-
-        checkBroadcastStatus();
-      }, 5000); // Sync every 5 seconds
-
-      setSyncInterval(interval);
-
-      return () => {
-        if (interval) clearInterval(interval);
-      };
-    }
-  }, [broadcastMode, broadcastStartTime, roomId, broadcastActive]);
-
-  // Sync video to server time
-  const syncToServerTime = useCallback((targetTime: number) => {
-    const video = videoRef.current;
-    if (!video) return;
-
-    console.log('🔄 Syncing to server time:', targetTime);
-
-    if (Math.abs(video.currentTime - targetTime / 1000) > 1) {
-      // Only seek if difference is more than 1 second
-      video.currentTime = targetTime / 1000;
-
-      // Add sync message to chat
-      setChatMessages(prev => [...prev, {
-        username: 'system',
-        message: `🔄 Đã đồng bộ với thời gian máy chủ`,
-        timestamp: Date.now(),
-        type: 'system'
-      }]);
-    }
-  }, []);
-
+  
+  
   // Initialize WebSocket connection
   useEffect(() => {
     console.log('🔌 Initializing WebSocket connection...');
@@ -316,9 +256,12 @@ const WatchTogetherPlayer: React.FC<WatchTogetherPlayerProps> = ({
 
       // Subscribe to room messages
       try {
-        const subscription = client.subscribe(`/topic/room.${roomId}`, (message) => {
-          console.log('📨 Received message from room topic');
+        const topic = `/topic/room.${roomId}`;
+        console.log('📨 Subscribing to topic:', topic);
+        const subscription = client.subscribe(topic, (message) => {
+          console.log('📨 Received message from room topic:', topic);
           console.log('📋 Message body:', message.body);
+          console.log('📋 Message headers:', message.headers);
           try {
             const data = JSON.parse(message.body);
             console.log('📋 Parsed message data:', data);
@@ -329,6 +272,7 @@ const WatchTogetherPlayer: React.FC<WatchTogetherPlayerProps> = ({
           }
         });
         console.log('✅ Subscription successful:', subscription);
+        console.log('✅ Subscription ID:', subscription.id);
       } catch (error) {
         console.error('❌ Error subscribing to room topic:', error);
       }
@@ -388,193 +332,42 @@ const WatchTogetherPlayer: React.FC<WatchTogetherPlayerProps> = ({
 
     switch(messageData.type) {
       case 'control':
+      case 'global_control':
         console.log('🎮 Control message received:', messageData);
-        // Process all control messages including sync actions
+        // Basic control message handling
         const controlData = messageData as ControlMessage;
         console.log('🎮 Control action:', controlData.action);
-        if (controlData.action === 'sync' || controlData.action === 'seek' || controlData.action === 'play' || controlData.action === 'pause') {
-          console.log('🔄 Control action received, processing...');
-          handleControlSync(controlData);
-        }
         break;
-      case 'sync_request':
-        console.log('📤 Sync request received:', messageData);
-        console.log('📋 Current user is room creator:', currentUser === roomCreator);
-        console.log('📋 Requesting user:', (messageData as ControlMessage).username);
-        console.log('📋 Room creator:', roomCreator);
-        console.log('📋 Room creator exists:', !!roomCreator);
-        console.log('📋 STOMP client connected:', stompClient?.connected);
-        console.log('📋 Connection state:', isConnected);
-
-        // Only room creator responds to sync requests
-        if (roomCreator && currentUser === roomCreator) {
-          console.log('✅ Current user is room creator, sending sync response');
-          const video = videoRef.current;
-          if (video && video.readyState >= 2) {
-            console.log('🎥 Video current time:', video.currentTime);
-
-            // Send current time back to the requesting user
-            // More robust connection check - try to send even if state is uncertain
-            const canSend = stompClient && (stompClient.connected || stompClient._connected);
-            console.log('🔌 Connection check:', {
-              stompClient: !!stompClient,
-              stompClientConnected: stompClient?.connected,
-              stompClientConnected_alt: stompClient?._connected,
-              isConnectedState: isConnected
-            });
-
-            if (canSend) {
-              const syncResponse = {
-                type: 'sync_response',
-                action: 'sync',
-                time: video.currentTime,
-                username: roomCreator,
-                timestamp: Date.now(),
-                targetUsername: (messageData as ControlMessage).username
-              };
-
-              console.log('📤 Sending sync response:', syncResponse);
-              console.log('📤 Destination:', `/app/room/${roomId}/control`);
-
-              try {
-                stompClient.publish({
-                  destination: `/app/room/${roomId}/control`,
-                  body: JSON.stringify(syncResponse)
-                });
-                console.log('✅ Sync response sent successfully');
-              } catch (error) {
-                console.error('❌ Error sending sync response:', error);
-              }
-            } else {
-              console.error('❌ Cannot send sync response - WebSocket connection issue');
-              console.error('📋 Connection details:', {
-                stompClient: !!stompClient,
-                stompClientConnected: stompClient?.connected,
-                stompClientConnected_alt: stompClient?._connected,
-                isConnectedState: isConnected,
-                roomCreator,
-                currentUser,
-                currentUserIsCreator: currentUser === roomCreator
-              });
-
-              // Try to send a chat message to inform users about the sync issue
-              if (stompClient && (stompClient.connected || stompClient._connected)) {
-                try {
-                  stompClient.publish({
-                    destination: `/app/room/${roomId}/chat`,
-                    body: JSON.stringify({
-                      type: 'chat',
-                      message: `❌ ${roomCreator} đang gặp sự cố kết nối, không thể đồng bộ video`,
-                      username: 'System',
-                      timestamp: Date.now()
-                    })
-                  });
-                } catch (chatError) {
-                  console.error('❌ Could not send error chat message:', chatError);
-                }
-              }
-            }
-          } else {
-            console.error('❌ Video element not found or not ready');
-            console.log('📋 videoRef.current:', videoRef.current);
-            console.log('📋 video.readyState:', video?.readyState);
-
-            // If video is not ready, wait for it to load and then send response
-            if (video) {
-              const onCanPlay = () => {
-                console.log('🎥 Video is now ready, sending delayed sync response');
-                // Use the same robust connection check
-                const canSend = stompClient && (stompClient.connected || stompClient._connected);
-                if (canSend) {
-                  const syncResponse = {
-                    type: 'sync_response',
-                    action: 'sync',
-                    time: video.currentTime,
-                    username: roomCreator,
-                    timestamp: Date.now(),
-                    targetUsername: (messageData as ControlMessage).username
-                  };
-
-                  try {
-                    stompClient.publish({
-                      destination: `/app/room/${roomId}/control`,
-                      body: JSON.stringify(syncResponse)
-                    });
-                    console.log('✅ Delayed sync response sent successfully');
-                  } catch (error) {
-                    console.error('❌ Error sending delayed sync response:', error);
-                  }
-                }
-                video.removeEventListener('canplay', onCanPlay);
-              };
-
-              video.addEventListener('canplay', onCanPlay, { once: true });
-
-              // If video is not loading, start loading it
-              if (video.readyState === 0) {
-                video.load();
-              }
-            } else {
-              // Send error response if video element doesn't exist
-              if (stompClient && stompClient.connected && isConnected) {
-                const errorResponse = {
-                  type: 'sync_response',
-                  action: 'sync',
-                  time: 0,
-                  username: roomCreator,
-                  timestamp: Date.now(),
-                  targetUsername: (messageData as ControlMessage).username,
-                  error: 'Video not available'
-                };
-
-                try {
-                  stompClient.publish({
-                    destination: `/app/room/${roomId}/control`,
-                    body: JSON.stringify(errorResponse)
-                  });
-                  console.log('📤 Error response sent');
-                } catch (error) {
-                  console.error('❌ Error sending error response:', error);
-                }
-              }
-            }
-          }
-        } else {
-          console.log('❌ Current user is not room creator, ignoring sync request');
-        }
+      case 'local_control':
+        console.log('🎮 Local control message received:', messageData);
+        // Local control messages are just for information, no action needed
         break;
-      case 'sync_response':
-        console.log('📥 Sync response received:', messageData);
-        const responseData = messageData as ControlMessage;
-        console.log('Target username:', responseData.targetUsername);
-        console.log('Current user:', currentUser);
-
-        // Only process sync responses meant for current user
-        if (responseData.targetUsername === currentUser) {
-          if (responseData.error) {
-            console.log('❌ Sync response contains error:', responseData.error);
-            setChatMessages(prev => [...prev, {
-              username: 'system',
-              message: `❌ Lỗi đồng bộ: ${responseData.error}`,
-              timestamp: Date.now(),
-              type: 'system'
-            }]);
-          } else {
-            console.log('✅ Sync response is for current user, syncing to time:', responseData.time);
-            handleControlSync(responseData);
-          }
-        } else {
-          console.log('❌ Sync response is for another user, ignoring');
-        }
+      case 'error':
+        console.log('❌ Error message received:', messageData);
+        setChatMessages(prev => [...prev, {
+          username: 'system',
+          message: `❌ ${(messageData as ControlMessage).error}`,
+          timestamp: Date.now(),
+          type: 'system'
+        }]);
         break;
       case 'chat':
-        console.log('💬 Chat message received');
-        setChatMessages(prev => [...prev, {
-          username: (messageData as ChatMessage).username || 'Anonymous',
+        console.log('💬 Chat message received:', messageData);
+        console.log('💬 Chat message details:', {
+          username: (messageData as ChatMessage).username,
           message: (messageData as ChatMessage).message,
-          timestamp: (messageData as ChatMessage).timestamp,
-          type: 'chat'
-        }]);
+          timestamp: (messageData as ChatMessage).timestamp
+        });
+        setChatMessages(prev => {
+          const newMessages = [...prev, {
+            username: (messageData as ChatMessage).username || 'Anonymous',
+            message: (messageData as ChatMessage).message,
+            timestamp: (messageData as ChatMessage).timestamp,
+            type: 'chat'
+          }];
+          console.log('💬 Updated chat messages:', newMessages);
+          return newMessages;
+        });
         break;
       case 'user_join':
         console.log('👋 User join message received');
@@ -590,151 +383,16 @@ const WatchTogetherPlayer: React.FC<WatchTogetherPlayerProps> = ({
     }
   }, [currentUser, stompClient, isConnected, roomId, roomCreator]);
 
-  // Utility function to format time
-  const formatTime = (time: number) => {
-    const minutes = Math.floor(time / 60);
-    const seconds = Math.floor(time % 60);
-    return `${minutes}:${seconds.toString().padStart(2, '0')}`;
-  };
-
-  const handleControlSync = useCallback((data: ControlMessage) => {
-    console.log('🎯 handleControlSync called with:', data);
-    const { action, time, timestamp } = data;
-    const now = Date.now();
-    const drift = (now - timestamp) / 1000; // seconds
-    const targetTime = Math.max(0, time + drift); // Ensure target time is not negative
-
-    console.log('🎯 Sync details:', {
-      action,
-      receivedTime: time,
-      timestamp,
-      now,
-      drift: `${drift.toFixed(3)}s`,
-      targetTime: `${targetTime.toFixed(3)}s`
-    });
-
-    const video = videoRef.current;
-    if (!video) {
-      console.error('❌ Video element not found in handleControlSync');
-      setChatMessages(prev => [...prev, {
-        username: 'system',
-        message: '❌ Lỗi đồng bộ: Video chưa được tải',
-        timestamp: Date.now(),
-        type: 'system'
-      }]);
-      return;
-    }
-
-    console.log('🎥 Current video time before sync:', video.currentTime);
-
-    // Ensure video is ready before seeking
-    if (video.readyState < 2) {
-      console.log('⏳ Video not ready, waiting for canplay event...');
-
-      // Set up event listener for when video can play
-      const onCanPlay = () => {
-        console.log('🎥 Video can play, now syncing to:', targetTime);
-        performSyncAction(video, action, targetTime);
-        video.removeEventListener('canplay', onCanPlay);
-      };
-
-      video.addEventListener('canplay', onCanPlay, { once: true });
-
-      // Also try to load the video if it's not loading
-      if (video.readyState === 0) {
-        video.load();
-      }
-    } else {
-      // Video is ready, sync immediately
-      performSyncAction(video, action, targetTime);
-    }
-
-    console.log('🎥 Video time after sync command:', video.currentTime);
-  }, [formatTime]);
-
-  // Helper function to perform sync actions
-  const performSyncAction = (video: HTMLVideoElement, action: string, targetTime: number) => {
-    console.log('🎯 Performing sync action:', action, 'to time:', targetTime);
-
-    switch(action) {
-      case 'play':
-        console.log('▶️ Sync: Play action');
-        video.currentTime = targetTime;
-        const playPromise = video.play();
-        if (playPromise !== undefined) {
-          playPromise.catch(err => console.error('❌ Error playing video:', err));
-        }
-        break;
-      case 'pause':
-        console.log('⏸️ Sync: Pause action');
-        video.currentTime = targetTime;
-        video.pause();
-        break;
-      case 'seek':
-      case 'sync':
-        console.log('🎯 Sync: Seek/Seek action to time:', targetTime);
-        const oldTime = video.currentTime;
-        video.currentTime = targetTime;
-
-        // Verify the sync worked after a short delay
-        const verifySync = () => {
-          const actualTime = video.currentTime;
-          const timeDiff = Math.abs(actualTime - targetTime);
-
-          console.log(`🎯 Sync verification - Target: ${targetTime.toFixed(3)}s, Actual: ${actualTime.toFixed(3)}s, Diff: ${timeDiff.toFixed(3)}s`);
-
-          if (timeDiff > 0.5) {
-            console.log('🔄 Sync not precise enough, retrying...');
-            video.currentTime = targetTime;
-
-            // Second verification
-            setTimeout(() => {
-              const secondActualTime = video.currentTime;
-              const secondTimeDiff = Math.abs(secondActualTime - targetTime);
-              console.log(`🎯 Second sync verification - Target: ${targetTime.toFixed(3)}s, Actual: ${secondActualTime.toFixed(3)}s, Diff: ${secondTimeDiff.toFixed(3)}s`);
-
-              if (secondTimeDiff > 1.0) {
-                console.log('⚠️ Sync still not perfect, but accepting best effort');
-              }
-
-              // Add success message to chat
-              setChatMessages(prev => [...prev, {
-                username: 'system',
-                message: `✅ Đã đồng bộ video đến ${formatTime(secondActualTime)}`,
-                timestamp: Date.now(),
-                type: 'system'
-              }]);
-            }, 200);
-          } else {
-            // Add success message to chat
-            setChatMessages(prev => [...prev, {
-              username: 'system',
-              message: `✅ Đã đồng bộ video đến ${formatTime(actualTime)}`,
-              timestamp: Date.now(),
-              type: 'system'
-            }]);
-          }
-        };
-
-        // Use seeked event if available, otherwise use timeout
-        if (video.readyState >= 2) {
-          setTimeout(verifySync, 150);
-        } else {
-          video.addEventListener('seeked', verifySync, { once: true });
-        }
-        break;
-      default:
-        console.log('❓ Unknown sync action:', action);
-    }
-  };
-
+  
+  
   // Helper function to check WebSocket connection reliably
   const isWebSocketConnected = useCallback(() => {
-    return stompClient && (stompClient.connected || stompClient._connected);
+    return stompClient && stompClient.connected;
   }, [stompClient]);
 
   const sendControl = useCallback((action: 'play' | 'pause' | 'seek', time: number) => {
-    if (isWebSocketConnected() && isHost) {
+    if (isWebSocketConnected()) {
+      // All users can send control messages, server will validate permissions
       stompClient.publish({
         destination: `/app/room/${roomId}/control`,
         body: JSON.stringify({
@@ -746,19 +404,35 @@ const WatchTogetherPlayer: React.FC<WatchTogetherPlayerProps> = ({
         })
       });
     }
-  }, [stompClient, isConnected, isHost, roomId, currentUser]);
+  }, [stompClient, isConnected, roomId, currentUser]);
 
   const sendChat = useCallback((message: string) => {
+    console.log('💬 sendChat called:', {
+      message,
+      currentUser,
+      roomId,
+      connected: isWebSocketConnected(),
+      stompClientExists: !!stompClient,
+      stompClientConnected: stompClient?.connected
+    });
+
     if (isWebSocketConnected()) {
+      const chatMessage = {
+        type: 'chat',
+        message,
+        username: currentUser,
+        timestamp: Date.now()
+      };
+      console.log('💬 Sending chat message:', chatMessage);
+      console.log('💬 Destination:', `/app/room/${roomId}/chat`);
+
       stompClient.publish({
         destination: `/app/room/${roomId}/chat`,
-        body: JSON.stringify({
-          type: 'chat',
-          message,
-          username: currentUser,
-          timestamp: Date.now()
-        })
+        body: JSON.stringify(chatMessage)
       });
+      console.log('💬 Chat message sent successfully');
+    } else {
+      console.error('💬 Cannot send chat - WebSocket not connected');
     }
   }, [stompClient, isConnected, roomId, currentUser]);
 
@@ -785,17 +459,13 @@ const WatchTogetherPlayer: React.FC<WatchTogetherPlayerProps> = ({
     }
   }, [roomId, currentUser]);
 
-  // Video event handlers - NO automatic sync (user equality model)
+  // Video event handlers
   useEffect(() => {
     const video = videoRef.current;
     if (!video) return;
 
     const handleTimeUpdate = () => {
       setCurrentTime(video.currentTime);
-      // Update creator time if current user is room creator
-      if (currentUser === roomCreator) {
-        setCreatorCurrentTime(video.currentTime);
-      }
     };
     const handleDurationChange = () => setDuration(video.duration);
     const handlePlay = () => setIsPlaying(true);
@@ -841,143 +511,34 @@ const WatchTogetherPlayer: React.FC<WatchTogetherPlayerProps> = ({
     const video = videoRef.current;
     if (!video) return;
 
+    // Just control local video, don't broadcast to others
     if (video.paused) {
-      video.play();
+      video.play().catch(err => console.error('Error playing video:', err));
     } else {
       video.pause();
     }
   };
 
+  
   const handleSeek = (time: number) => {
-    if (broadcastMode) {
-      // In broadcast mode, seeking is disabled for all users
-      setChatMessages(prev => [...prev, {
-        username: 'system',
-        message: '❌ Tua video bị vô hiệu hóa trong chế độ phát trực tiếp',
-        timestamp: Date.now(),
-        type: 'system'
-      }]);
-      return;
-    }
-
     const video = videoRef.current;
     if (!video) return;
     video.currentTime = time;
   };
 
   const seekForward = () => {
-    if (broadcastMode) {
-      // In broadcast mode, seeking is disabled for all users
-      setChatMessages(prev => [...prev, {
-        username: 'system',
-        message: '❌ Tua video bị vô hiệu hóa trong chế độ phát trực tiếp',
-        timestamp: Date.now(),
-        type: 'system'
-      }]);
-      return;
-    }
-
     const video = videoRef.current;
     if (!video) return;
     video.currentTime = Math.min(video.currentTime + 10, video.duration);
   };
 
   const seekBackward = () => {
-    if (broadcastMode) {
-      // In broadcast mode, seeking is disabled for all users
-      setChatMessages(prev => [...prev, {
-        username: 'system',
-        message: '❌ Tua video bị vô hiệu hóa trong chế độ phát trực tiếp',
-        timestamp: Date.now(),
-        type: 'system'
-      }]);
-      return;
-    }
-
     const video = videoRef.current;
     if (!video) return;
     video.currentTime = Math.max(video.currentTime - 10, 0);
   };
 
-  const syncWithCreator = () => {
-    console.log('🔄 Sync button clicked');
-    console.log('📋 Current user:', currentUser);
-    console.log('📋 Room creator:', roomCreator);
-    console.log('📋 WebSocket connected:', isConnected);
-    console.log('📋 STOMP client available:', !!stompClient);
-    console.log('📋 STOMP client connected:', stompClient?.connected);
-    console.log('📋 Users match:', currentUser === roomCreator);
-
-    // Don't sync if user is the room creator (they are the source of truth)
-    if (!roomCreator || currentUser === roomCreator) {
-      console.log('❌ User is room creator or room creator not set, no sync needed');
-      setChatMessages(prev => [...prev, {
-        username: 'system',
-        message: '❌ Bạn là người tạo phòng, không cần đồng bộ',
-        timestamp: Date.now(),
-        type: 'system'
-      }]);
-      return;
-    }
-
-    // Request sync from room creator
-    if (isWebSocketConnected()) {
-      console.log('🔄 Sending sync request to room creator:', roomCreator);
-
-      const syncMessage = {
-        type: 'sync_request',
-        action: 'sync',
-        time: 0, // Not used for requests
-        username: currentUser,
-        timestamp: Date.now()
-      };
-
-      console.log('📤 Sync request message:', syncMessage);
-      console.log('📤 Destination:', `/app/room/${roomId}/control`);
-
-      try {
-        stompClient.publish({
-          destination: `/app/room/${roomId}/control`,
-          body: JSON.stringify(syncMessage)
-        });
-        console.log('✅ Sync request sent successfully');
-
-        // Add system message
-        setChatMessages(prev => [...prev, {
-          username: 'system',
-          message: `${currentUser} đang yêu cầu đồng bộ với người tạo phòng`,
-          timestamp: Date.now(),
-          type: 'system'
-        }]);
-      } catch (error) {
-        console.error('❌ Error sending sync request:', error);
-        setChatMessages(prev => [...prev, {
-          username: 'system',
-          message: '❌ Lỗi khi gửi yêu cầu đồng bộ',
-          timestamp: Date.now(),
-          type: 'system'
-        }]);
-      }
-    } else {
-      console.error('❌ Cannot sync - WebSocket not connected or STOMP client not available');
-      console.error('📋 Connection details:', {
-        isConnectedState: isConnected,
-        stompClient: !!stompClient,
-        stompClientConnected: stompClient?.connected,
-        stompClientConnected_alt: stompClient?._connected,
-        isWebSocketConnected: isWebSocketConnected()
-      });
-
-      // Add error message to chat
-      setChatMessages(prev => [...prev, {
-        username: 'system',
-        message: '❌ Không thể đồng bộ: Chưa kết nối đến máy chủ',
-        timestamp: Date.now(),
-        type: 'system'
-      }]);
-    }
-  };
-
+  
   const handleVolumeChange = (newVolume: number) => {
     const video = videoRef.current;
     if (!video) return;
@@ -1091,16 +652,16 @@ const WatchTogetherPlayer: React.FC<WatchTogetherPlayerProps> = ({
   // WebSocket connection state monitoring
   useEffect(() => {
     if (stompClient) {
-      const actualConnected = stompClient.connected || stompClient._connected;
+      const actualConnected = stompClient.connected;
       console.log('🔍 WebSocket state monitoring:');
       console.log('📋 stompClient.connected:', stompClient.connected);
-      console.log('📋 stompClient._connected:', stompClient._connected);
+      console.log('📋 stompClient.connected:', stompClient.connected);
       console.log('📋 isConnected state:', isConnected);
       console.log('📋 actualConnected:', actualConnected);
 
-      // Sync state if there's a mismatch (use more comprehensive check)
+      // Update state if there's a mismatch (use more comprehensive check)
       if (actualConnected !== isConnected) {
-        console.log('🔄 Syncing WebSocket connection state:', actualConnected);
+        console.log('🔄 Updating WebSocket connection state:', actualConnected);
         setIsConnected(actualConnected);
       }
     }
@@ -1108,7 +669,7 @@ const WatchTogetherPlayer: React.FC<WatchTogetherPlayerProps> = ({
 
   // Connection retry mechanism
   useEffect(() => {
-    const actualConnected = stompClient && (stompClient.connected || stompClient._connected);
+    const actualConnected = stompClient && stompClient.connected;
     if (!actualConnected) {
       console.log('🔄 WebSocket not connected, checking if reconnection needed...');
       console.log('📋 Reconnection check:', {
@@ -1300,13 +861,10 @@ const WatchTogetherPlayer: React.FC<WatchTogetherPlayerProps> = ({
                   max={duration || 0}
                   value={currentTime}
                   onChange={(e) => handleSeek(parseFloat(e.target.value))}
-                  className={`w-full h-1 bg-white/30 rounded-lg appearance-none ${
-                    broadcastMode ? 'cursor-not-allowed opacity-50' : 'cursor-pointer'
-                  }`}
+                  className="w-full h-1 bg-white/30 rounded-lg appearance-none cursor-pointer"
                   style={{
                     background: `linear-gradient(to right, #3b82f6 0%, #3b82f6 ${(currentTime / duration) * 100}%, rgba(255,255,255,0.3) ${(currentTime / duration) * 100}%, rgba(255,255,255,0.3) 100%)`
                   }}
-                  disabled={broadcastMode}
                 />
               </div>
 
@@ -1330,52 +888,28 @@ const WatchTogetherPlayer: React.FC<WatchTogetherPlayerProps> = ({
                     )}
                   </button>
 
-                  {/* Seek Backward Button - Disabled in broadcast mode */}
+                  {/* Seek Backward Button */}
                   <button
                     onClick={seekBackward}
-                    disabled={broadcastMode}
-                    className={`w-10 h-10 rounded-full flex items-center justify-center text-white transition-colors ${
-                      broadcastMode
-                        ? 'bg-gray-500/20 cursor-not-allowed opacity-50'
-                        : 'bg-white/20 hover:bg-white/30'
-                    }`}
-                    title={broadcastMode ? "Tua video bị vô hiệu hóa" : "Tua lại 10 giây"}
+                    className="w-10 h-10 bg-white/20 rounded-full flex items-center justify-center text-white hover:bg-white/30 transition-colors"
+                    title="Tua lại 10 giây"
                   >
                     <svg className="w-4 h-4" fill="currentColor" viewBox="0 0 20 20">
                       <path d="M8.445 14.832A1 1 0 0010 14v-2.798l5.445 3.63A1 1 0 0017 14V6a1 1 0 00-1.555-.832L10 8.798V6a1 1 0 00-1.555-.832l-6 4a1 1 0 000 1.664l6 4z"/>
                     </svg>
                   </button>
 
-                  {/* Seek Forward Button - Disabled in broadcast mode */}
+                  {/* Seek Forward Button */}
                   <button
                     onClick={seekForward}
-                    disabled={broadcastMode}
-                    className={`w-10 h-10 rounded-full flex items-center justify-center text-white transition-colors ${
-                      broadcastMode
-                        ? 'bg-gray-500/20 cursor-not-allowed opacity-50'
-                        : 'bg-white/20 hover:bg-white/30'
-                    }`}
-                    title={broadcastMode ? "Tua video bị vô hiệu hóa" : "Tua tới 10 giây"}
+                    className="w-10 h-10 bg-white/20 rounded-full flex items-center justify-center text-white hover:bg-white/30 transition-colors"
+                    title="Tua tới 10 giây"
                   >
                     <svg className="w-4 h-4" fill="currentColor" viewBox="0 0 20 20">
                       <path d="M4.555 5.168A1 1 0 003 6v8a1 1 0 001.555.832L10 11.202V14a1 1 0 001.555.832l6-4a1 1 0 000-1.664l-6-4A1 1 0 0010 6v2.798L4.555 5.168z"/>
                     </svg>
                   </button>
 
-                  {/* Sync Button (for non-creators) */}
-                  {currentUser !== roomCreator && (
-                    <button
-                      onClick={syncWithCreator}
-                      className="w-10 h-10 bg-green-500/20 rounded-full flex items-center justify-center text-white hover:bg-green-500/30 transition-colors"
-                      title="Đồng bộ với người tạo phòng"
-                    >
-                      <svg className="w-4 h-4" fill="currentColor" viewBox="0 0 20 20">
-                        <path fillRule="evenodd" d="M4 2a1 1 0 011 1v2.101a7.002 7.002 0 0111.601 2.566 1 1 0 11-1.885.666A5.002 5.002 0 005.999 7H9a1 1 0 010 2H4a1 1 0 01-1-1V3a1 1 0 011-1zm.008 9.057a1 1 0 011.276.61A5.002 5.002 0 0014.001 13H11a1 1 0 110-2h5a1 1 0 011 1v5a1 1 0 11-2 0v-2.101a7.002 7.002 0 01-11.601-2.566 1 1 0 01.61-1.276z" clipRule="evenodd" />
-                      </svg>
-                    </button>
-                  )}
-
-  
                   {/* Volume Control */}
                   <div className="flex items-center space-x-2">
                     <button

@@ -71,9 +71,14 @@ export default function QuanLyXemChungPage() {
 
       // Load rooms from backend API
       try {
+        console.log('🔄 Loading rooms for user:', currentUser);
         const response = await fetch(`http://localhost:8080/api/rooms/user/${currentUser}`);
+        console.log('Rooms API response status:', response.status);
+
         if (response.ok) {
           const data = await response.json();
+          console.log('Rooms API response data:', data);
+
           if (data.success && data.data) {
             // Convert backend rooms to frontend format
             const backendRooms = data.data.map((backendRoom: any) => {
@@ -120,10 +125,24 @@ export default function QuanLyXemChungPage() {
             setRooms(backendRooms);
             console.log('📋 Loaded rooms from backend:', backendRooms);
             return;
+          } else {
+            console.warn('Backend API returned success:false or no data:', data);
+          }
+        } else {
+          console.warn('Backend API returned non-200 status:', response.status);
+          try {
+            const errorText = await response.text();
+            console.error('Backend API error response:', errorText);
+          } catch (e) {
+            console.error('Could not read error response body');
           }
         }
       } catch (error) {
         console.error('Error loading rooms from backend:', error);
+        // Log more details about the error
+        if (error instanceof Error) {
+          console.error('Error details:', error.message, error.stack);
+        }
       }
 
       // Fallback to localStorage if backend fails

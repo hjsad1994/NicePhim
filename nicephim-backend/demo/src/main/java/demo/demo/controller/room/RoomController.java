@@ -65,6 +65,10 @@ public class RoomController {
 
 			// Generate user ID for username
 			UUID userId = UUID.nameUUIDFromBytes(username.getBytes());
+			System.out.println("🔍 Creating room - Username: " + username + ", Generated UUID: " + userId);
+
+			// Create user if not exists
+			watchRoomService.createOrUpdateSimpleUser(username);
 
 			// Generate room ID
 			String roomId = UUID.randomUUID().toString();
@@ -246,10 +250,53 @@ public class RoomController {
 		}
 	}
 
+	/**
+	 * Get current playback position for all users to sync to
+	 */
+	@GetMapping("/api/rooms/{roomId}/current-position")
+	public ResponseEntity<Map<String, Object>> getCurrentPosition(@PathVariable String roomId) {
+		try {
+			// First check if room exists, create fallback if not
+			Map<String, Object> room = watchRoomService.getRoom(roomId);
+			if (room == null) {
+				// Create a fallback room if it doesn't exist
+				System.out.println("📋 Room not found for sync, creating fallback: " + roomId);
+				room = watchRoomService.getOrCreateRoom(roomId);
+			}
+
+			// Calculate the current position all users should sync to
+			Long currentPosition = watchRoomService.calculateCurrentPosition(roomId);
+			Long scheduledStartTime = (Long) room.get("scheduled_start_time");
+			Short playbackStateShort = (Short) room.get("playback_state");
+			Integer playbackState = playbackStateShort != null ? playbackStateShort.intValue() : null;
+
+			// Reduced logging - only log significant sync events
+			if (currentPosition > 0 || playbackState != 0) {
+				System.out.println("🔄 Sync request for room " + roomId + ": position=" + currentPosition + "ms, state=" + playbackState);
+			}
+
+			return ResponseEntity.ok(Map.of(
+				"success", true,
+				"currentPositionMs", currentPosition,
+				"currentTimeMs", System.currentTimeMillis(),
+				"scheduledStartTime", scheduledStartTime,
+				"playbackState", playbackState,
+				"broadcastStatus", room.get("broadcast_status")
+			));
+		} catch (Exception e) {
+			System.err.println("❌ Error getting current position for room " + roomId + ": " + e.getMessage());
+			e.printStackTrace();
+			return ResponseEntity.internalServerError().body(Map.of(
+				"success", false,
+				"error", e.getMessage()
+			));
+		}
+	}
+
 	// WebSocket message handlers (existing functionality)
 
 	/**
-	 * Host controls: play/pause (seek disabled in broadcast mode)
+	 * Handle control messages (local only, no global broadcasting)
 	 */
 	@MessageMapping("/room/{roomId}/control")
 	@SendTo("/topic/room.{roomId}")
@@ -260,10 +307,27 @@ public class RoomController {
 		// Add timestamp for drift calculation
 		message.put("timestamp", System.currentTimeMillis());
 
-		// For broadcast mode, only allow play/pause, disable seek
 		String action = (String) message.get("action");
+		String username = (String) message.get("username");
+
+		// Handle sync requests only (no global play/pause broadcasting)
+		if ("sync".equals(action)) {
+			// Get current server position for sync
+			Long currentPosition = watchRoomService.calculateCurrentPosition(roomId);
+			message.put("currentPosition", currentPosition);
+			message.put("type", "sync_response");
+		}
+
+		// Disable seeking for all users in server-managed sync mode
 		if ("seek".equals(action)) {
-			message.put("error", "Seeking is disabled in broadcast mode");
+			message.put("error", "Seeking is disabled in watch together mode");
+			message.put("type", "error");
+		}
+
+		// For play/pause, just acknowledge but don't broadcast to others
+		if ("play".equals(action) || "pause".equals(action)) {
+			message.put("type", "local_control");
+			message.put("message", username + " " + ("play".equals(action) ? "played" : "paused") + " locally");
 		}
 
 		return message;

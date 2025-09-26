@@ -23,18 +23,28 @@ public class WatchRoomService {
         return jdbcTemplate;
     }
 
+    // Helper method to validate UUID
+    private boolean isValidUUID(String uuid) {
+        try {
+            UUID.fromString(uuid);
+            return true;
+        } catch (IllegalArgumentException e) {
+            return false;
+        }
+    }
+
     // Row mapper for watch room
     private static final RowMapper<Map<String, Object>> watchRoomRowMapper = (rs, rowNum) -> {
         Map<String, Object> room = new HashMap<>();
         room.put("room_id", rs.getString("room_id"));
         room.put("name", rs.getString("name"));
-        room.put("created_by", rs.getString("created_by"));
+        room.put("created_by", UUID.fromString(rs.getString("created_by")));
         room.put("movie_id", rs.getString("movie_id"));
         room.put("episode_id", rs.getString("episode_id"));
         room.put("is_private", rs.getBoolean("is_private"));
         room.put("invite_code", rs.getString("invite_code"));
         room.put("current_time_ms", rs.getLong("current_time_ms"));
-        room.put("playback_state", rs.getInt("playback_state"));
+        room.put("playback_state", rs.getShort("playback_state"));
         room.put("playback_rate", rs.getBigDecimal("playback_rate"));
         room.put("scheduled_start_time", rs.getLong("scheduled_start_time"));
         room.put("broadcast_start_time_type", rs.getString("broadcast_start_time_type"));
@@ -112,12 +122,9 @@ public class WatchRoomService {
     public Map<String, Object> createRoomWithSchedule(String roomId, String name, UUID createdBy, String movieId, Long scheduledStartTime, String broadcastStartTimeType) {
         try {
             System.out.println("🚀 Creating room with schedule: " + roomId + ", name: " + name + ", movieId: " + movieId);
+            System.out.println("👤 User ID for room creation: " + createdBy);
 
-            // Create user first if not exists
-            String username = name; // Use room name as username for now
-            createOrUpdateSimpleUser(username);
-            UUID userId = UUID.nameUUIDFromBytes(username.getBytes());
-            System.out.println("👤 User ID for room creation: " + userId);
+            // Use the provided createdBy UUID directly (already generated from username in controller)
 
             String sql = """
                 INSERT INTO dbo.watch_rooms (room_id, name, created_by, movie_id, scheduled_start_time, broadcast_start_time_type,
@@ -131,8 +138,8 @@ public class WatchRoomService {
             jdbcTemplate.update(sql,
                 UUID.fromString(roomId),
                 name,
-                userId,
-                movieId != null && !movieId.isEmpty() && !movieId.equals("null") ? UUID.fromString(movieId) : null,
+                createdBy,
+                movieId != null && !movieId.isEmpty() && !movieId.equals("null") && isValidUUID(movieId) ? UUID.fromString(movieId) : null,
                 scheduledStartTime,
                 broadcastStartTimeType != null ? broadcastStartTimeType : "now",
                 scheduledStartTime != null ? "scheduled" : "live",
@@ -175,11 +182,15 @@ public class WatchRoomService {
         try {
             // Generate user ID from username
             UUID userId = UUID.nameUUIDFromBytes(username.getBytes());
+            System.out.println("🔍 Getting rooms for user: " + username + " (ID: " + userId + ")");
 
             String sql = "SELECT * FROM dbo.watch_rooms WHERE created_by = ? ORDER BY created_at DESC";
-            return jdbcTemplate.query(sql, watchRoomRowMapper, userId);
+            List<Map<String, Object>> rooms = jdbcTemplate.query(sql, watchRoomRowMapper, userId);
+            System.out.println("📋 Found " + rooms.size() + " rooms for user " + username);
+            return rooms;
         } catch (Exception e) {
             System.err.println("Error getting rooms by user: " + e.getMessage());
+            e.printStackTrace();
             return new ArrayList<>();
         }
     }
@@ -192,6 +203,7 @@ public class WatchRoomService {
             // Get room first to check ownership
             Map<String, Object> room = getRoom(roomId);
             if (room == null) {
+                System.err.println("❌ Room not found for deletion: " + roomId);
                 return false;
             }
 
@@ -200,6 +212,7 @@ public class WatchRoomService {
 
             // Check if user owns the room
             UUID createdBy = (UUID) room.get("created_by");
+
             if (!createdBy.equals(userId)) {
                 return false; // User doesn't own the room
             }
@@ -207,10 +220,10 @@ public class WatchRoomService {
             // Delete the room
             String sql = "DELETE FROM dbo.watch_rooms WHERE room_id = ?";
             int rowsDeleted = jdbcTemplate.update(sql, UUID.fromString(roomId));
-
             return rowsDeleted > 0;
         } catch (Exception e) {
-            System.err.println("Error deleting room: " + e.getMessage());
+            System.err.println("❌ Error deleting room: " + e.getMessage());
+            e.printStackTrace();
             return false;
         }
     }
@@ -266,47 +279,68 @@ public class WatchRoomService {
         try {
             Map<String, Object> room = getRoom(roomId);
             if (room == null) {
+                System.out.println("📋 Room not found for position calculation, returning 0: " + roomId);
                 return 0L;
             }
 
             Long scheduledStartTime = (Long) room.get("scheduled_start_time");
-            Short playbackStateShort = (Short) room.get("playback_state");
-            Integer playbackState = playbackStateShort != null ? playbackStateShort.intValue() : null;
+            Object playbackStateObj = room.get("playback_state");
+            Integer playbackState = null;
+            if (playbackStateObj instanceof Short) {
+                playbackState = ((Short) playbackStateObj).intValue();
+            } else if (playbackStateObj instanceof Integer) {
+                playbackState = (Integer) playbackStateObj;
+            }
+            if (playbackState == null) playbackState = 0;
             Long pausedAt = (Long) room.get("current_time_ms");
+            String broadcastStatus = (String) room.get("broadcast_status");
 
-            if (scheduledStartTime == null || scheduledStartTime == 0) {
-                // No scheduled time, return current position
+            // Removed spammy position calculation logging - only log significant changes
+
+            if (scheduledStartTime == null || scheduledStartTime == 0 || "now".equals(broadcastStatus)) {
+                // No scheduled time or immediate broadcast, return current position
                 return pausedAt != null ? pausedAt : 0L;
             }
 
             long now = System.currentTimeMillis();
-            
+
             // If broadcast hasn't started yet
             if (now < scheduledStartTime) {
+                // Only log when broadcast is about to start (within 5 seconds)
+                long timeUntilStart = scheduledStartTime - now;
+                if (timeUntilStart < 5000) {
+                    System.out.println("⏰ Broadcast starting in: " + timeUntilStart + "ms");
+                }
                 return 0L;
             }
 
             // If video is paused, return the paused position
-            if (playbackState != null && playbackState == 2) {
+            if (playbackState == 2) {
                 return pausedAt != null ? pausedAt : 0L;
             }
 
             // If video is playing, calculate position based on elapsed time
-            if (playbackState != null && playbackState == 1) {
+            if (playbackState == 1) {
                 long elapsedTime = now - scheduledStartTime;
+                // Only log significant position changes (every 30 seconds)
+                if (elapsedTime > 0 && elapsedTime % 30000 < 1000) {
+                    System.out.println("▶️ Video playing, position: " + elapsedTime + "ms");
+                }
                 return elapsedTime;
             }
 
             // If stopped or not started (state = 0), check if it should auto-start
             if (now >= scheduledStartTime) {
-                // Auto-start the video
-                updateRoomState(roomId, now - scheduledStartTime, 1, 1.0);
-                return now - scheduledStartTime;
+                System.out.println("🚀 Auto-starting video for room: " + roomId);
+                long elapsedTime = now - scheduledStartTime;
+                updateRoomState(roomId, elapsedTime, 1, 1.0);
+                return elapsedTime;
             }
 
             return 0L;
         } catch (Exception e) {
             System.err.println("Error calculating current position: " + e.getMessage());
+            e.printStackTrace();
             return 0L;
         }
     }

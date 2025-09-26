@@ -9,7 +9,8 @@ import java.util.Map;
 import java.util.UUID;
 import java.util.logging.Logger;
 
-@Service
+// @Service - DISABLED to prevent duplicate scheduling conflicts with BroadcastScheduler
+// This service was causing excessive database updates every second
 public class BroadcastSchedulerService {
 
     private static final Logger logger = Logger.getLogger(BroadcastSchedulerService.class.getName());
@@ -84,9 +85,9 @@ public class BroadcastSchedulerService {
     }
 
     /**
-     * Update server-managed time for live broadcasts every second
+     * Update server-managed time for live broadcasts every 30 seconds
      */
-    @Scheduled(fixedRate = 1000)
+    @Scheduled(fixedRate = 30000)
     @Transactional
     public void updateLiveBroadcastTimes() {
         try {
@@ -139,7 +140,7 @@ public class BroadcastSchedulerService {
                 watchRoomService.getJdbcTemplate().update(updateSql, calculatedTime, calculatedTime, UUID.fromString(roomId));
 
                 // Only log if time has changed significantly (to reduce log spam)
-                if (serverManagedTime == null || Math.abs(calculatedTime - serverManagedTime) > 1000) {
+                if (serverManagedTime == null || Math.abs(calculatedTime - serverManagedTime) > 5000) {
                     logger.info("⏰ Updated time for room " + roomId + ": " + calculatedTime + "ms (state=" + playbackState + ")");
                 }
             }
@@ -207,10 +208,12 @@ public class BroadcastSchedulerService {
             long currentTime = System.currentTimeMillis();
             long calculatedTime = 0;
 
-            // Log room state for debugging
-            logger.info("🔍 Room " + roomId + " state: status=" + broadcastStatus +
-                       ", playback=" + playbackState + ", serverTime=" + serverManagedTime +
-                       ", actualStart=" + actualStartTime + ", currentTimeMs=" + currentTimeMs);
+            // Reduced logging - only log room state for debugging significant changes
+            if (broadcastStatus.equals("live") && playbackState != null && playbackState == 1) {
+                logger.info("🔍 Room " + roomId + " state: status=" + broadcastStatus +
+                           ", playback=" + playbackState + ", serverTime=" + serverManagedTime +
+                           ", actualStart=" + actualStartTime);
+            }
 
             // Calculate time based on broadcast status and playback state
             if ("live".equals(broadcastStatus)) {
@@ -224,39 +227,45 @@ public class BroadcastSchedulerService {
                         logger.warning("⚠️ Negative calculated time for room " + roomId + ", resetting to 0");
                     }
 
-                    logger.info("⏰ Live playing time for " + roomId + ": " + calculatedTime + "ms (elapsed since " + actualStartTime + ")");
+                    // Reduced logging - only log significant playing time changes
+                    if (calculatedTime > 0 && calculatedTime % 30000 < 1000) { // Log every ~30 seconds
+                        logger.info("⏰ Live playing time for " + roomId + ": " + calculatedTime + "ms");
+                    }
                 } else if (playbackState != null && playbackState == 2) {
                     // Video is paused - use the last known position
                     calculatedTime = currentTimeMs != null ? currentTimeMs : 0;
-                    logger.info("⏰ Live paused time for " + roomId + ": " + calculatedTime + "ms");
+                    // Reduced logging for paused state
                 } else {
                     // Video is stopped or unknown state - use server managed time or calculate from start
                     if (actualStartTime != null && serverManagedTime != null && serverManagedTime > 0) {
                         // Use the last known server managed time
                         calculatedTime = serverManagedTime;
-                        logger.info("⏰ Live stopped time for " + roomId + ": " + calculatedTime + "ms (using server managed time)");
+                        // Reduced logging for stopped state
                     } else if (actualStartTime != null) {
                         // Calculate from start time as fallback
                         calculatedTime = currentTime - actualStartTime;
                         if (calculatedTime < 0) calculatedTime = 0;
-                        logger.info("⏰ Live stopped time for " + roomId + ": " + calculatedTime + "ms (calculated from start)");
+                        // Reduced logging for calculated time
                     } else {
                         // Last resort
                         calculatedTime = serverManagedTime != null ? serverManagedTime : 0;
-                        logger.info("⏰ Live stopped time for " + roomId + ": " + calculatedTime + "ms (fallback)");
+                        // Reduced logging for fallback
                     }
                 }
             } else if ("scheduled".equals(broadcastStatus)) {
                 // For scheduled broadcasts, return 0 (hasn't started yet)
                 calculatedTime = 0L;
-                logger.info("⏰ Scheduled broadcast time for " + roomId + ": 0ms (not started yet)");
+                // Reduced logging for scheduled broadcasts
             } else {
                 // Not live or scheduled - use server managed time
                 calculatedTime = serverManagedTime != null ? serverManagedTime : 0;
-                logger.info("⏰ Non-live time for " + roomId + ": " + calculatedTime + "ms");
+                // Reduced logging for non-live broadcasts
             }
 
-            logger.info("✅ Final calculated time for " + roomId + ": " + calculatedTime + "ms");
+            // Only log final calculated time for significant values
+            if (calculatedTime > 0) {
+                logger.info("✅ Final calculated time for " + roomId + ": " + calculatedTime + "ms");
+            }
             return calculatedTime;
 
         } catch (Exception e) {
