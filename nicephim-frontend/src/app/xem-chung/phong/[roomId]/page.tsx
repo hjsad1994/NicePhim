@@ -116,8 +116,7 @@ function RoomContent() {
                       poster: movie.poster_url || '/placeholder-movie.jpg',
                       hlsUrl: movie.hls_url ?
                         (movie.hls_url.startsWith('http') ? movie.hls_url : `http://localhost:8080${movie.hls_url}`) :
-                        (movie.video_id ? `http://localhost:8080/videos/${movie.video_id}/master.m3u8` :
-                        `http://localhost:8080/videos/be36685a-0dcb-45bf-8b63-e1ca0157be98/master.m3u8`),
+                        (movie.video_id ? `http://localhost:8080/videos/${movie.video_id}/master.m3u8` : null),
                       autoStart: false,
                       isPrivate: backendRoomData.is_private || false,
                       createdBy: backendRoomData.created_by || 'Unknown',
@@ -240,8 +239,7 @@ function RoomContent() {
                   poster: selectedMovie.posterUrl || '/placeholder-movie.jpg',
                   hlsUrl: selectedMovie.hlsUrl ?
                     (selectedMovie.hlsUrl.startsWith('http') ? selectedMovie.hlsUrl : `http://localhost:8080${selectedMovie.hlsUrl}`) :
-                    (selectedMovie.videoId ? `http://localhost:8080/videos/${selectedMovie.videoId}/master.m3u8` :
-                    `http://localhost:8080/videos/be36685a-0dcb-45bf-8b63-e1ca0157be98/master.m3u8`),
+                    (selectedMovie.videoId ? `http://localhost:8080/videos/${selectedMovie.videoId}/master.m3u8` : null),
                   autoStart: false,
                   isPrivate: false,
                   createdBy: 'Shared Room',
@@ -267,21 +265,21 @@ function RoomContent() {
             // Enhanced fallback: Try multiple fallback movies with working videos
             console.log('Creating enhanced fallback demo room...');
 
-            // Use known working video IDs from the API response
+            // Use real movie IDs from database (instead of hardcoded mock data)
             const fallbackMovies = [
               {
-                id: 'movie-b80c1bbe-f9ff-43c5-9326-bb595db65f8c',
+                id: 'b80c1bbe-f9ff-43c5-9326-bb595db65f8c',
                 title: 'Âm Thầm Bên Em',
                 slug: 'am-tham-ben-em',
                 videoId: 'be36685a-0dcb-45bf-8b63-e1ca0157be98',
-                hlsUrl: 'http://localhost:8080/videos/be36685a-0dcb-45bf-8b63-e1ca0157be98/master.m3u8'
+                hlsUrl: '/videos/be36685a-0dcb-45bf-8b63-e1ca0157be98/master.m3u8'
               },
               {
-                id: 'movie-e630bae4-1d06-4aac-8f05-2c02c5362069',
-                title: 'Test Movie',
+                id: 'e630bae4-1d06-4aac-8f05-2c02c5362069',
+                title: 'test',
                 slug: 'test',
                 videoId: '3c0f2d25-049f-4a96-a856-7a580bed6917',
-                hlsUrl: 'http://localhost:8080/videos/3c0f2d25-049f-4a96-a856-7a580bed6917/master.m3u8'
+                hlsUrl: '/videos/3c0f2d25-049f-4a96-a856-7a580bed6917/master.m3u8'
               }
             ];
 
@@ -530,6 +528,12 @@ function RoomContent() {
         <div className="pt-20">
           {(() => {
             let hlsUrl = roomData.movie.hlsUrl || getHlsUrl(roomData.movie);
+
+            // Format HLS URL to ensure it's a full URL
+            if (hlsUrl && !hlsUrl.startsWith('http')) {
+              hlsUrl = hlsUrl.startsWith('/') ? `http://localhost:8080${hlsUrl}` : `http://localhost:8080/${hlsUrl}`;
+            }
+
             console.log('🎬 Final HLS URL for video player:', hlsUrl);
             console.log('📺 Room data movie:', {
               title: roomData.movie.title,
@@ -538,15 +542,18 @@ function RoomContent() {
               movieId: roomData.movie.id
             });
 
-            // Always ensure we have a working HLS URL with fallbacks
-            const fallbackUrls = [
-              'http://localhost:8080/videos/be36685a-0dcb-45bf-8b63-e1ca0157be98/master.m3u8',
-              'http://localhost:8080/videos/3c0f2d25-049f-4a96-a856-7a580bed6917/master.m3u8'
-            ];
-
+            // Validate HLS URL - only use URLs from database
             if (!hlsUrl || !hlsUrl.startsWith('http')) {
-              console.log('🔄 Using fallback HLS URL');
-              hlsUrl = fallbackUrls[0];
+              console.error('❌ No valid HLS URL available for this movie');
+              return (
+                <div className="w-full h-[600px] flex items-center justify-center bg-gray-900 rounded-lg">
+                  <div className="text-center text-white">
+                    <h3 className="text-xl font-semibold mb-2">Video Not Available</h3>
+                    <p className="text-gray-400">This movie doesn't have a valid video source in the database.</p>
+                    <p className="text-sm text-gray-500 mt-2">Please contact the administrator to add video content.</p>
+                  </div>
+                </div>
+              );
             }
 
             // Add cache-busting parameter for different browsers
