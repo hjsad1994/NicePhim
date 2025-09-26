@@ -12,6 +12,8 @@ import java.util.Map;
 import java.util.HashMap;
 import java.util.List;
 import java.util.UUID;
+import java.util.Set;
+import java.util.concurrent.ConcurrentHashMap;
 
 @RestController
 @CrossOrigin(origins = "http://localhost:3000")
@@ -19,6 +21,9 @@ public class RoomController {
 
 	@Autowired
 	private WatchRoomService watchRoomService;
+
+	// Track active users in each room to prevent duplicate join notifications
+	private Map<String, Set<String>> roomUsers = new ConcurrentHashMap<>();
 
 	
 	// REST API endpoints for room management
@@ -63,12 +68,10 @@ public class RoomController {
 				}
 			}
 
-			// Generate user ID for username
-			UUID userId = UUID.nameUUIDFromBytes(username.getBytes());
-			System.out.println("🔍 Creating room - Username: " + username + ", Generated UUID: " + userId);
-
-			// Create user if not exists
-			watchRoomService.createOrUpdateSimpleUser(username);
+			// Get or create user ID for username
+			System.out.println("🔍 Creating room - Username: " + username);
+			UUID userId = watchRoomService.createOrUpdateSimpleUser(username);
+			System.out.println("👤 Using User ID for room creation: " + userId);
 
 			// Generate room ID
 			String roomId = UUID.randomUUID().toString();
@@ -348,7 +351,7 @@ public class RoomController {
 	}
 
 	/**
-	 * User join/leave notifications
+	 * User join/leave notifications with duplicate prevention
 	 */
 	@MessageMapping("/room/{roomId}/join")
 	@SendTo("/topic/room.{roomId}")
@@ -356,8 +359,66 @@ public class RoomController {
 			@DestinationVariable String roomId,
 			Map<String, Object> message) {
 
+		String username = (String) message.get("username");
+
+		// Initialize user set for this room if it doesn't exist
+		roomUsers.putIfAbsent(roomId, ConcurrentHashMap.newKeySet());
+		Set<String> usersInRoom = roomUsers.get(roomId);
+
+		// Check if user is already in the room to prevent duplicate notifications
+		if (usersInRoom.contains(username)) {
+			System.out.println("🔄 User " + username + " already in room " + roomId + ", skipping duplicate join notification");
+			// Return null or empty message to prevent broadcasting duplicate notification
+			Map<String, Object> emptyMessage = new HashMap<>();
+			emptyMessage.put("type", "system");
+			emptyMessage.put("message", "duplicate_join");
+			emptyMessage.put("timestamp", System.currentTimeMillis());
+			return emptyMessage;
+		}
+
+		// Add user to room
+		usersInRoom.add(username);
+		System.out.println("✅ User " + username + " joined room " + roomId + ". Total users: " + usersInRoom.size());
+
+		// Create join notification
 		message.put("timestamp", System.currentTimeMillis());
 		message.put("type", "user_join");
 		return message;
+	}
+
+	/**
+	 * User leave handler for cleanup
+	 */
+	@MessageMapping("/room/{roomId}/leave")
+	public void handleLeave(
+			@DestinationVariable String roomId,
+			Map<String, Object> message) {
+
+		String username = (String) message.get("username");
+		Set<String> usersInRoom = roomUsers.get(roomId);
+
+		if (usersInRoom != null && usersInRoom.remove(username)) {
+			System.out.println("👋 User " + username + " left room " + roomId + ". Remaining users: " + usersInRoom.size());
+
+			// Clean up empty rooms
+			if (usersInRoom.isEmpty()) {
+				roomUsers.remove(roomId);
+				System.out.println("🧹 Cleaned up empty room: " + roomId);
+			}
+		}
+	}
+
+	/**
+	 * Helper method to remove user from room (for cleanup)
+	 */
+	public void removeUserFromRoom(String roomId, String username) {
+		Set<String> usersInRoom = roomUsers.get(roomId);
+		if (usersInRoom != null && usersInRoom.remove(username)) {
+			System.out.println("🧹 Cleaned up user " + username + " from room " + roomId);
+			if (usersInRoom.isEmpty()) {
+				roomUsers.remove(roomId);
+				System.out.println("🧹 Cleaned up empty room: " + roomId);
+			}
+		}
 	}
 }

@@ -6,6 +6,7 @@ import { useState, useEffect, use } from 'react';
 import { useRouter } from 'next/navigation';
 import { ApiService, MovieResponse } from '@/lib/api';
 import { Movie } from '@/types/movie';
+import { useAuth } from '@/hooks/useAuth';
 
 interface TaoPhongXemChungPageProps {
   searchParams: Promise<{
@@ -16,6 +17,7 @@ interface TaoPhongXemChungPageProps {
 export default function TaoPhongXemChungPage({ searchParams }: TaoPhongXemChungPageProps) {
   const router = useRouter();
   const resolvedSearchParams = use(searchParams);
+  const { user, isLoggedIn } = useAuth();
   const [movie, setMovie] = useState<Movie | null>(null);
   const [movies, setMovies] = useState<Movie[]>([]); // Store all movies for poster selection
   const [isLoading, setIsLoading] = useState(true);
@@ -23,7 +25,6 @@ export default function TaoPhongXemChungPage({ searchParams }: TaoPhongXemChungP
   const [autoStart, setAutoStart] = useState<boolean>(false);
   const [privateOnly, setPrivateOnly] = useState<boolean>(false);
   const [isCreating, setIsCreating] = useState<boolean>(false);
-  const [username, setUsername] = useState<string>('');
   const [broadcastStartTimeType, setBroadcastStartTimeType] = useState<string>('now');
 
   // Convert MovieResponse to Movie type for compatibility
@@ -57,17 +58,11 @@ export default function TaoPhongXemChungPage({ searchParams }: TaoPhongXemChungP
     };
   };
 
-  // Load user and movie data
+  // Load movie data
   useEffect(() => {
     const loadData = async () => {
       try {
         setIsLoading(true);
-
-        // Check if user already exists in localStorage
-        const savedUser = localStorage.getItem('watchTogetherUser');
-        if (savedUser) {
-          setUsername(savedUser);
-        }
 
         // Create realistic fallback movie
         const createFallbackMovie = (): Movie => ({
@@ -147,16 +142,7 @@ export default function TaoPhongXemChungPage({ searchParams }: TaoPhongXemChungP
     loadData();
   }, [resolvedSearchParams.movie]);
 
-  const handleUsernameSubmit = () => {
-    if (!username || username.trim().length < 2) {
-      alert('Vui lòng nhập tên người dùng có ít nhất 2 ký tự');
-      return;
-    }
-
-    localStorage.setItem('watchTogetherUser', username.trim());
-    alert('Đã lưu tên người dùng: ' + username.trim());
-  };
-
+  
   // Generate posters from available movies in database
   const posters = movies.length > 0 ? movies.slice(0, 6).map((m) => ({
     alt: m.title,
@@ -207,6 +193,12 @@ export default function TaoPhongXemChungPage({ searchParams }: TaoPhongXemChungP
       return;
     }
 
+    if (!isLoggedIn || !user) {
+      alert('Vui lòng đăng nhập trước khi tạo phòng xem chung');
+      router.push('/dang-nhap');
+      return;
+    }
+
     console.log('Selected movie:', movie);
     console.log('Movie ID:', movie.id);
     if (!movie.id) {
@@ -217,13 +209,8 @@ export default function TaoPhongXemChungPage({ searchParams }: TaoPhongXemChungP
     setIsCreating(true);
 
     try {
-      // Get current user from localStorage
-      const currentUser = localStorage.getItem('watchTogetherUser');
-      if (!currentUser) {
-        alert('Vui lòng nhập tên người dùng trước khi tạo phòng');
-        setIsCreating(false);
-        return;
-      }
+      // Use authenticated user's username
+      const currentUser = user.username;
 
       // Create room data structure
       const roomId = 'room_' + Date.now();
@@ -507,67 +494,63 @@ export default function TaoPhongXemChungPage({ searchParams }: TaoPhongXemChungP
                   </div>
                 </div>
 
-                {/* 1.5 Username Input */}
+                {/* 1.5 User Authentication Status */}
                 <div className="group">
                   <div className="flex items-center gap-3 mb-4">
                     <div className="w-8 h-8 rounded-full bg-gradient-to-r from-blue-500/20 to-blue-600/20 border border-blue-500/30 flex items-center justify-center">
                       <span className="text-blue-400 font-bold text-sm">1.5</span>
                     </div>
-                    <h3 className="text-white font-semibold text-lg">Tên người dùng</h3>
-                    {!username && (
+                    <h3 className="text-white font-semibold text-lg">Tài khoản</h3>
+                    {!isLoggedIn && (
                       <span className="text-red-400 text-sm ml-auto">Bắt buộc</span>
                     )}
                   </div>
-                  <div className="flex gap-3">
-                    <div className="relative flex-1">
-                      <input
-                        className={`w-full px-4 py-4 rounded-xl bg-black/30 border-2 text-white placeholder:text-gray-400 outline-none transition-all duration-300 text-lg ${
-                          username.length > 0 && username.length < 2
-                            ? 'border-red-500/50 focus:border-red-500/70'
-                            : 'border-gray-400/30 focus:border-red-500/50'
-                        } focus:bg-black/40`}
-                        placeholder="Nhập tên của bạn..."
-                        maxLength={30}
-                        type="text"
-                        value={username}
-                        onChange={(e) => setUsername(e.target.value)}
-                      />
-                      <div className={`absolute right-3 top-1/2 -translate-y-1/2 text-sm ${
-                        username.length > 0 && username.length < 2
-                          ? 'text-red-400'
-                          : 'text-gray-400'
-                      }`}>
-                        {username.length}/30
-                      </div>
-                      {username.length > 0 && username.length < 2 && (
-                        <div className="absolute -bottom-6 left-0 text-red-400 text-sm">
-                          Tên cần ít nhất 2 ký tự
+
+                  {isLoggedIn && user ? (
+                    <div className="p-4 bg-green-500/10 border border-green-500/30 rounded-xl">
+                      <div className="flex items-center gap-3 text-green-400">
+                        <div className="w-10 h-10 rounded-full bg-green-500/20 border border-green-500/30 flex items-center justify-center">
+                          <svg className="w-5 h-5" fill="currentColor" viewBox="0 0 20 20">
+                            <path fillRule="evenodd" d="M10 9a3 3 0 100-6 3 3 0 000 6zm-7 9a7 7 0 1114 0H3z" clipRule="evenodd" />
+                          </svg>
                         </div>
-                      )}
+                        <div>
+                          <div className="font-medium">Đã đăng nhập</div>
+                          <div className="text-sm">{user.username}</div>
+                          {user.display_name && (
+                            <div className="text-sm text-green-300">{user.display_name}</div>
+                          )}
+                        </div>
+                      </div>
                     </div>
-                    <button
-                      onClick={handleUsernameSubmit}
-                      disabled={!username || username.trim().length < 2}
-                      className="px-6 py-4 bg-blue-500/20 hover:bg-blue-500/30 border border-blue-500/50 text-white rounded-xl transition-all duration-300 disabled:opacity-50 disabled:cursor-not-allowed font-medium whitespace-nowrap"
-                    >
-                      Lưu tên
-                    </button>
-                  </div>
-                  {username && (
-                    <div className="text-green-400 text-sm flex items-center gap-2 mt-2">
-                      <svg className="w-4 h-4" fill="currentColor" viewBox="0 0 20 20">
-                        <path fillRule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zm3.707-9.293a1 1 0 00-1.414-1.414L9 10.586 7.707 9.293a1 1 0 00-1.414 1.414l2 2a1 1 0 001.414 0l4-4z" clipRule="evenodd" />
-                      </svg>
-                      Đã đăng nhập với tên: {username}
+                  ) : (
+                    <div className="p-4 bg-red-500/10 border border-red-500/30 rounded-xl">
+                      <div className="flex items-center gap-3 text-red-400">
+                        <div className="w-10 h-10 rounded-full bg-red-500/20 border border-red-500/30 flex items-center justify-center">
+                          <svg className="w-5 h-5" fill="currentColor" viewBox="0 0 20 20">
+                            <path fillRule="evenodd" d="M18 10a8 8 0 11-16 0 8 8 0 0116 0zm-7 4a1 1 0 11-2 0 1 1 0 012 0zm-1-9a1 1 0 00-1 1v4a1 1 0 102 0V6a1 1 0 00-1-1z" clipRule="evenodd" />
+                          </svg>
+                        </div>
+                        <div>
+                          <div className="font-medium">Chưa đăng nhập</div>
+                          <div className="text-sm">Bạn cần đăng nhập để tạo phòng xem chung</div>
+                          <button
+                            onClick={() => router.push('/dang-nhap')}
+                            className="mt-2 px-4 py-2 bg-red-500/20 hover:bg-red-500/30 border border-red-500/50 text-white rounded-lg transition-all duration-300 text-sm font-medium"
+                          >
+                            Đăng nhập ngay
+                          </button>
+                        </div>
+                      </div>
                     </div>
                   )}
                 </div>
 
-                {/* 3. Poster Selection */}
+                {/* 2. Poster Selection */}
                 <div className="group">
                   <div className="flex items-center gap-3 mb-4">
                     <div className="w-8 h-8 rounded-full bg-gradient-to-r from-purple-500/20 to-purple-600/20 border border-purple-500/30 flex items-center justify-center">
-                      <span className="text-purple-400 font-bold text-sm">3</span>
+                      <span className="text-purple-400 font-bold text-sm">2</span>
                     </div>
                     <h3 className="text-white font-semibold text-lg">Chọn poster hiển thị</h3>
                   </div>
@@ -610,11 +593,11 @@ export default function TaoPhongXemChungPage({ searchParams }: TaoPhongXemChungP
                   </div>
                 </div>
 
-                {/* 4. Broadcast Time */}
+                {/* 3. Broadcast Time */}
                 <div className="group">
                   <div className="flex items-center gap-3 mb-3">
                     <div className="w-8 h-8 rounded-full bg-gradient-to-r from-blue-500/20 to-blue-600/20 border border-blue-500/30 flex items-center justify-center">
-                      <span className="text-blue-400 font-bold text-sm">4</span>
+                      <span className="text-blue-400 font-bold text-sm">3</span>
                     </div>
                     <h3 className="text-white font-semibold text-lg">Thời gian bắt đầu phát</h3>
                   </div>
@@ -668,11 +651,11 @@ export default function TaoPhongXemChungPage({ searchParams }: TaoPhongXemChungP
                   )}
                 </div>
 
-                {/* 5. Privacy */}
+                {/* 4. Privacy */}
                 <div className="group">
                   <div className="flex items-center gap-3 mb-3">
                     <div className="w-8 h-8 rounded-full bg-gradient-to-r from-green-500/20 to-green-600/20 border border-green-500/30 flex items-center justify-center">
-                      <span className="text-green-400 font-bold text-sm">5</span>
+                      <span className="text-green-400 font-bold text-sm">4</span>
                     </div>
                     <h3 className="text-white font-semibold text-lg">Quyền riêng tư</h3>
                   </div>
@@ -701,7 +684,7 @@ export default function TaoPhongXemChungPage({ searchParams }: TaoPhongXemChungP
                 <div className="flex gap-4 pt-4">
                   <button
                     onClick={handleCreate}
-                    disabled={!roomName || roomName.length < 10 || isCreating}
+                    disabled={!roomName || roomName.length < 10 || !isLoggedIn || isCreating}
                     className="flex-1 bg-gradient-to-r from-red-500 to-red-600 hover:from-red-600 hover:to-red-700 disabled:from-gray-600 disabled:to-gray-700 text-white font-semibold py-4 px-8 rounded-xl transition-all duration-300 transform hover:scale-[1.02] disabled:opacity-50 disabled:cursor-not-allowed disabled:transform-none shadow-lg hover:shadow-xl"
                   >
                     <div className="flex items-center justify-center gap-2">

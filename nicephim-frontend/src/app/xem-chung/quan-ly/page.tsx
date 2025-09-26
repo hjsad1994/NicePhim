@@ -5,6 +5,7 @@ import { useRouter } from 'next/navigation';
 import Link from 'next/link';
 import { ApiService, MovieResponse } from '@/lib/api';
 import { Movie } from '@/types/movie';
+import { useAuth } from '@/hooks/useAuth';
 
 interface Room {
   id: string;
@@ -24,9 +25,10 @@ interface Room {
 
 export default function QuanLyXemChungPage() {
   const router = useRouter();
+  const { user, isLoggedIn, isLoading: authLoading } = useAuth();
   const [rooms, setRooms] = useState<Room[]>([]);
   const [isLoading, setIsLoading] = useState(true);
-  const [user, setUser] = useState('');
+  const [hasLoaded, setHasLoaded] = useState(false);
 
   // Convert MovieResponse to Movie type
   const convertToMovie = (movieResponse: MovieResponse): Movie => {
@@ -63,15 +65,18 @@ export default function QuanLyXemChungPage() {
     try {
       setIsLoading(true);
 
-      const currentUser = user || localStorage.getItem('watchTogetherUser');
-      if (!currentUser) {
+      // Check if user is authenticated
+      if (!isLoggedIn || !user) {
         setRooms([]);
+        setIsLoading(false);
         return;
       }
 
+      const currentUser = user.username;
+      console.log('Loading rooms for user:', currentUser);
+
       // Load rooms from backend API
       try {
-        console.log('🔄 Loading rooms for user:', currentUser);
         const response = await fetch(`http://localhost:8080/api/rooms/user/${currentUser}`);
         console.log('Rooms API response status:', response.status);
 
@@ -80,50 +85,65 @@ export default function QuanLyXemChungPage() {
           console.log('Rooms API response data:', data);
 
           if (data.success && data.data) {
-            // Convert backend rooms to frontend format
-            const backendRooms = data.data.map((backendRoom: any) => {
-              // Create a fallback movie if no movie data
-              const fallbackMovie: Movie = {
-                id: backendRoom.movie_id || 'default-movie',
-                title: 'Unknown Movie',
-                slug: 'unknown-movie',
-                description: '',
-                poster: '/placeholder-movie.jpg',
-                releaseYear: 2023,
-                duration: 120,
-                imdbRating: 0,
-                genres: [],
-                country: 'Unknown',
-                status: 'completed',
-                quality: 'HD',
-                language: 'vi',
-                createdAt: new Date().toISOString(),
-                updatedAt: new Date().toISOString(),
-                viewCount: 0,
-                likeCount: 0,
-                isHot: false,
-                isFeatured: false
-              };
+            // Fetch movie details for each room
+            const roomsWithMovies = await Promise.all(
+              data.data.map(async (backendRoom: any) => {
+                let movie: Movie;
 
-              return {
-                id: backendRoom.room_id,
-                backendRoomId: backendRoom.room_id,
-                name: backendRoom.name,
-                movie: fallbackMovie,
-                creator: currentUser,
-                createdBy: currentUser,
-                isPrivate: backendRoom.is_private || false,
-                autoStart: backendRoom.broadcast_status === 'scheduled',
-                broadcastStartTimeType: backendRoom.broadcast_start_time_type,
-                scheduledStartTime: backendRoom.scheduled_start_time,
-                broadcastStatus: backendRoom.broadcast_status,
-                createdAt: backendRoom.created_at,
-                participants: 0 // TODO: Get actual participant count
-              };
-            });
+                try {
+                  // Fetch movie details from API
+                  const movieResponse = await ApiService.getMovieById(backendRoom.movie_id);
 
-            setRooms(backendRooms);
-            console.log('📋 Loaded rooms from backend:', backendRooms);
+                  if (movieResponse.success && movieResponse.data) {
+                    movie = convertToMovie(movieResponse.data);
+                  } else {
+                    throw new Error('Movie not found');
+                  }
+                } catch (error) {
+                  console.warn(`Could not fetch movie details for ${backendRoom.movie_id}, using fallback:`, error);
+                  // Create a fallback movie if API fails
+                  movie = {
+                    id: backendRoom.movie_id || 'default-movie',
+                    title: 'Unknown Movie',
+                    slug: 'unknown-movie',
+                    description: '',
+                    poster: '/placeholder-movie.jpg',
+                    releaseYear: 2023,
+                    duration: 120,
+                    imdbRating: 0,
+                    genres: [],
+                    country: 'Unknown',
+                    status: 'completed',
+                    quality: 'HD',
+                    language: 'vi',
+                    createdAt: new Date().toISOString(),
+                    updatedAt: new Date().toISOString(),
+                    viewCount: 0,
+                    likeCount: 0,
+                    isHot: false,
+                    isFeatured: false
+                  };
+                }
+
+                return {
+                  id: backendRoom.room_id,
+                  backendRoomId: backendRoom.room_id,
+                  name: backendRoom.name,
+                  movie: movie,
+                  creator: currentUser,
+                  createdBy: currentUser,
+                  isPrivate: backendRoom.is_private || false,
+                  autoStart: backendRoom.broadcast_status === 'scheduled',
+                  broadcastStartTimeType: backendRoom.broadcast_start_time_type,
+                  scheduledStartTime: backendRoom.scheduled_start_time,
+                  broadcastStatus: backendRoom.broadcast_status,
+                  createdAt: backendRoom.created_at,
+                  participants: 0 // TODO: Get actual participant count
+                };
+              })
+            );
+
+            setRooms(roomsWithMovies);
             return;
           } else {
             console.warn('Backend API returned success:false or no data:', data);
@@ -139,51 +159,51 @@ export default function QuanLyXemChungPage() {
         }
       } catch (error) {
         console.error('Error loading rooms from backend:', error);
-        // Log more details about the error
         if (error instanceof Error) {
           console.error('Error details:', error.message, error.stack);
         }
       }
 
-      // Fallback to localStorage if backend fails
-      let savedRooms: Room[] = [];
-      try {
-        const roomsData = localStorage.getItem('watchTogetherRooms');
-        if (roomsData) {
-          savedRooms = JSON.parse(roomsData);
-        }
-      } catch (error) {
-        console.error('Error reading rooms from localStorage:', error);
-      }
-
-      const userRooms = savedRooms.filter(room =>
-        room.creator === currentUser || room.createdBy === currentUser
-      );
-
-      setRooms(userRooms);
+      // Set empty rooms array if backend fails - no fallback to localStorage for authenticated users
+      setRooms([]);
     } catch (error) {
       console.error('Error loading rooms:', error);
+      setRooms([]);
     } finally {
       setIsLoading(false);
     }
   };
 
   useEffect(() => {
-    // Load user from localStorage
-    const savedUser = localStorage.getItem('watchTogetherUser');
-    if (savedUser) {
-      setUser(savedUser);
-    } else {
-      // If no user set, redirect to create room page
-      router.push('/xem-chung/tao-moi');
+    // Reset hasLoaded when authentication state changes
+    if (!isLoggedIn || !user) {
+      setHasLoaded(false);
     }
-  }, [router]);
+  }, [isLoggedIn, user]);
 
   useEffect(() => {
-    if (user) {
+    // Wait for auth to finish loading
+    if (authLoading) return;
+
+    // Set loading to false once auth is loaded
+    setIsLoading(false);
+  }, [authLoading]);
+
+  useEffect(() => {
+    // Only check authentication and redirect if auth is not loading
+    if (authLoading || isLoading) return;
+
+    if (!isLoggedIn || !user) {
+      router.push('/dang-nhap');
+      return;
+    }
+
+    // Load rooms only once when authenticated and haven't loaded before
+    if (!hasLoaded) {
+      setHasLoaded(true);
       loadRooms();
     }
-  }, [user]);
+  }, [authLoading, isLoading, isLoggedIn, user, hasLoaded]); // Include all necessary dependencies
 
   const joinRoom = (roomId: string) => {
     // In a real app, this would join the WebSocket room
@@ -195,26 +215,21 @@ export default function QuanLyXemChungPage() {
       return;
     }
 
+    if (!user) {
+      alert('Bạn cần đăng nhập để xóa phòng');
+      return;
+    }
+
     try {
       // Try to delete from backend first
       if (backendRoomId) {
-        const response = await fetch(`http://localhost:8080/api/rooms/${backendRoomId}?username=${user}`, {
+        const response = await fetch(`http://localhost:8080/api/rooms/${backendRoomId}?username=${user.username}`, {
           method: 'DELETE',
         });
 
         if (response.ok) {
-          // Remove from local state
-          setRooms(prev => prev.filter(room => room.id !== roomId));
-
-          // Remove from localStorage
-          try {
-            const savedRooms = JSON.parse(localStorage.getItem('watchTogetherRooms') || '[]');
-            const updatedRooms = savedRooms.filter((room: any) => room.id !== roomId && room.backendRoomId !== backendRoomId);
-            localStorage.setItem('watchTogetherRooms', JSON.stringify(updatedRooms));
-          } catch (error) {
-            console.error('Error updating localStorage:', error);
-          }
-
+          // Remove from local state and refresh rooms list
+          loadRooms();
           alert('Đã xóa phòng thành công!');
           return;
         } else {
@@ -222,18 +237,9 @@ export default function QuanLyXemChungPage() {
           throw new Error(errorData.error || 'Failed to delete room');
         }
       } else {
-        // If no backend ID, just remove from localStorage
-        try {
-          const savedRooms = JSON.parse(localStorage.getItem('watchTogetherRooms') || '[]');
-          const updatedRooms = savedRooms.filter((room: any) => room.id !== roomId);
-          localStorage.setItem('watchTogetherRooms', JSON.stringify(updatedRooms));
-
-          setRooms(prev => prev.filter(room => room.id !== roomId));
-          alert('Đã xóa phòng thành công!');
-        } catch (error) {
-          console.error('Error deleting room from localStorage:', error);
-          alert('Đã xảy ra lỗi khi xóa phòng');
-        }
+        // If no backend ID, just remove from local state
+        setRooms(prev => prev.filter(room => room.id !== roomId));
+        alert('Đã xóa phòng thành công!');
       }
     } catch (error) {
       console.error('Error deleting room:', error);
@@ -301,28 +307,35 @@ export default function QuanLyXemChungPage() {
         </div>
 
         {/* User Info */}
-        <div className="bg-[#23242F] border border-gray-400/20 rounded-2xl p-6 mb-8">
-          <div className="flex items-center justify-between">
-            <div className="flex items-center gap-4">
-              <div className="w-12 h-12 rounded-full bg-gradient-to-r from-blue-500 to-purple-500 flex items-center justify-center">
-                <span className="text-white font-bold text-lg">{user.charAt(0).toUpperCase()}</span>
+        {user && (
+          <div className="bg-[#23242F] border border-gray-400/20 rounded-2xl p-6 mb-8">
+            <div className="flex items-center justify-between">
+              <div className="flex items-center gap-4">
+                <div className="w-12 h-12 rounded-full bg-gradient-to-r from-blue-500 to-purple-500 flex items-center justify-center">
+                  <span className="text-white font-bold text-lg">{user.username.charAt(0).toUpperCase()}</span>
+                </div>
+                <div>
+                  <h2 className="text-white font-semibold text-lg">{user.username}</h2>
+                  {user.display_name && (
+                    <p className="text-gray-400 text-sm">{user.display_name}</p>
+                  )}
+                  <p className="text-gray-400 text-sm">Đã tham gia {rooms.length} phòng</p>
+                </div>
               </div>
-              <div>
-                <h2 className="text-white font-semibold text-lg">{user}</h2>
-                <p className="text-gray-400 text-sm">Đã tham gia {rooms.length} phòng</p>
-              </div>
+              <button
+                onClick={() => {
+                  // Logout and redirect to login
+                  const logoutEvent = new Event('auth-change');
+                  window.dispatchEvent(logoutEvent);
+                  router.push('/dang-nhap');
+                }}
+                className="px-4 py-2 border border-gray-400/30 text-white hover:bg-white/10 rounded-lg transition-colors text-sm"
+              >
+                Đăng xuất
+              </button>
             </div>
-            <button
-              onClick={() => {
-                localStorage.removeItem('watchTogetherUser');
-                router.push('/xem-chung/tao-moi');
-              }}
-              className="px-4 py-2 border border-gray-400/30 text-white hover:bg-white/10 rounded-lg transition-colors text-sm"
-            >
-              Đổi tên người dùng
-            </button>
           </div>
-        </div>
+        )}
 
         {/* Rooms List */}
         {rooms.length === 0 ? (
@@ -430,7 +443,7 @@ export default function QuanLyXemChungPage() {
                   {/* Room Actions */}
                   <div className="flex items-center justify-between pt-4 border-t border-gray-400/20">
                     <div className="flex items-center gap-2 text-xs text-gray-400">
-                      {room.creator === user ? (
+                      {room.creator === user?.username ? (
                         <span className="flex items-center gap-1 text-purple-400">
                           <svg className="w-3 h-3" fill="currentColor" viewBox="0 0 20 20">
                             <path d="M9.049 2.927c.3-.921 1.603-.921 1.902 0l1.07 3.292a1 1 0 00.95.69h3.462c.969 0 1.371 1.24.588 1.81l-2.8 2.034a1 1 0 00-.364 1.118l1.07 3.292c.3.921-.755 1.688-1.54 1.118l-2.8-2.034a1 1 0 00-1.175 0l-2.8 2.034c-.784.57-1.838-.197-1.539-1.118l1.07-3.292a1 1 0 00-.364-1.118L2.98 8.72c-.783-.57-.38-1.81.588-1.81h3.461a1 1 0 00.951-.69l1.07-3.292z" />
@@ -447,7 +460,7 @@ export default function QuanLyXemChungPage() {
                       )}
                     </div>
                     <div className="flex items-center gap-2">
-                      {room.creator === user && (
+                      {room.creator === user?.username && (
                         <button
                           onClick={() => deleteRoom(room.id, room.backendRoomId)}
                           className="px-3 py-2 bg-red-500/20 hover:bg-red-500/30 border border-red-500/50 text-red-400 rounded-lg transition-all duration-300 text-sm flex items-center gap-2"

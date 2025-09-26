@@ -5,6 +5,7 @@ import { useParams, useRouter } from 'next/navigation';
 import { useState, useEffect } from 'react';
 import WatchTogetherPlayer from '@/components/video/WatchTogetherPlayer';
 import { Movie } from '@/types/movie';
+import { useAuth } from '@/hooks/useAuth';
 
 interface RoomData {
   id: string;
@@ -21,38 +22,31 @@ interface RoomData {
 function RoomContent() {
   const params = useParams();
   const router = useRouter();
+  const { user, isLoggedIn, isLoading: authLoading } = useAuth();
   const roomId = params.roomId as string;
 
   const [roomData, setRoomData] = useState<RoomData | null>(null);
   const [isLoading, setIsLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
   const [isHost, setIsHost] = useState(false);
-  const [currentUser, setCurrentUser] = useState('');
 
-  // Initialize current user on client side only
+  // Check authentication and redirect if not logged in
   useEffect(() => {
-    try {
-      const savedUser = localStorage.getItem('watchTogetherUser');
-      if (savedUser) {
-        setCurrentUser(savedUser);
-      } else {
-        const newUser = 'User_' + Math.random().toString(36).substr(2, 9);
-        localStorage.setItem('watchTogetherUser', newUser);
-        setCurrentUser(newUser);
-      }
-    } catch (error) {
-      // Fallback for when localStorage is not available
-      const newUser = 'User_' + Math.random().toString(36).substr(2, 9);
-      setCurrentUser(newUser);
-    }
-  }, []);
+    if (authLoading) return;
 
-  // Load room data (only after currentUser is set)
+    if (!isLoggedIn || !user) {
+      console.log('User not authenticated, redirecting to login...');
+      router.push('/dang-nhap');
+      return;
+    }
+  }, [authLoading, isLoggedIn, user, router]);
+
+  // Load room data (only after user is authenticated)
   useEffect(() => {
     const loadRoomData = async () => {
-      // Don't load if currentUser is not set yet
-      if (!currentUser) {
-        console.log('⏳ Waiting for currentUser to be set...');
+      // Don't load if auth is still loading or user is not authenticated
+      if (authLoading || !isLoggedIn || !user) {
+        console.log('⏳ Waiting for authentication...');
         return;
       }
       let room: RoomData | null = null;
@@ -357,7 +351,8 @@ function RoomContent() {
         setRoomData(room);
 
         // Set current user as host if they created the room
-        setIsHost(room.createdBy === currentUser);
+        // Note: This is a simplified check - in production you might want to compare user IDs
+        setIsHost(room.createdBy === user.username || room.name.includes(user.username));
 
       } catch (err) {
         console.error('Error loading room data:', err);
@@ -368,7 +363,7 @@ function RoomContent() {
     };
 
     loadRoomData();
-  }, [roomId, currentUser]);
+  }, [roomId, user, authLoading, isLoggedIn]);
 
   // Simulate getting HLS URL for the movie
   const getHlsUrl = (movie: Movie) => {
@@ -459,7 +454,7 @@ function RoomContent() {
     }
   };
 
-  if (isLoading || !currentUser) {
+  if (isLoading || authLoading || !user) {
     return (
       <div className="min-h-screen flex items-center justify-center bg-black">
         <div className="text-center">
@@ -565,7 +560,7 @@ function RoomContent() {
 
             console.log('🎬 Passing to WatchTogetherPlayer:', {
               roomCreator: roomData.createdBy,
-              currentUser: currentUser,
+              currentUser: user.username,
               isHost: isHost,
               roomId: roomId
             });
@@ -578,7 +573,7 @@ function RoomContent() {
                 isHost={isHost}
                 onHostChange={handleHostChange}
                 roomCreator={roomData.createdBy}
-                currentUser={currentUser}
+                currentUser={user.username}
                 className="w-full"
               />
             );

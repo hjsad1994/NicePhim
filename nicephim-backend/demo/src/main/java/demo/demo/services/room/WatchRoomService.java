@@ -180,8 +180,13 @@ public class WatchRoomService {
      */
     public List<Map<String, Object>> getRoomsByUser(String username) {
         try {
-            // Generate user ID from username
-            UUID userId = UUID.nameUUIDFromBytes(username.getBytes());
+            // Get actual user ID from database
+            UUID userId = getUserIdByUsername(username);
+            if (userId == null) {
+                System.out.println("🔍 User not found: " + username);
+                return new ArrayList<>();
+            }
+
             System.out.println("🔍 Getting rooms for user: " + username + " (ID: " + userId + ")");
 
             String sql = "SELECT * FROM dbo.watch_rooms WHERE created_by = ? ORDER BY created_at DESC";
@@ -207,19 +212,25 @@ public class WatchRoomService {
                 return false;
             }
 
-            // Generate user ID from username
-            UUID userId = UUID.nameUUIDFromBytes(username.getBytes());
+            // Get actual user ID from database
+            UUID userId = getUserIdByUsername(username);
+            if (userId == null) {
+                System.err.println("❌ User not found for deletion: " + username);
+                return false;
+            }
 
             // Check if user owns the room
             UUID createdBy = (UUID) room.get("created_by");
 
             if (!createdBy.equals(userId)) {
+                System.err.println("❌ Permission denied - User " + username + " does not own room " + roomId);
                 return false; // User doesn't own the room
             }
 
             // Delete the room
             String sql = "DELETE FROM dbo.watch_rooms WHERE room_id = ?";
             int rowsDeleted = jdbcTemplate.update(sql, UUID.fromString(roomId));
+            System.out.println("✅ Room deleted successfully: " + roomId + ", rows affected: " + rowsDeleted);
             return rowsDeleted > 0;
         } catch (Exception e) {
             System.err.println("❌ Error deleting room: " + e.getMessage());
@@ -452,17 +463,39 @@ public class WatchRoomService {
     }
 
     /**
+     * Get user ID by username, returns null if user doesn't exist
+     */
+    public UUID getUserIdByUsername(String username) {
+        try {
+            String sql = "SELECT user_id FROM dbo.users WHERE username = ?";
+            return jdbcTemplate.queryForObject(sql, UUID.class, username);
+        } catch (Exception e) {
+            // User not found or other error
+            return null;
+        }
+    }
+
+    /**
      * Create a simple user if it doesn't exist
      */
-    public void createOrUpdateSimpleUser(String username) {
+    public UUID createOrUpdateSimpleUser(String username) {
         try {
+            // First, try to get existing user by username
+            UUID existingUserId = getUserIdByUsername(username);
+
+            if (existingUserId != null) {
+                System.out.println("✅ User already exists: " + username + " with ID: " + existingUserId);
+                return existingUserId;
+            }
+
+            // Generate consistent UUID for new user
             UUID userId = UUID.nameUUIDFromBytes(username.getBytes());
             System.out.println("🔧 Creating user: " + username + " with ID: " + userId);
 
-            // Check if user exists
+            // Check if user exists with this UUID (shouldn't happen, but just in case)
             String checkSql = "SELECT COUNT(*) FROM dbo.users WHERE user_id = ?";
             Integer count = jdbcTemplate.queryForObject(checkSql, Integer.class, userId);
-            System.out.println("🔧 User count: " + count);
+            System.out.println("🔧 User count for UUID: " + count);
 
             if (count != null && count == 0) {
                 // Create user
@@ -482,12 +515,21 @@ public class WatchRoomService {
                     passwordHash.getBytes()
                 );
                 System.out.println("✅ Created user: " + username);
+                return userId;
             } else {
-                System.out.println("✅ User already exists: " + username);
+                // UUID already exists, fetch the actual username for this UUID
+                String actualUsername = jdbcTemplate.queryForObject("SELECT username FROM dbo.users WHERE user_id = ?", String.class, userId);
+                System.out.println("⚠️  UUID already exists for different username: " + actualUsername);
+                // Return existing user ID, but this might cause confusion
+                return userId;
             }
         } catch (Exception e) {
             System.err.println("Error creating user " + username + ": " + e.getMessage());
             e.printStackTrace();
+            // Fallback: generate a random UUID
+            UUID fallbackUserId = UUID.randomUUID();
+            System.out.println("🔄 Using fallback UUID for user: " + username + " -> " + fallbackUserId);
+            return fallbackUserId;
         }
     }
 }
