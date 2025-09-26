@@ -3,8 +3,6 @@ package demo.demo.controller.auth;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.ExceptionHandler;
-import org.springframework.web.bind.annotation.GetMapping;
-import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
@@ -74,31 +72,6 @@ public class AuthController {
 		Map<String, Object> res = new HashMap<>();
 		res.put("error", ex.getMessage());
 		return ResponseEntity.status(HttpStatus.CONFLICT).body(res);
-	}
-
-	@GetMapping("/users/{userId}/username")
-	public ResponseEntity<Map<String, Object>> getUsername(@PathVariable String userId) {
-		try {
-			UUID userUuid = UUID.fromString(userId);
-			String username = authService.getUsernameById(userUuid);
-
-			if (username != null) {
-				Map<String, Object> res = new HashMap<>();
-				res.put("success", true);
-				res.put("username", username);
-				return ResponseEntity.ok(res);
-			} else {
-				Map<String, Object> res = new HashMap<>();
-				res.put("success", false);
-				res.put("error", "User not found");
-				return ResponseEntity.status(HttpStatus.NOT_FOUND).body(res);
-			}
-		} catch (IllegalArgumentException e) {
-			Map<String, Object> res = new HashMap<>();
-			res.put("success", false);
-			res.put("error", "Invalid user ID format");
-			return ResponseEntity.badRequest().body(res);
-		}
 	}
 }
 
