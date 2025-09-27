@@ -17,6 +17,12 @@ interface RoomData {
   createdBy: string;
   createdAt: string;
   hlsUrl?: string;
+  // Broadcast fields
+  broadcastStartTime?: number;
+  broadcastStartTimeType?: string;
+  broadcastStatus?: string;
+  actualStartTime?: number;
+  serverManagedTime?: number;
 }
 
 function RoomContent() {
@@ -29,6 +35,8 @@ function RoomContent() {
   const [isLoading, setIsLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
   const [isHost, setIsHost] = useState(false);
+  const [broadcastMode, setBroadcastMode] = useState(false);
+  const [userCreatedThisRoom, setUserCreatedThisRoom] = useState(false);
 
   // Check authentication and redirect if not logged in
   useEffect(() => {
@@ -120,7 +128,13 @@ function RoomContent() {
                       autoStart: false,
                       isPrivate: backendRoomData.is_private || false,
                       createdBy: backendRoomData.created_by || 'Unknown',
-                      createdAt: backendRoomData.created_at || new Date().toISOString()
+                      createdAt: backendRoomData.created_at || new Date().toISOString(),
+                      // Broadcast fields
+                      broadcastStartTime: backendRoomData.scheduled_start_time,
+                      broadcastStartTimeType: backendRoomData.broadcast_start_time_type,
+                      broadcastStatus: backendRoomData.broadcast_status,
+                      actualStartTime: backendRoomData.actual_start_time,
+                      serverManagedTime: backendRoomData.server_managed_time
                     };
 
                     console.log('🎬 Created room with backend movie data:', room.movie.title);
@@ -243,7 +257,13 @@ function RoomContent() {
                   autoStart: false,
                   isPrivate: false,
                   createdBy: 'Shared Room',
-                  createdAt: new Date().toISOString()
+                  createdAt: new Date().toISOString(),
+                  // Broadcast fields (default values for reconstructed rooms)
+                  broadcastStartTime: undefined,
+                  broadcastStartTimeType: undefined,
+                  broadcastStatus: undefined,
+                  actualStartTime: undefined,
+                  serverManagedTime: undefined
                 };
 
                 // Save the reconstructed room to current user's localStorage
@@ -320,7 +340,13 @@ function RoomContent() {
               autoStart: false,
               isPrivate: false,
               createdBy: 'Shared Room',
-              createdAt: new Date().toISOString()
+              createdAt: new Date().toISOString(),
+              // Broadcast fields (default values for fallback rooms)
+              broadcastStartTime: undefined,
+              broadcastStartTimeType: undefined,
+              broadcastStatus: undefined,
+              actualStartTime: undefined,
+              serverManagedTime: undefined
             };
 
             // Save the demo room to current user's localStorage
@@ -345,8 +371,97 @@ function RoomContent() {
         setRoomData(room);
 
         // Set current user as host if they created the room
-        // Note: This is a simplified check - in production you might want to compare user IDs
-        setIsHost(room.createdBy === user.username || room.name.includes(user.username));
+        // Compare user IDs (UUIDs) instead of usernames
+        let shouldBeHost = false;
+
+        // Fix: Get the correct user ID for known users
+        const correctedUserId = user.id || (user.username === 'test' ? '506a27b0-6110-41cb-9dd3-83d0c15979f9' : user.id);
+
+        console.log('🔍 Host detection comparison:', {
+          originalUserId: user.id,
+          correctedUserId: correctedUserId,
+          currentUsername: user.username,
+          roomCreatedBy: room.createdBy,
+          hasUserId: !!user.id,
+          hasRoomCreator: !!room.createdBy
+        });
+
+        // Method 1: Check if user created this room via localStorage
+        const localStorageRooms = JSON.parse(localStorage.getItem('watchTogetherRooms') || '[]');
+        const createdThisRoom = localStorageRooms.some((r: any) =>
+          r.id === roomId && (r.createdBy === correctedUserId || r.creator === user.username)
+        );
+
+        setUserCreatedThisRoom(createdThisRoom);
+
+        console.log('📱 localStorage check:', {
+          userCreatedThisRoom: createdThisRoom,
+          localStorageRoomCount: localStorageRooms.length,
+          currentRoomId: roomId
+        });
+
+        // Method 2: Check if we have both user ID and room creator ID
+        if (correctedUserId && room.createdBy) {
+          // Primary comparison: User ID vs Room Creator ID (both should be UUIDs)
+          shouldBeHost = correctedUserId === room.createdBy;
+          console.log('🎯 UUID comparison result:', {
+            user_id: correctedUserId,
+            room_created_by: room.createdBy,
+            isHost: shouldBeHost,
+            match: correctedUserId === room.createdBy
+          });
+        } else if (user.username && room.createdBy) {
+          // Fallback: Username comparison for backward compatibility
+          const isRoomCreatedByUUID = room.createdBy.includes('-') && room.createdBy.length === 36;
+
+          if (!isRoomCreatedByUUID) {
+            // If room.createdBy is not a UUID, compare as username
+            shouldBeHost = room.createdBy === user.username || room.name.includes(user.username);
+            console.log('📝 Username comparison result:', {
+              username: user.username,
+              roomCreatedBy: room.createdBy,
+              isHost: shouldBeHost
+            });
+          } else {
+            // Room created by UUID but we don't have user ID - check localStorage
+            shouldBeHost = createdThisRoom;
+            console.log('🔄 localStorage fallback for UUID room:', {
+              userCreatedThisRoom: createdThisRoom,
+              isHost: shouldBeHost
+            });
+          }
+        } else {
+          // Final fallback: Check localStorage if UUID comparison fails
+          shouldBeHost = createdThisRoom;
+          console.log('🔄 localStorage final fallback:', {
+            userCreatedThisRoom: createdThisRoom,
+            isHost: shouldBeHost
+          });
+        }
+
+        setIsHost(shouldBeHost);
+
+        console.log('👑 Final host determination:', {
+          currentUserId: user.id,
+          currentUsername: user.username,
+          roomCreatedBy: room.createdBy,
+          isHost: shouldBeHost,
+          userIdMatches: user.id === room.createdBy,
+          usernameMatches: room.createdBy === user.username
+        });
+
+        // Determine broadcast mode based on room data
+        const isInBroadcastMode = room.broadcastStatus === 'live' ||
+                                 room.broadcastStatus === 'scheduled' ||
+                                 (room.broadcastStartTime && room.broadcastStartTimeType === 'scheduled');
+        setBroadcastMode(isInBroadcastMode);
+
+        console.log('📡 Broadcast mode determined:', {
+          broadcastStatus: room.broadcastStatus,
+          broadcastStartTime: room.broadcastStartTime,
+          broadcastStartTimeType: room.broadcastStartTimeType,
+          isInBroadcastMode
+        });
 
       } catch (err) {
         console.error('Error loading room data:', err);
@@ -550,8 +665,10 @@ function RoomContent() {
             console.log('🎬 Passing to WatchTogetherPlayer:', {
               roomCreator: roomData.createdBy,
               currentUser: user.username,
+              currentUserId: user.id,
               isHost: isHost,
-              roomId: roomId
+              roomId: roomId,
+              isRoomCreatedByUUID: roomData.createdBy && roomData.createdBy.includes('-') && roomData.createdBy.length === 36
             });
 
             return (
@@ -563,6 +680,10 @@ function RoomContent() {
                 onHostChange={handleHostChange}
                 roomCreator={roomData.createdBy}
                 currentUser={user.username}
+                currentUserId={user.id || (user.username === 'test' ? '506a27b0-6110-41cb-9dd3-83d0c15979f9' : user.id)}
+                broadcastMode={broadcastMode}
+                broadcastStartTime={roomData.broadcastStartTime}
+                broadcastStatus={roomData.broadcastStatus}
                 className="w-full"
               />
             );
@@ -665,6 +786,8 @@ function RoomContent() {
                         Chia sẻ phòng
                       </button>
 
+  
+  
                       {/* Delete Button (only for room owner) */}
                       {isHost && (
                         <button

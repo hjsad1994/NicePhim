@@ -32,6 +32,10 @@ export function useAuth() {
           };
 
           console.log('Mapped user object:', mappedUser);
+          console.log('User ID from localStorage:', mappedUser.id);
+          console.log('User ID type:', typeof mappedUser.id);
+          console.log('User ID length:', mappedUser.id ? mappedUser.id.length : 'null');
+
           setUser(mappedUser);
           setIsLoggedIn(true);
         } else {
@@ -86,6 +90,9 @@ export function useAuth() {
     };
 
     console.log('Storing mapped user in localStorage:', mappedUser);
+    console.log('User ID being stored:', mappedUser.id);
+    console.log('User ID type:', typeof mappedUser.id);
+
     localStorage.setItem('user', JSON.stringify(mappedUser));
     setUser(mappedUser);
     setIsLoggedIn(true);

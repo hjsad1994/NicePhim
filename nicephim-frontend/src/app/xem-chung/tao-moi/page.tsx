@@ -246,7 +246,8 @@ export default function TaoPhongXemChungPage({ searchParams }: TaoPhongXemChungP
         autoStart,
         isPrivate: privateOnly,
         broadcastStartTimeType,
-        createdBy: currentUser,
+        createdBy: user.id, // Use user ID (UUID) instead of username
+        creator: currentUser, // Store username separately for display
         createdAt: new Date().toISOString(),
         hlsUrl: movie.hlsUrl || `http://localhost:8080/videos/${movie.id}/master.m3u8`
       };
@@ -301,13 +302,15 @@ export default function TaoPhongXemChungPage({ searchParams }: TaoPhongXemChungP
 
       const backendRoom = await response.json();
 
-      // Save room to localStorage with backend room ID
+      // Save room to localStorage with backend room ID and proper creator info
       try {
         const existingRooms = JSON.parse(localStorage.getItem('watchTogetherRooms') || '[]');
         const roomWithBackendId = {
           ...roomData,
           id: backendRoom.room_id,
-          backendRoomId: backendRoom.room_id
+          backendRoomId: backendRoom.room_id,
+          createdBy: backendRoom.created_by || user.id, // Use backend created_by (UUID) or user.id as fallback
+          creator: user.username
         };
         existingRooms.push(roomWithBackendId);
         localStorage.setItem('watchTogetherRooms', JSON.stringify(existingRooms));

@@ -26,7 +26,6 @@ interface WatchTogetherPlayerProps {
   onHostChange: (isHost: boolean) => void;
   roomCreator: string;
   currentUser: string;
-  currentUserId?: string;
   broadcastMode?: boolean;
   broadcastStartTime?: number;
   broadcastStatus?: string;
@@ -58,23 +57,11 @@ const WatchTogetherPlayer: React.FC<WatchTogetherPlayerProps> = ({
   onHostChange,
   roomCreator,
   currentUser,
-  currentUserId,
   broadcastMode = false,
   broadcastStartTime,
   broadcastStatus,
   className = ''
 }) => {
-  // Debug: Log all props on component mount
-  console.log('🎬 WatchTogetherPlayer props:', {
-    isHost,
-    roomCreator,
-    currentUser,
-    currentUserId,
-    broadcastMode,
-    broadcastStatus,
-    roomId,
-    title
-  });
   const videoRef = useRef<HTMLVideoElement>(null);
   const hlsRef = useRef<Hls | null>(null);
   const [isPlaying, setIsPlaying] = useState(false);
@@ -465,66 +452,9 @@ const WatchTogetherPlayer: React.FC<WatchTogetherPlayerProps> = ({
       case 'control':
       case 'global_control':
         console.log('🎮 Control message received:', messageData);
-        // Handle control messages from host
+        // Basic control message handling
         const controlData = messageData as ControlMessage;
-        console.log('🎮 Control action:', controlData.action, 'from user:', controlData.username);
-
-        console.log('🎮 Processing control message:', {
-          messageFrom: controlData.username,
-          roomCreator,
-          isHost,
-          shouldProcess: controlData.username === roomCreator && !isHost,
-          currentUsername: currentUser
-        });
-
-        // Only process control messages if they're from the host AND current user is not host
-        if (controlData.username === roomCreator && !isHost) {
-          const video = videoRef.current;
-          if (!video) return;
-
-          console.log('🔄 Applying host control action:', controlData.action);
-
-          try {
-            switch (controlData.action) {
-              case 'play':
-                if (video.paused) {
-                  video.play().then(() => {
-                    console.log('▶️ Auto-synced: started playing with host');
-                  }).catch(err => {
-                    console.error('❌ Error playing video on auto-sync:', err);
-                  });
-                }
-                break;
-              case 'pause':
-                if (!video.paused) {
-                  video.pause();
-                  console.log('⏸️ Auto-synced: paused with host');
-                }
-                break;
-              case 'seek':
-                if (controlData.time !== undefined && controlData.time >= 0) {
-                  video.currentTime = controlData.time;
-                  console.log('🎯 Auto-synced: seeked to', controlData.time, 'seconds with host');
-                }
-                break;
-            }
-
-            // Show auto-sync notification in chat
-            setChatMessages(prev => [...prev, {
-              username: 'system',
-              message: `🔄 Tự động đồng bộ với chủ phòng: ${
-                controlData.action === 'play' ? 'bắt đầu phát' :
-                controlData.action === 'pause' ? 'tạm dừng' :
-                `tua đến ${formatTime(controlData.time)}`
-              }`,
-              timestamp: Date.now(),
-              type: 'system'
-            }]);
-
-          } catch (error) {
-            console.error('❌ Error applying host control:', error);
-          }
-        }
+        console.log('🎮 Control action:', controlData.action);
         break;
       case 'local_control':
         console.log('🎮 Local control message received:', messageData);
@@ -587,48 +517,19 @@ const WatchTogetherPlayer: React.FC<WatchTogetherPlayerProps> = ({
 
   const sendControl = useCallback((action: 'play' | 'pause' | 'seek', time: number) => {
     if (isWebSocketConnected()) {
-      const controlMessage = {
-        type: 'control',
-        action,
-        time,
-        username: currentUser,
-        timestamp: Date.now()
-      };
-
-      console.log('📤 Sending control message:', controlMessage);
-      console.log('🎬 Sender info:', {
-        isHost,
-        currentUser,
-        roomCreator,
-        isActuallyHost: isHost && currentUser === roomCreator
-      });
-
       // All users can send control messages, server will validate permissions
       stompClient.publish({
         destination: `/app/room/${roomId}/control`,
-        body: JSON.stringify(controlMessage)
+        body: JSON.stringify({
+          type: 'control',
+          action,
+          time,
+          username: currentUser,
+          timestamp: Date.now()
+        })
       });
-
-      // If host is sending control, also update server position immediately
-      if (isHost) {
-        if (action === 'play' || action === 'pause') {
-          // Update server position for play/pause actions
-          fetch(`http://localhost:8080/api/rooms/${roomId}/${action}`, {
-            method: 'POST',
-            headers: { 'Content-Type': 'application/json' },
-            body: JSON.stringify({
-              username: currentUser,
-              positionMs: Math.floor((videoRef.current?.currentTime || 0) * 1000)
-            })
-          }).catch(error => {
-            console.error('❌ Error updating server for host action:', error);
-          });
-        }
-      }
-    } else {
-      console.error('❌ Cannot send control - WebSocket not connected');
     }
-  }, [stompClient, isConnected, roomId, currentUser, isHost]);
+  }, [stompClient, isConnected, roomId, currentUser]);
 
   const sendChat = useCallback((message: string) => {
     console.log('💬 sendChat called:', {
@@ -695,16 +596,11 @@ const WatchTogetherPlayer: React.FC<WatchTogetherPlayerProps> = ({
     const video = videoRef.current;
     if (!video) return;
 
-    const positionMs = Math.floor(video.currentTime * 1000);
-    console.log('⏸️ Pause triggered at position:', positionMs);
-
     setIsPlaying(false);
-
-    // Send control message for other users to sync
-    sendControl('pause', video.currentTime);
 
     // Notify backend about pause
     try {
+      const positionMs = Math.floor(video.currentTime * 1000);
       await fetch(`http://localhost:8080/api/rooms/${roomId}/pause`, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
@@ -741,8 +637,6 @@ const WatchTogetherPlayer: React.FC<WatchTogetherPlayerProps> = ({
 
     setIsSyncing(true);
     try {
-      console.log('🔄 Starting sync to host...');
-
       // Get fresh data from server
       const response = await fetch(`http://localhost:8080/api/rooms/${roomId}/server-position`);
       const data = await response.json();
@@ -752,71 +646,36 @@ const WatchTogetherPlayer: React.FC<WatchTogetherPlayerProps> = ({
         const state = data.playbackState;
         const positionSeconds = positionMs / 1000;
 
-        console.log('📡 Host data received:', {
-          positionMs,
-          positionSeconds,
-          playbackState: state,
-          hostState: state === 1 ? 'playing' : 'paused'
-        });
-
         // Update local state
         setServerPosition(positionSeconds);
         setPlaybackState(state);
 
         const video = videoRef.current;
-        if (video && positionSeconds >= 0) {
-          const wasPlaying = !video.paused;
+        if (video && positionSeconds > 0) {
+          const wasPlaying = !video.paused; // Remember current playback state
 
-          // Sync position first
+          // Only sync position, don't change playback state
           video.currentTime = positionSeconds;
 
-          // Wait a bit for position to settle, then sync playback state
-          setTimeout(async () => {
-            try {
-              // Sync playback state with host
-              if (state === 1) { // Host is playing
-                if (video.paused) {
-                  await video.play();
-                  console.log('▶️ Synced: started playing with host');
-                }
-              } else { // Host is paused
-                if (!video.paused) {
-                  video.pause();
-                  console.log('⏸️ Synced: paused with host');
-                }
-              }
+          // Keep the user's current playback state (don't pause/play based on server state)
+          if (wasPlaying) {
+            // If video was playing before sync, ensure it keeps playing
+            await video.play().catch(err => {
+              console.log('Could not resume play after sync:', err);
+            });
+          }
+          // If video was paused, keep it paused
 
-              setLastSyncTime(Date.now());
+          setLastSyncTime(Date.now());
+          console.log('🔄 Viewer synced to host position:', positionSeconds, 's (kept playback state:', wasPlaying, ')');
 
-              // Show comprehensive sync notification in chat
-              setChatMessages(prev => [...prev, {
-                username: 'system',
-                message: `🔄 ${currentUser} đã đồng bộ với chủ phòng: ${formatTime(positionSeconds)} (${state === 1 ? 'đang phát' : 'đã dừng'})`,
-                timestamp: Date.now(),
-                type: 'system'
-              }]);
-
-              console.log('✅ Full sync completed:', {
-                position: positionSeconds,
-                playbackState: state === 1 ? 'playing' : 'paused',
-                syncTime: new Date().toLocaleTimeString()
-              });
-
-            } catch (playError) {
-              console.error('❌ Error syncing playback state:', playError);
-
-              // Show error message but still acknowledge position sync
-              setChatMessages(prev => [...prev, {
-                username: 'system',
-                message: `🔄 ${currentUser} đã đồng bộ vị trí (${formatTime(positionSeconds)}) nhưng không thể đồng bộ trạng thái phát`,
-                timestamp: Date.now(),
-                type: 'system'
-              }]);
-            }
-          }, 100);
-
-        } else {
-          console.error('❌ Video element not available or invalid position');
+          // Show sync notification in chat
+          setChatMessages(prev => [...prev, {
+            username: 'system',
+            message: `${currentUser} đã đồng bộ với chủ phòng (${formatTime(positionSeconds)})`,
+            timestamp: Date.now(),
+            type: 'system'
+          }]);
         }
       } else {
         console.error('❌ Server returned error:', data.error);
@@ -848,10 +707,7 @@ const WatchTogetherPlayer: React.FC<WatchTogetherPlayerProps> = ({
     const handleTimeUpdate = () => {
       setCurrentTime(video.currentTime);
     };
-    const handleDurationChange = () => {
-      console.log('📽️ Duration changed:', video.duration);
-      setDuration(video.duration);
-    };
+    const handleDurationChange = () => setDuration(video.duration);
     const handlePlay = () => setIsPlaying(true);
 
     // Use custom pause handler
@@ -859,33 +715,16 @@ const WatchTogetherPlayer: React.FC<WatchTogetherPlayerProps> = ({
       handlePause();
     };
 
-    // Add seek event listeners for debugging
-    const handleSeeking = () => {
-      console.log('🎯 Video seeking event triggered');
-    };
-    const handleSeeked = () => {
-      console.log('✅ Video seeked event triggered, new time:', video.currentTime);
-      setCurrentTime(video.currentTime);
-    };
-
     video.addEventListener('timeupdate', handleTimeUpdate);
     video.addEventListener('durationchange', handleDurationChange);
     video.addEventListener('play', handlePlay);
     video.addEventListener('pause', handlePauseWrapper);
-    video.addEventListener('seeking', handleSeeking);
-    video.addEventListener('seeked', handleSeeked);
-
-    // Enable seeking
-    video.removeAttribute('disablePictureInPicture');
-    video.removeAttribute('controlslist');
 
     return () => {
       video.removeEventListener('timeupdate', handleTimeUpdate);
       video.removeEventListener('durationchange', handleDurationChange);
       video.removeEventListener('play', handlePlay);
       video.removeEventListener('pause', handlePauseWrapper);
-      video.removeEventListener('seeking', handleSeeking);
-      video.removeEventListener('seeked', handleSeeked);
     };
   }, [currentUser, roomCreator, roomId]);
 
@@ -912,16 +751,12 @@ const WatchTogetherPlayer: React.FC<WatchTogetherPlayerProps> = ({
   };
 
   // Control functions - different for host vs viewers
-  const togglePlay = async () => {
+  const togglePlay = () => {
     const video = videoRef.current;
     if (!video) return;
 
     if (video.paused) {
-      console.log('▶️ Play triggered at position:', video.currentTime);
-      await video.play().catch(err => console.error('Error playing video:', err));
-
-      // Send control message for other users to sync
-      sendControl('play', video.currentTime);
+      video.play().catch(err => console.error('Error playing video:', err));
     } else {
       video.pause(); // This will trigger handlePause
     }
@@ -931,25 +766,12 @@ const WatchTogetherPlayer: React.FC<WatchTogetherPlayerProps> = ({
     const video = videoRef.current;
     if (!video) return;
 
-    console.log('🎯 Seek called:', {
-      time,
-      isHost,
-      broadcastMode,
-      duration: video.duration,
-      currentTime: video.currentTime
-    });
-
-    // Allow everyone to seek for now (simplified logic)
-    try {
+    if (isHost) {
+      // Host can seek freely
       video.currentTime = time;
-      console.log('✅ Seek successful:', time);
-
-      // Send control message if host is seeking (for others to sync)
-      if (isHost) {
-        sendControl('seek', time);
-      }
-    } catch (error) {
-      console.error('❌ Seek failed:', error);
+    } else {
+      // Viewers cannot seek
+      console.log('🚫 Viewers cannot seek - use sync button instead');
     }
   };
 
@@ -957,12 +779,10 @@ const WatchTogetherPlayer: React.FC<WatchTogetherPlayerProps> = ({
     const video = videoRef.current;
     if (!video) return;
 
-    console.log('⏭️ Seek forward called');
-    try {
-      video.currentTime = Math.min(video.currentTime + 10, video.duration || 1000);
-      console.log('✅ Seek forward successful');
-    } catch (error) {
-      console.error('❌ Seek forward failed:', error);
+    if (isHost) {
+      video.currentTime = Math.min(video.currentTime + 10, video.duration);
+    } else {
+      console.log('🚫 Viewers cannot seek - use sync button instead');
     }
   };
 
@@ -970,12 +790,10 @@ const WatchTogetherPlayer: React.FC<WatchTogetherPlayerProps> = ({
     const video = videoRef.current;
     if (!video) return;
 
-    console.log('⏮️ Seek backward called');
-    try {
+    if (isHost) {
       video.currentTime = Math.max(video.currentTime - 10, 0);
-      console.log('✅ Seek backward successful');
-    } catch (error) {
-      console.error('❌ Seek backward failed:', error);
+    } else {
+      console.log('🚫 Viewers cannot seek - use sync button instead');
     }
   };
 
@@ -1146,7 +964,67 @@ const WatchTogetherPlayer: React.FC<WatchTogetherPlayerProps> = ({
           }}
         />
 
-  
+        {/* Connection Status */}
+        <div className={`absolute top-2 right-2 px-2 py-1 rounded text-xs font-medium ${
+          stompClient?.connected ? 'bg-green-500/80 text-white' : 'bg-red-500/80 text-white'
+        }`}>
+          {stompClient?.connected ? '🟢 Đã kết nối' : '🔴 Mất kết nối'}
+        </div>
+
+        {/* Broadcast Status */}
+        {broadcastMode && (
+          <div className={`absolute top-2 left-2 px-2 py-1 rounded text-xs font-medium ${
+            broadcastActive ? 'bg-blue-500/80 text-white' : 'bg-yellow-500/80 text-white'
+          }`}>
+            {broadcastActive ? '📺 Đang phát' : '⏰ Chờ phát'}
+          </div>
+        )}
+
+        {/* User Status */}
+        <div className={`absolute top-2 left-2 px-2 py-1 rounded text-xs font-medium ${
+          currentUser === roomCreator ? 'bg-blue-500/80 text-white' : 'bg-gray-500/80 text-white'
+        }`}>
+          {editingUsername ? (
+            <div className="flex items-center space-x-2">
+              <input
+                type="text"
+                value={tempUsername}
+                onChange={(e) => setTempUsername(e.target.value)}
+                className="bg-black/50 text-white px-2 py-1 rounded text-xs border border-white/30 focus:border-white/60 focus:outline-none"
+                placeholder="Nhập tên..."
+                autoFocus
+                onBlur={() => {
+                  if (tempUsername.trim()) {
+                    // Update localStorage
+                    try {
+                      localStorage.setItem('watchTogetherUser', tempUsername.trim());
+                      // Force page reload to update currentUser
+                      window.location.reload();
+                    } catch (error) {
+                      console.error('Error updating username:', error);
+                    }
+                  }
+                  setEditingUsername(false);
+                }}
+                onKeyDown={(e) => {
+                  if (e.key === 'Enter') {
+                    e.currentTarget.blur();
+                  } else if (e.key === 'Escape') {
+                    setTempUsername(currentUser);
+                    setEditingUsername(false);
+                  }
+                }}
+              />
+            </div>
+          ) : (
+            <div className="flex items-center space-x-2 cursor-pointer" onClick={() => setEditingUsername(true)}>
+              <span>{currentUser === roomCreator ? '👑' : '👥'}</span>
+              <span className="truncate max-w-32">{currentUser}</span>
+              <span className="text-xs opacity-70">(✏️)</span>
+            </div>
+          )}
+        </div>
+
         {/* Controls Overlay */}
         {showControls && (
           <div className="absolute inset-0 bg-gradient-to-t from-black/80 via-transparent to-transparent pointer-events-none">
@@ -1159,8 +1037,6 @@ const WatchTogetherPlayer: React.FC<WatchTogetherPlayerProps> = ({
                   <span>{formatTime(duration)}</span>
                   {isHost ? (
                     <span className="text-xs text-blue-400">👑 Chủ phòng</span>
-                  ) : broadcastMode ? (
-                    <span className="text-xs text-green-400">📡 Chế độ Broadcast</span>
                   ) : (
                     <span className="text-xs text-gray-400">
                       {lastSyncTime > 0 ? `Đồng bộ: ${new Date(lastSyncTime).toLocaleTimeString()}` : 'Chưa đồng bộ'}
@@ -1168,18 +1044,41 @@ const WatchTogetherPlayer: React.FC<WatchTogetherPlayerProps> = ({
                   )}
                 </div>
                 <div className="relative">
-                  {/* Everyone can use progress bar */}
-                  <input
-                    type="range"
-                    min="0"
-                    max={duration || 100}
-                    value={currentTime}
-                    onChange={(e) => handleSeek(parseFloat(e.target.value))}
-                    className="w-full h-1 bg-white/30 rounded-lg appearance-none cursor-pointer"
-                    style={{
-                      background: `linear-gradient(to right, #3b82f6 0%, #3b82f6 ${duration ? (currentTime / duration) * 100 : 0}%, rgba(255,255,255,0.3) ${duration ? (currentTime / duration) * 100 : 0}%, rgba(255,255,255,0.3) 100%)`
-                    }}
-                  />
+                  {isHost ? (
+                    // Host can use progress bar
+                    <input
+                      type="range"
+                      min="0"
+                      max={duration || 0}
+                      value={currentTime}
+                      onChange={(e) => handleSeek(parseFloat(e.target.value))}
+                      className="w-full h-1 bg-white/30 rounded-lg appearance-none cursor-pointer"
+                      style={{
+                        background: `linear-gradient(to right, #3b82f6 0%, #3b82f6 ${(currentTime / duration) * 100}%, rgba(255,255,255,0.3) ${(currentTime / duration) * 100}%, rgba(255,255,255,0.3) 100%)`
+                      }}
+                    />
+                  ) : (
+                    // Viewers see disabled progress bar
+                    <>
+                      <input
+                        type="range"
+                        min="0"
+                        max={duration || 0}
+                        value={currentTime}
+                        onChange={(e) => handleSeek(parseFloat(e.target.value))}
+                        disabled
+                        className="w-full h-1 bg-gray-500/20 rounded-lg appearance-none cursor-not-allowed opacity-50"
+                        style={{
+                          background: `linear-gradient(to right, #6b7280 0%, #6b7280 ${(currentTime / duration) * 100}%, rgba(107,114,128,0.2) ${(currentTime / duration) * 100}%, rgba(107,114,128,0.2) 100%)`
+                        }}
+                      />
+                      <div className="absolute inset-0 flex items-center justify-center pointer-events-none">
+                        <span className="text-xs text-gray-400 bg-black/50 px-2 py-1 rounded">
+                          Khán giả không thể tua - dùng nút đồng bộ
+                        </span>
+                      </div>
+                    </>
+                  )}
                 </div>
               </div>
 
@@ -1203,76 +1102,86 @@ const WatchTogetherPlayer: React.FC<WatchTogetherPlayerProps> = ({
                     )}
                   </button>
 
-                  {/* Seek Backward Button - Everyone can use */}
-                  <button
-                    onClick={seekBackward}
-                    className="w-10 h-10 bg-white/20 rounded-full flex items-center justify-center text-white hover:bg-white/30 transition-colors"
-                    title="Tua lại 10 giây"
-                  >
-                    <svg className="w-4 h-4" fill="currentColor" viewBox="0 0 20 20">
-                      <path d="M8.445 14.832A1 1 0 0010 14v-2.798l5.445 3.63A1 1 0 0017 14V6a1 1 0 00-1.555-.832L10 8.798V6a1 1 0 00-1.555-.832l-6 4a1 1 0 000 1.664l6 4z"/>
-                    </svg>
-                  </button>
-
-                  {/* Sync Button - Only for viewers */}
-                  {!isHost && (
+                  {/* Seek Backward Button */}
+                  {isHost ? (
+                    <button
+                      onClick={seekBackward}
+                      className="w-10 h-10 bg-white/20 rounded-full flex items-center justify-center text-white hover:bg-white/30 transition-colors"
+                      title="Tua lại 10 giây"
+                    >
+                      <svg className="w-4 h-4" fill="currentColor" viewBox="0 0 20 20">
+                        <path d="M8.445 14.832A1 1 0 0010 14v-2.798l5.445 3.63A1 1 0 0017 14V6a1 1 0 00-1.555-.832L10 8.798V6a1 1 0 00-1.555-.832l-6 4a1 1 0 000 1.664l6 4z"/>
+                      </svg>
+                    </button>
+                  ) : (
                     <div className="relative group">
                       <button
-                        onClick={syncToServer}
-                        disabled={isSyncing}
-                        className={`w-10 h-10 rounded-full flex items-center justify-center text-white transition-all transform hover:scale-105 ${
-                          isSyncing
-                            ? 'bg-purple-500/50 cursor-not-allowed animate-pulse'
-                            : broadcastMode
-                            ? 'bg-gradient-to-r from-purple-500/30 to-pink-500/30 hover:from-purple-500/40 hover:to-pink-500/40 ring-2 ring-purple-500/50 shadow-lg'
-                            : 'bg-gradient-to-r from-blue-500/20 to-cyan-500/20 hover:from-blue-500/30 hover:to-cyan-500/30 ring-2 ring-blue-500/30'
-                        }`}
-                        title={
-                          broadcastMode
-                            ? "📡 Đồng bộ với chủ phòng (chế độ broadcast)"
-                            : "🔄 Đồng bộ với chủ phòng (vị trí + trạng thái phát)"
-                        }
+                        disabled
+                        className="w-10 h-10 bg-gray-500/20 rounded-full flex items-center justify-center text-gray-400 cursor-not-allowed opacity-50"
+                        title="Tua lại đã bị vô hiệu hóa"
                       >
-                        {isSyncing ? (
-                          <svg className="w-4 h-4 animate-spin" fill="none" viewBox="0 0 24 24">
-                            <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4"></circle>
-                            <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
-                          </svg>
-                        ) : (
-                          <svg className="w-4 h-4" fill="currentColor" viewBox="0 0 20 20">
-                            <path fillRule="evenodd" d="M4 2a1 1 0 011 1v2.101a7.002 7.002 0 0111.601 2.566 1 1 0 11-1.885.666A5.002 5.002 0 005.999 7H9a1 1 0 010 2H4a1 1 0 01-1-1V3a1 1 0 011-1zm.008 9.057a1 1 0 011.276.61A5.002 5.002 0 0014.001 13H11a1 1 0 110-2h5a1 1 0 011 1v5a1 1 0 11-2 0v-2.101a7.002 7.002 0 01-11.601-2.566 1 1 0 01.61-1.276z" clipRule="evenodd" />
-                          </svg>
-                        )}
+                        <svg className="w-4 h-4" fill="currentColor" viewBox="0 0 20 20">
+                          <path d="M8.445 14.832A1 1 0 0010 14v-2.798l5.445 3.63A1 1 0 0017 14V6a1 1 0 00-1.555-.832L10 8.798V6a1 1 0 00-1.555-.832l-6 4a1 1 0 000 1.664l6 4z"/>
+                        </svg>
                       </button>
-                      <div className="absolute bottom-full left-1/2 transform -translate-x-1/2 mb-2 px-3 py-2 bg-black/90 backdrop-blur-sm text-white text-xs rounded-lg whitespace-nowrap opacity-0 group-hover:opacity-100 transition-all duration-200 pointer-events-none shadow-lg border border-gray-600/30">
-                        <div className="font-semibold mb-1">
-                          {broadcastMode ? "📡 Đồng bộ Broadcast" : "🔄 Đồng bộ với Chủ Phòng"}
-                        </div>
-                        <div className="text-gray-300 text-xs">
-                          {broadcastMode
-                            ? "Sync vị trí & trạng thái phát"
-                            : "Tự động theo dõi chủ phòng"
-                          }
-                        </div>
-                        {lastSyncTime > 0 && (
-                          <div className="text-gray-400 text-xs mt-1">
-                            Lần cuối: {new Date(lastSyncTime).toLocaleTimeString()}
-                          </div>
-                        )}
+                      <div className="absolute bottom-full left-1/2 transform -translate-x-1/2 mb-2 px-2 py-1 bg-black/80 text-white text-xs rounded whitespace-nowrap opacity-0 group-hover:opacity-100 transition-opacity pointer-events-none">
+                        Khán giả không thể tua
                       </div>
                     </div>
                   )}
 
-                  {/* Seek Forward Button - Everyone can use */}
-                  <button
-                    onClick={seekForward}
-                    className="w-10 h-10 bg-white/20 rounded-full flex items-center justify-center text-white hover:bg-white/30 transition-colors"
-                    title="Tua tới 10 giây"
-                  >
-                    <svg className="w-4 h-4" fill="currentColor" viewBox="0 0 20 20">
-                      <path d="M4.555 5.168A1 1 0 003 6v8a1 1 0 001.555.832L10 11.202V14a1 1 0 001.555.832l6-4a1 1 0 000-1.664l-6-4A1 1 0 0010 6v2.798L4.555 5.168z"/>
-                    </svg>
-                  </button>
+                  {/* Sync Button - Only for viewers */}
+                  {!isHost && (
+                    <button
+                      onClick={syncToServer}
+                      disabled={isSyncing}
+                      className={`w-10 h-10 rounded-full flex items-center justify-center text-white transition-colors ${
+                        isSyncing
+                          ? 'bg-blue-500/50 cursor-not-allowed'
+                          : 'bg-blue-500/20 hover:bg-blue-500/30'
+                      }`}
+                      title="Đồng bộ với chủ phòng"
+                    >
+                      {isSyncing ? (
+                        <svg className="w-4 h-4 animate-spin" fill="none" viewBox="0 0 24 24">
+                          <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4"></circle>
+                          <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
+                        </svg>
+                      ) : (
+                        <svg className="w-4 h-4" fill="currentColor" viewBox="0 0 20 20">
+                          <path fillRule="evenodd" d="M4 2a1 1 0 011 1v2.101a7.002 7.002 0 0111.601 2.566 1 1 0 11-1.885.666A5.002 5.002 0 005.999 7H9a1 1 0 010 2H4a1 1 0 01-1-1V3a1 1 0 011-1zm.008 9.057a1 1 0 011.276.61A5.002 5.002 0 0014.001 13H11a1 1 0 110-2h5a1 1 0 011 1v5a1 1 0 11-2 0v-2.101a7.002 7.002 0 01-11.601-2.566 1 1 0 01.61-1.276z" clipRule="evenodd" />
+                        </svg>
+                      )}
+                    </button>
+                  )}
+
+                  {/* Seek Forward Button */}
+                  {isHost ? (
+                    <button
+                      onClick={seekForward}
+                      className="w-10 h-10 bg-white/20 rounded-full flex items-center justify-center text-white hover:bg-white/30 transition-colors"
+                      title="Tua tới 10 giây"
+                    >
+                      <svg className="w-4 h-4" fill="currentColor" viewBox="0 0 20 20">
+                        <path d="M4.555 5.168A1 1 0 003 6v8a1 1 0 001.555.832L10 11.202V14a1 1 0 001.555.832l6-4a1 1 0 000-1.664l-6-4A1 1 0 0010 6v2.798L4.555 5.168z"/>
+                      </svg>
+                    </button>
+                  ) : (
+                    <div className="relative group">
+                      <button
+                        disabled
+                        className="w-10 h-10 bg-gray-500/20 rounded-full flex items-center justify-center text-gray-400 cursor-not-allowed opacity-50"
+                        title="Tua tới đã bị vô hiệu hóa"
+                      >
+                        <svg className="w-4 h-4" fill="currentColor" viewBox="0 0 20 20">
+                          <path d="M4.555 5.168A1 1 0 003 6v8a1 1 0 001.555.832L10 11.202V14a1 1 0 001.555.832l6-4a1 1 0 000-1.664l-6-4A1 1 0 0010 6v2.798L4.555 5.168z"/>
+                        </svg>
+                      </button>
+                      <div className="absolute bottom-full left-1/2 transform -translate-x-1/2 mb-2 px-2 py-1 bg-black/80 text-white text-xs rounded whitespace-nowrap opacity-0 group-hover:opacity-100 transition-opacity pointer-events-none">
+                        Khán giả không thể tua
+                      </div>
+                    </div>
+                  )}
 
                   {/* Volume Control */}
                   <div className="flex items-center space-x-2">
@@ -1424,21 +1333,11 @@ const WatchTogetherPlayer: React.FC<WatchTogetherPlayerProps> = ({
 
       {/* Chat Panel */}
       {showChat && (
-        <div className="absolute bottom-20 right-4 w-80 bg-black/40 backdrop-blur-sm border border-gray-700/50 rounded-xl flex flex-col" style={{ maxHeight: '300px' }}>
+        <div className="absolute bottom-20 right-4 w-80 bg-black/90 rounded-lg border border-gray-400/30 flex flex-col" style={{ maxHeight: '300px' }}>
           {/* Chat Header */}
-          <div className="group inline-flex items-center justify-between p-4 border-b border-gray-700/50">
-            <div className="flex items-center">
-              <svg className="w-5 h-5 mr-2" fill="currentColor" viewBox="0 0 20 20">
-                <path fillRule="evenodd" d="M18 5v8a2 2 0 01-2 2h-5l-5 4v-4H4a2 2 0 01-2-2V5a2 2 0 012-2h12a2 2 0 012 2zM7 8H5v2h2V8zm2 0h2v2H9V8zm6 0h-2v2h2V8z" clipRule="evenodd" />
-              </svg>
-              <h3 className="text-white font-semibold text-sm">Chat phòng</h3>
-            </div>
-            <div className="flex items-center">
-              <span className="text-gray-400 text-xs mr-2">{chatMessages.length} tin nhắn</span>
-              <svg className="w-4 h-4 group-hover:translate-x-1 transition-transform" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M9 5l7 7-7 7"></path>
-              </svg>
-            </div>
+          <div className="flex items-center justify-between p-3 border-b border-gray-400/30">
+            <h3 className="text-white font-medium text-sm">Chat phòng</h3>
+            <span className="text-gray-400 text-xs">{chatMessages.length} tin nhắn</span>
           </div>
 
           {/* Chat Messages */}
@@ -1458,7 +1357,7 @@ const WatchTogetherPlayer: React.FC<WatchTogetherPlayerProps> = ({
           </div>
 
           {/* Chat Input */}
-          <div className="p-4 border-t border-gray-700/50">
+          <div className="p-3 border-t border-gray-400/30">
             <div className="flex gap-2">
               <input
                 type="text"
@@ -1467,12 +1366,12 @@ const WatchTogetherPlayer: React.FC<WatchTogetherPlayerProps> = ({
                 onKeyPress={(e) => e.key === 'Enter' && sendChatMessage()}
                 placeholder="Nhập tin nhắn..."
                 maxLength={500}
-                className="flex-1 px-4 py-3 bg-white/10 backdrop-blur-sm border border-gray-700/50 rounded-lg text-white text-sm placeholder:text-gray-400 outline-none focus:border-gray-600/50 transition-all duration-500"
+                className="flex-1 px-3 py-2 bg-white/10 border border-gray-400/30 rounded text-white text-sm placeholder:text-gray-400 outline-none focus:border-blue-500/50"
               />
               <button
                 onClick={sendChatMessage}
                 disabled={!newChatMessage.trim()}
-                className="group inline-flex items-center px-3 py-3 bg-white/10 backdrop-blur-sm border border-gray-700/50 text-white font-medium rounded-lg hover:bg-white/20 hover:border-gray-600/50 disabled:bg-gray-500/20 disabled:opacity-50 disabled:cursor-not-allowed transition-all duration-500 whitespace-nowrap"
+                className="px-3 py-2 bg-blue-500/20 hover:bg-blue-500/30 disabled:bg-gray-500/20 text-white rounded text-sm font-medium transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
               >
                 Gửi
               </button>
@@ -1485,4 +1384,3 @@ const WatchTogetherPlayer: React.FC<WatchTogetherPlayerProps> = ({
 };
 
 export default WatchTogetherPlayer;
-

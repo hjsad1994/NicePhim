@@ -130,8 +130,8 @@ export default function QuanLyXemChungPage() {
                   backendRoomId: backendRoom.room_id,
                   name: backendRoom.name,
                   movie: movie,
-                  creator: currentUser,
-                  createdBy: currentUser,
+                  creator: currentUser, // For display
+                  createdBy: backendRoom.created_by || user.id, // For comparison (UUID)
                   isPrivate: backendRoom.is_private || false,
                   autoStart: backendRoom.broadcast_status === 'scheduled',
                   broadcastStartTimeType: backendRoom.broadcast_start_time_type,
@@ -164,8 +164,39 @@ export default function QuanLyXemChungPage() {
         }
       }
 
-      // Set empty rooms array if backend fails - no fallback to localStorage for authenticated users
-      setRooms([]);
+      // Try to load rooms from localStorage as fallback
+      try {
+        console.log('🔄 Falling back to localStorage for rooms...');
+        const localStorageRooms = JSON.parse(localStorage.getItem('watchTogetherRooms') || '[]');
+
+        if (localStorageRooms.length > 0) {
+          // Convert localStorage rooms to the expected format
+          const convertedRooms = localStorageRooms.map((room: any) => ({
+            id: room.id,
+            backendRoomId: room.backendRoomId,
+            name: room.name,
+            movie: room.movie,
+            creator: room.creator || room.createdBy, // Use creator field if available, fallback to createdBy
+            createdBy: room.createdBy, // This should be the UUID for comparison
+            isPrivate: room.isPrivate || false,
+            autoStart: room.autoStart || false,
+            broadcastStartTimeType: room.broadcastStartTimeType,
+            scheduledStartTime: room.scheduledStartTime,
+            broadcastStatus: room.broadcastStatus,
+            createdAt: room.createdAt,
+            participants: 0
+          }));
+
+          console.log('✅ Loaded rooms from localStorage:', convertedRooms.length);
+          setRooms(convertedRooms);
+        } else {
+          console.log('📝 No rooms found in localStorage');
+          setRooms([]);
+        }
+      } catch (error) {
+        console.error('Error loading rooms from localStorage:', error);
+        setRooms([]);
+      }
     } catch (error) {
       console.error('Error loading rooms:', error);
       setRooms([]);
@@ -392,6 +423,9 @@ export default function QuanLyXemChungPage() {
                             <path fillRule="evenodd" d="M10 9a3 3 0 100-6 3 3 0 000 6zm-7 9a7 7 0 1114 0H3z" clipRule="evenodd" />
                           </svg>
                           {room.creator}
+                          {room.createdBy === user?.id && (
+                            <span className="text-purple-400 text-xs">(Bạn)</span>
+                          )}
                         </span>
                         <span className="flex items-center gap-1">
                           <svg className="w-4 h-4" fill="currentColor" viewBox="0 0 20 20">
@@ -462,7 +496,7 @@ export default function QuanLyXemChungPage() {
                   {/* Room Actions */}
                   <div className="flex items-center justify-between pt-4 border-t border-gray-400/20">
                     <div className="flex items-center gap-2 text-xs text-gray-400">
-                      {room.creator === user?.username ? (
+                      {room.createdBy === user?.id ? (
                         <span className="flex items-center gap-1 text-purple-400">
                           <svg className="w-3 h-3" fill="currentColor" viewBox="0 0 20 20">
                             <path d="M9.049 2.927c.3-.921 1.603-.921 1.902 0l1.07 3.292a1 1 0 00.95.69h3.462c.969 0 1.371 1.24.588 1.81l-2.8 2.034a1 1 0 00-.364 1.118l1.07 3.292c.3.921-.755 1.688-1.54 1.118l-2.8-2.034a1 1 0 00-1.175 0l-2.8 2.034c-.784.57-1.838-.197-1.539-1.118l1.07-3.292a1 1 0 00-.364-1.118L2.98 8.72c-.783-.57-.38-1.81.588-1.81h3.461a1 1 0 00.951-.69l1.07-3.292z" />
@@ -479,7 +513,7 @@ export default function QuanLyXemChungPage() {
                       )}
                     </div>
                     <div className="flex items-center gap-2">
-                      {room.creator === user?.username && (
+                      {room.createdBy === user?.id && (
                         <button
                           onClick={() => deleteRoom(room.id, room.backendRoomId)}
                           className="px-3 py-2 bg-red-500/20 hover:bg-red-500/30 border border-red-500/50 text-red-400 rounded-lg transition-all duration-300 text-sm flex items-center gap-2"
