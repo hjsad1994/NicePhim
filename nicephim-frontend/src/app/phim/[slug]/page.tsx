@@ -239,23 +239,9 @@ export default function MovieDetailPage({ params }: MovieDetailPageProps) {
   return (
     <div className="min-h-screen bg-black relative overflow-hidden">
       {/* Animated Glow Orbs Background */}
-      <div className="absolute top-0 left-1/4 w-96 h-96 bg-red-600/10 rounded-full blur-3xl animate-pulse"></div>
-      <div className="absolute bottom-0 right-1/4 w-96 h-96 bg-blue-600/10 rounded-full blur-3xl animate-pulse delay-1000"></div>
-      <div className="absolute top-1/2 left-1/2 transform -translate-x-1/2 -translate-y-1/2 w-80 h-80 bg-purple-600/5 rounded-full blur-3xl animate-pulse delay-2000"></div>
-
-      {/* Floating Particles */}
-      {[...Array(15)].map((_, i) => (
-        <div
-          key={i}
-          className="absolute w-1 h-1 bg-white/20 rounded-full animate-pulse"
-          style={{
-            left: `${Math.random() * 100}%`,
-            top: `${Math.random() * 100}%`,
-            animationDelay: `${Math.random() * 3}s`,
-            animationDuration: `${2 + Math.random() * 3}s`
-          }}
-        />
-      ))}
+      <div className="absolute top-0 left-1/4 w-96 h-96 bg-rose-600/10 rounded-full blur-3xl animate-pulse"></div>
+      <div className="absolute bottom-0 right-1/4 w-96 h-96 bg-purple-600/10 rounded-full blur-3xl animate-pulse delay-1000"></div>
+      <div className="absolute top-1/2 left-1/2 transform -translate-x-1/2 -translate-y-1/2 w-80 h-80 bg-pink-600/5 rounded-full blur-3xl animate-pulse delay-2000"></div>
 
       <div className="relative z-10">
       {/* Hero Section with Banner */}
@@ -343,45 +329,83 @@ export default function MovieDetailPage({ params }: MovieDetailPageProps) {
                 </p>
 
                 <div className="flex flex-wrap gap-4 justify-center md:justify-start">
+                  {/* Primary Button - Watch Now */}
                   <Link
                     href={`/xem/${movie.slug}`}
-                    className="group inline-flex items-center px-8 py-4 bg-gradient-to-r from-red-600 to-pink-600 text-white font-semibold rounded-xl hover:from-red-700 hover:to-pink-700 transition-all duration-500 shadow-lg hover:shadow-xl transform hover:scale-105"
+                    className="group relative inline-flex items-center px-8 py-4 overflow-hidden text-white font-bold rounded-xl transition-all duration-500 shadow-2xl hover:shadow-rose-500/50 transform hover:scale-105"
                   >
-                    <PlayIcon className="h-6 w-6 mr-3" />
-                    Xem Ngay
-                    <svg className="w-5 h-5 ml-2 group-hover:translate-x-1 transition-transform" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M13 7l5 5m0 0l-5 5m5-5H6" />
-                    </svg>
+                    {/* Gradient Background */}
+                    <div className="absolute inset-0 bg-gradient-to-r from-rose-500 via-pink-500 to-red-500 transition-all duration-500 group-hover:from-rose-600 group-hover:via-pink-600 group-hover:to-red-600"></div>
+                    
+                    {/* Glow Effect */}
+                    <div className="absolute -inset-1 bg-gradient-to-r from-rose-500 via-pink-500 to-red-500 rounded-xl blur opacity-30 group-hover:opacity-60 transition-all duration-500"></div>
+                    
+                    {/* Content */}
+                    <div className="relative flex items-center">
+                      <PlayIcon className="h-6 w-6 mr-3" />
+                      <span>Xem Ngay</span>
+                      <svg className="w-5 h-5 ml-3 group-hover:translate-x-1 transition-transform" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M13 7l5 5m0 0l-5 5m5-5H6" />
+                      </svg>
+                    </div>
                   </Link>
 
+                  {/* Secondary Button - Watch Together */}
                   <Link
                     href={`/xem-chung/tao-moi?movie=${movie.slug}`}
-                    className="group inline-flex items-center px-8 py-4 bg-blue-600 hover:bg-blue-700 text-white font-semibold rounded-xl transition-all duration-500 shadow-lg hover:shadow-xl transform hover:scale-105"
+                    className="group relative inline-flex items-center px-8 py-4 overflow-hidden text-white font-bold rounded-xl transition-all duration-500 shadow-2xl hover:shadow-purple-500/50 transform hover:scale-105"
                   >
-                    <UsersIcon className="h-6 w-6 mr-3" />
-                    Xem chung
-                    <svg className="w-5 h-5 ml-2 group-hover:translate-x-1 transition-transform" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M13 7l5 5m0 0l-5 5m5-5H6" />
-                    </svg>
+                    {/* Gradient Background */}
+                    <div className="absolute inset-0 bg-gradient-to-r from-purple-500 via-violet-500 to-indigo-500 transition-all duration-500 group-hover:from-purple-600 group-hover:via-violet-600 group-hover:to-indigo-600"></div>
+                    
+                    {/* Glow Effect */}
+                    <div className="absolute -inset-1 bg-gradient-to-r from-purple-500 via-violet-500 to-indigo-500 rounded-xl blur opacity-30 group-hover:opacity-60 transition-all duration-500"></div>
+                    
+                    {/* Content */}
+                    <div className="relative flex items-center">
+                      <UsersIcon className="h-6 w-6 mr-3" />
+                      <span>Xem chung</span>
+                      <svg className="w-5 h-5 ml-3 group-hover:translate-x-1 transition-transform" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M13 7l5 5m0 0l-5 5m5-5H6" />
+                      </svg>
+                    </div>
                   </Link>
 
+                  {/* Tertiary Button - Favorite */}
                   <button
                     onClick={handleFavoriteToggle}
-                    className={`group inline-flex items-center px-8 py-4 font-semibold rounded-xl transition-all duration-500 shadow-lg backdrop-blur-sm transform hover:scale-105 ${
+                    className={`group relative inline-flex items-center px-8 py-4 overflow-hidden font-bold rounded-xl transition-all duration-500 shadow-xl transform hover:scale-105 ${
                       isFavorite
-                        ? 'bg-red-600 text-white hover:bg-red-700'
-                        : 'bg-gray-800/80 hover:bg-gray-700 text-white'
+                        ? 'text-white'
+                        : 'text-white'
                     }`}
                   >
                     {isFavorite ? (
-                      <HeartIcon className="h-6 w-6 mr-3" />
+                      <>
+                        {/* Filled State - Gradient */}
+                        <div className="absolute inset-0 bg-gradient-to-r from-pink-500 via-rose-500 to-red-500 transition-all duration-500"></div>
+                        <div className="absolute -inset-1 bg-gradient-to-r from-pink-500 via-rose-500 to-red-500 rounded-xl blur opacity-40 transition-all duration-500"></div>
+                      </>
                     ) : (
-                      <HeartOutlineIcon className="h-6 w-6 mr-3" />
+                      <>
+                        {/* Empty State - Glass Morphism */}
+                        <div className="absolute inset-0 bg-white/10 backdrop-blur-xl border border-white/20 rounded-xl transition-all duration-500 group-hover:bg-white/20 group-hover:border-white/30"></div>
+                        <div className="absolute -inset-1 bg-gradient-to-r from-white/0 to-white/0 group-hover:from-pink-500/20 group-hover:to-purple-500/20 rounded-xl blur opacity-0 group-hover:opacity-60 transition-all duration-500"></div>
+                      </>
                     )}
-                    {isFavorite ? 'Đã thích' : 'Thích'}
-                    <svg className="w-5 h-5 ml-2 group-hover:translate-x-1 transition-transform" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M13 7l5 5m0 0l-5 5m5-5H6" />
-                    </svg>
+                    
+                    {/* Content */}
+                    <div className="relative flex items-center">
+                      {isFavorite ? (
+                        <HeartIcon className="h-6 w-6 mr-3" />
+                      ) : (
+                        <HeartOutlineIcon className="h-6 w-6 mr-3" />
+                      )}
+                      <span>{isFavorite ? 'Đã thích' : 'Thích'}</span>
+                      <svg className="w-5 h-5 ml-3 group-hover:translate-x-1 transition-transform" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M13 7l5 5m0 0l-5 5m5-5H6" />
+                      </svg>
+                    </div>
                   </button>
                 </div>
               </div>
@@ -396,11 +420,11 @@ export default function MovieDetailPage({ params }: MovieDetailPageProps) {
           <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
             {/* Left Sidebar - Additional Info */}
             <div className="lg:col-span-1 space-y-6">
-              <div className="bg-gray-900/80 backdrop-blur-sm rounded-2xl p-6 border border-gray-800">
-                <h3 className="text-xl font-bold text-white mb-4">Thông tin phim</h3>
+              <div className="bg-white/5 backdrop-blur-xl rounded-2xl p-6 border border-white/10 hover:border-white/20 transition-all duration-500">
+                <h3 className="text-xl font-bold text-white mb-6 bg-gradient-to-r from-white to-gray-300 bg-clip-text text-transparent">Thông tin phim</h3>
 
-                <div className="space-y-4">
-                  <div className="flex justify-between items-center py-3 border-b border-gray-800">
+                <div className="space-y-3">
+                  <div className="flex justify-between items-center py-3 border-b border-white/10">
                     <span className="text-gray-400">Năm phát hành</span>
                     <span className="text-white font-semibold">{movie.releaseYear}</span>
                   </div>
@@ -448,8 +472,10 @@ export default function MovieDetailPage({ params }: MovieDetailPageProps) {
             {/* Main Content */}
             <div className="lg:col-span-2 space-y-8">
               {/* Description */}
-              <div className="bg-gray-900/80 backdrop-blur-sm rounded-2xl p-8 border border-gray-800">
-                <h2 className="text-2xl font-bold text-white mb-6">Nội dung phim</h2>
+              <div className="bg-white/5 backdrop-blur-xl rounded-2xl p-8 border border-white/10 hover:border-white/20 transition-all duration-500">
+                <h2 className="text-2xl font-bold text-white mb-6 bg-gradient-to-r from-white to-gray-300 bg-clip-text text-transparent">
+                  Nội dung phim
+                </h2>
                 <p className="text-gray-300 leading-relaxed text-lg">
                   {movie.description || 'Không có mô tả cho bộ phim này.'}
                 </p>
@@ -457,16 +483,19 @@ export default function MovieDetailPage({ params }: MovieDetailPageProps) {
 
               {/* All Genres */}
               {movie.genres && movie.genres.length > 0 && (
-                <div className="bg-gray-900/80 backdrop-blur-sm rounded-2xl p-8 border border-gray-800">
-                  <h3 className="text-2xl font-bold text-white mb-6">Thể loại</h3>
+                <div className="bg-white/5 backdrop-blur-xl rounded-2xl p-8 border border-white/10 hover:border-white/20 transition-all duration-500">
+                  <h3 className="text-2xl font-bold text-white mb-6 bg-gradient-to-r from-white to-gray-300 bg-clip-text text-transparent">
+                    Thể loại
+                  </h3>
                   <div className="flex flex-wrap gap-3">
                     {movie.genres.map((genre) => (
                       <Link
                         key={genre.id}
                         href={`/the-loai/${genre.slug}`}
-                        className="bg-red-600/20 hover:bg-red-600/30 text-red-400 hover:text-red-300 border border-red-600/30 px-4 py-2 rounded-xl font-medium transition-all duration-300"
+                        className="group relative bg-white/5 hover:bg-white/10 backdrop-blur-xl text-white border border-white/10 hover:border-rose-500/50 px-5 py-2.5 rounded-xl font-medium transition-all duration-300 hover:scale-105"
                       >
-                        {genre.name}
+                        <span className="relative z-10">{genre.name}</span>
+                        <div className="absolute inset-0 bg-gradient-to-r from-rose-500/0 to-pink-500/0 group-hover:from-rose-500/20 group-hover:to-pink-500/20 rounded-xl transition-all duration-300"></div>
                       </Link>
                     ))}
                   </div>
@@ -474,19 +503,21 @@ export default function MovieDetailPage({ params }: MovieDetailPageProps) {
               )}
 
               {/* Comments Section */}
-              <div className="bg-gray-900/80 backdrop-blur-sm rounded-2xl p-8 border border-gray-800">
+              <div className="bg-white/5 backdrop-blur-xl rounded-2xl p-8 border border-white/10 hover:border-white/20 transition-all duration-500">
                 <div className="flex items-center justify-between mb-8">
                   <div className="flex items-center gap-3">
-                    <div className="w-10 h-10 bg-gradient-to-br from-red-600 to-pink-600 rounded-full flex items-center justify-center">
+                    <div className="w-12 h-12 bg-gradient-to-br from-rose-500 to-pink-500 rounded-full flex items-center justify-center shadow-lg">
                       <span className="text-white text-sm font-bold">144</span>
                     </div>
-                    <h3 className="text-2xl font-bold text-white">Bình luận</h3>
+                    <h3 className="text-2xl font-bold bg-gradient-to-r from-white to-gray-300 bg-clip-text text-transparent">
+                      Bình luận
+                    </h3>
                   </div>
                   <div className="flex gap-2">
-                    <button className="bg-red-600 hover:bg-red-700 text-white px-4 py-2 rounded-full text-sm font-medium transition-colors">
+                    <button className="bg-gradient-to-r from-rose-500 to-pink-500 hover:from-rose-600 hover:to-pink-600 text-white px-5 py-2 rounded-full text-sm font-semibold transition-all duration-300 shadow-lg hover:scale-105">
                       Bình luận
                     </button>
-                    <button className="bg-gray-700 hover:bg-gray-600 text-white px-4 py-2 rounded-full text-sm font-medium transition-colors">
+                    <button className="bg-white/10 hover:bg-white/20 backdrop-blur-sm text-white border border-white/20 px-5 py-2 rounded-full text-sm font-semibold transition-all duration-300 hover:scale-105">
                       Đánh giá
                     </button>
                   </div>
@@ -495,21 +526,21 @@ export default function MovieDetailPage({ params }: MovieDetailPageProps) {
                 {/* Comment Form */}
                 <div className="mb-8">
                   <div className="flex gap-4">
-                    <div className="w-12 h-12 bg-gradient-to-br from-gray-700 to-gray-600 rounded-full flex items-center justify-center">
+                    <div className="w-12 h-12 bg-gradient-to-br from-rose-500 to-pink-500 rounded-full flex items-center justify-center shadow-lg">
                       <span className="text-white text-sm font-bold">T</span>
                     </div>
                     <div className="flex-1">
                       <textarea
-                        className="w-full bg-gray-800 text-white p-4 rounded-xl resize-none focus:outline-none focus:ring-2 focus:ring-red-600 border border-gray-700"
+                        className="w-full bg-white/5 backdrop-blur-sm text-white p-4 rounded-xl resize-none focus:outline-none focus:ring-2 focus:ring-rose-500 border border-white/10 focus:border-rose-500/50 transition-all duration-300"
                         rows={4}
                         placeholder="Chia sẻ cảm nhận của bạn về bộ phim này..."
                       />
                       <div className="flex items-center justify-between mt-3">
                         <label className="flex items-center gap-2 text-gray-400 text-sm">
-                          <input type="checkbox" className="rounded" />
+                          <input type="checkbox" className="rounded bg-white/10 border-white/20" />
                           Chứa nội dung tiết lộ
                         </label>
-                        <button className="bg-gradient-to-r from-red-600 to-pink-600 hover:from-red-700 hover:to-pink-700 text-white px-6 py-2 rounded-full font-semibold transition-all duration-300 shadow-lg">
+                        <button className="bg-gradient-to-r from-rose-500 to-pink-500 hover:from-rose-600 hover:to-pink-600 text-white px-6 py-2.5 rounded-full font-semibold transition-all duration-300 shadow-lg hover:scale-105">
                           Gửi bình luận
                         </button>
                       </div>
@@ -518,10 +549,10 @@ export default function MovieDetailPage({ params }: MovieDetailPageProps) {
                 </div>
 
                 {/* Comments List */}
-                <div className="space-y-6">
+                <div className="space-y-4">
                   {[1, 2, 3].map((comment) => (
-                    <div key={comment} className="flex gap-4 p-4 bg-gray-800/50 rounded-xl">
-                      <div className="w-12 h-12 bg-gradient-to-br from-gray-700 to-gray-600 rounded-full flex items-center justify-center">
+                    <div key={comment} className="flex gap-4 p-5 bg-white/5 backdrop-blur-sm rounded-xl border border-white/10 hover:border-white/20 hover:bg-white/10 transition-all duration-300">
+                      <div className="w-12 h-12 bg-gradient-to-br from-purple-500 to-pink-500 rounded-full flex items-center justify-center shadow-lg">
                         <span className="text-white text-sm font-bold">U{comment}</span>
                       </div>
                       <div className="flex-1">
@@ -529,15 +560,15 @@ export default function MovieDetailPage({ params }: MovieDetailPageProps) {
                           <span className="text-white font-semibold">User {comment}</span>
                           <span className="text-gray-400 text-sm">{comment} giờ trước</span>
                         </div>
-                        <p className="text-gray-300 mb-3">
+                        <p className="text-gray-300 mb-3 leading-relaxed">
                           Phim này thật sự tuyệt vời! Cốt truyện hấp dẫn, diễn xuất xuất sắc và hiệu ứng hình ảnh đáng kinh ngạc.
                         </p>
                         <div className="flex items-center gap-4">
-                          <button className="flex items-center gap-1 text-gray-400 hover:text-red-400 transition-colors px-3 py-1 rounded-full hover:bg-red-600/10">
+                          <button className="flex items-center gap-1 text-gray-400 hover:text-rose-400 transition-colors px-3 py-1.5 rounded-full hover:bg-rose-500/10 border border-transparent hover:border-rose-500/30">
                             <HeartOutlineIcon className="h-4 w-4" />
-                            <span className="text-sm">{comment * 5}</span>
+                            <span className="text-sm font-medium">{comment * 5}</span>
                           </button>
-                          <button className="text-gray-400 hover:text-white transition-colors text-sm px-3 py-1 rounded-full hover:bg-gray-700">
+                          <button className="text-gray-400 hover:text-white transition-colors text-sm font-medium px-3 py-1.5 rounded-full hover:bg-white/10 border border-transparent hover:border-white/20">
                             Trả lời
                           </button>
                         </div>

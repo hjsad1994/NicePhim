@@ -371,62 +371,39 @@ export default function TaoPhongXemChungPage({ searchParams }: TaoPhongXemChungP
 
   return (
     <div className="min-h-screen bg-black relative overflow-hidden">
-      {/* Animated Glow Orbs Background */}
-      <div className="absolute top-0 left-1/4 w-96 h-96 bg-red-600/10 rounded-full blur-3xl animate-pulse"></div>
-      <div className="absolute bottom-0 right-1/4 w-96 h-96 bg-blue-600/10 rounded-full blur-3xl animate-pulse delay-1000"></div>
-      <div className="absolute top-1/2 left-1/2 transform -translate-x-1/2 -translate-y-1/2 w-80 h-80 bg-purple-600/5 rounded-full blur-3xl animate-pulse delay-2000"></div>
-
-      {/* Floating Particles */}
-      {particles.map((particle) => (
-        <div
-          key={particle.key}
-          className="absolute w-1 h-1 bg-white/20 rounded-full animate-pulse"
-          style={{
-            left: `${particle.left}%`,
-            top: `${particle.top}%`,
-            animationDelay: `${particle.delay}s`,
-            animationDuration: `${particle.duration}s`
-          }}
-        />
-      ))}
+      {/* Modern Gradient Background */}
+      <div className="absolute top-0 left-1/4 w-96 h-96 bg-rose-600/10 rounded-full blur-3xl animate-pulse"></div>
+      <div className="absolute bottom-0 right-1/4 w-96 h-96 bg-purple-600/10 rounded-full blur-3xl animate-pulse delay-1000"></div>
+      <div className="absolute top-1/2 left-1/2 transform -translate-x-1/2 -translate-y-1/2 w-80 h-80 bg-pink-600/5 rounded-full blur-3xl animate-pulse delay-2000"></div>
 
       <div className="relative w-[90%] mx-auto px-4 sm:px-6 lg:px-8 py-8 z-10">
-        {/* Enhanced Header */}
-        <div className="mb-8 pt-20">
-          <nav className="flex items-center space-x-2 text-sm text-gray-400 mb-4">
-            <Link href="/" className="hover:text-red-400 transition-colors">
-              Trang chủ
-            </Link>
-            <span>/</span>
-            <Link href="/xem-chung" className="hover:text-red-400 transition-colors">
-              Xem chung
-            </Link>
-            <span>/</span>
-            <span className="text-white">Tạo phòng mới</span>
-          </nav>
-
-          <div className="flex items-center gap-4 mb-4">
+        {/* Modern Minimalist Header */}
+        <div className="mb-12 pt-24">
+          <div className="max-w-3xl mx-auto text-center">
             <Link
               href={`/phim/${movie.slug}`}
-              className="group flex items-center justify-center w-12 h-12 rounded-full border-2 border-gray-400/30 text-white hover:bg-red-500/20 hover:border-red-500/50 transition-all duration-300"
-              aria-label="Quay lại"
+              className="inline-flex items-center gap-2 text-gray-400 hover:text-white transition-colors mb-8 group"
             >
-              <svg className="w-5 h-5 group-hover:-translate-x-0.5 transition-transform" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <svg className="w-5 h-5 group-hover:-translate-x-1 transition-transform" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                 <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 19l-7-7 7-7" />
               </svg>
+              <span>Quay lại</span>
             </Link>
-            <div>
-              <h1 className="text-4xl font-bold text-white mb-2 bg-gradient-to-r from-red-400 to-pink-400 bg-clip-text text-transparent">
-                Tạo phòng xem chung
-              </h1>
-              <p className="text-gray-400">Cùng xem phim với bạn bè mọi lúc mọi nơi</p>
-            </div>
+            
+            <h1 className="text-5xl md:text-6xl font-black mb-4 tracking-tight">
+              <span className="bg-gradient-to-r from-rose-500 via-pink-500 to-purple-500 bg-clip-text text-transparent">
+                Tạo Phòng
+              </span>
+            </h1>
+            <p className="text-xl text-gray-400 font-light">
+              Cùng xem phim với bạn bè, mọi lúc mọi nơi
+            </p>
           </div>
         </div>
 
-        <div className="grid grid-cols-1 xl:grid-cols-3 gap-8">
+        <div className="max-w-5xl mx-auto">
           {/* Main content */}
-          <div className="xl:col-span-2 space-y-6">
+          <div className="space-y-6">
             {/* Enhanced Movie Card */}
             <div className="border-2 border-gray-400/15 rounded-2xl overflow-hidden bg-[#23242F]">
               <div className="relative p-6">
@@ -771,99 +748,6 @@ export default function TaoPhongXemChungPage({ searchParams }: TaoPhongXemChungP
                 </div>
               </div>
             </div>
-          </div>
-
-          {/* Sidebar */}
-          <div className="xl:col-span-1 space-y-6">
-            {/* Features Card */}
-            <div className="border-2 border-gray-400/15 rounded-2xl p-6 bg-[#23242F]">
-              <h3 className="text-xl font-bold text-white mb-6 flex items-center gap-2">
-                <div className="w-6 h-6 rounded-full bg-red-500/20 border border-red-500/30 flex items-center justify-center">
-                  <svg className="w-3 h-3 text-red-400" fill="currentColor" viewBox="0 0 20 20">
-                    <path fillRule="evenodd" d="M11.3 1.046A1 1 0 0112 2v5h4a1 1 0 01.82 1.573l-7 10A1 1 0 018 18v-5H4a1 1 0 01-.82-1.573l7-10a1 1 0 011.12-.38z" clipRule="evenodd" />
-                  </svg>
-                </div>
-                Tính năng nổi bật
-              </h3>
-              <div className="space-y-4">
-                <div className="flex items-start gap-3">
-                  <div className="w-8 h-8 rounded-lg bg-red-500/20 border border-red-500/30 flex items-center justify-center flex-shrink-0">
-                    <svg className="w-4 h-4 text-red-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M13 10V3L4 14h7v7l9-11h-7z" />
-                    </svg>
-                  </div>
-                  <div>
-                    <div className="text-white font-medium">Đồng bộ thời gian thực</div>
-                    <div className="text-gray-400 text-sm">Tất cả cùng xem một khung hình</div>
-                  </div>
-                </div>
-                <div className="flex items-start gap-3">
-                  <div className="w-8 h-8 rounded-lg bg-blue-500/20 border border-blue-500/30 flex items-center justify-center flex-shrink-0">
-                    <svg className="w-4 h-4 text-blue-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M8 12h.01M12 12h.01M16 12h.01M21 12c0 4.418-4.03 8-9 8a9.863 9.863 0 01-4.255-.949L3 20l1.395-3.72C3.512 15.042 3 13.574 3 12c0-4.418 4.03-8 9-8s9 3.582 9 8z" />
-                    </svg>
-                  </div>
-                  <div>
-                    <div className="text-white font-medium">Chat trong khi xem</div>
-                    <div className="text-gray-400 text-sm">Trao đổi ngay trên màn hình</div>
-                  </div>
-                </div>
-                <div className="flex items-start gap-3">
-                  <div className="w-8 h-8 rounded-lg bg-green-500/20 border border-green-500/30 flex items-center justify-center flex-shrink-0">
-                    <svg className="w-4 h-4 text-green-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 5v2m0 4v2m0 4v2M5 5a2 2 0 00-2 2v3a2 2 0 110 4v3a2 2 0 002 2h14a2 2 0 002-2v-3a2 2 0 110-4V7a2 2 0 00-2-2H5z" />
-                    </svg>
-                  </div>
-                  <div>
-                    <div className="text-white font-medium">Điều khiển chung</div>
-                    <div className="text-gray-400 text-sm">Play, pause, seek cùng nhau</div>
-                  </div>
-                </div>
-                <div className="flex items-start gap-3">
-                  <div className="w-8 h-8 rounded-lg bg-purple-500/20 border border-purple-500/30 flex items-center justify-center flex-shrink-0">
-                    <svg className="w-4 h-4 text-purple-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z" />
-                    </svg>
-                  </div>
-                  <div>
-                    <div className="text-white font-medium">Không giới hạn thời gian</div>
-                    <div className="text-gray-400 text-sm">Xem bao lâu cũng được</div>
-                  </div>
-                </div>
-              </div>
-            </div>
-
-            {/* Tips Card */}
-            <div className="border-2 border-gray-400/15 rounded-2xl p-6 bg-[#23242F]">
-              <h3 className="text-xl font-bold text-white mb-6 flex items-center gap-2">
-                <div className="w-6 h-6 rounded-full bg-yellow-500/20 border border-yellow-500/30 flex items-center justify-center">
-                  <svg className="w-3 h-3 text-yellow-400" fill="currentColor" viewBox="0 0 20 20">
-                    <path fillRule="evenodd" d="M18 10a8 8 0 11-16 0 8 8 0 0116 0zm-7-4a1 1 0 11-2 0 1 1 0 012 0zM9 9a1 1 0 000 2v3a1 1 0 001 1h1a1 1 0 100-2v-3a1 1 0 00-1-1H9z" clipRule="evenodd" />
-                  </svg>
-                </div>
-                Mẹo tạo phòng
-              </h3>
-              <div className="space-y-3 text-sm">
-                <div className="flex items-start gap-2">
-                  <span className="text-red-400 mt-1">•</span>
-                  <span className="text-gray-300">Chọn tên phòng dễ nhớ để bạn bè dễ tìm</span>
-                </div>
-                <div className="flex items-start gap-2">
-                  <span className="text-red-400 mt-1">•</span>
-                  <span className="text-gray-300">Chọn poster đẹp để thu hút người tham gia</span>
-                </div>
-                <div className="flex items-start gap-2">
-                  <span className="text-red-400 mt-1">•</span>
-                  <span className="text-gray-300">Bật riêng tư nếu muốn kiểm soát người tham gia</span>
-                </div>
-                <div className="flex items-start gap-2">
-                  <span className="text-red-400 mt-1">•</span>
-                  <span className="text-gray-300">Chia sẻ link phòng sau khi tạo thành công</span>
-                </div>
-              </div>
-            </div>
-
-            
           </div>
         </div>
       </div>

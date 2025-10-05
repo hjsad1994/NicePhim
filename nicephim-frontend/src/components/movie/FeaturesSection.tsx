@@ -55,23 +55,24 @@ export function FeaturesSection() {
       </div>
 
       <div className="relative max-w-7xl mx-auto px-6 lg:px-8">
-        {/* Section Header */}
-        <div className="text-center mb-20">
-          <div className="inline-flex items-center gap-2 px-4 py-2 bg-white/5 backdrop-blur-sm border border-white/10 rounded-full mb-6">
-            <SparklesSolidIcon className="w-4 h-4 text-yellow-400" />
-            <span className="text-sm font-medium text-gray-300">Trải Nghiệm Đỉnh Cao</span>
+        {/* Section Header - Modern Minimalist Design */}
+        <div className="text-center mb-24">
+          <div className="inline-block mb-8">
+            <h2 className="text-6xl md:text-7xl lg:text-8xl font-black mb-4 tracking-tight">
+              <span className="bg-gradient-to-r from-white via-gray-50 to-gray-200 bg-clip-text text-transparent drop-shadow-2xl">
+                Tại Sao
+              </span>
+              {' '}
+              <span className="relative inline-block">
+                <span className="bg-gradient-to-r from-rose-500 via-pink-500 to-purple-500 bg-clip-text text-transparent">
+                  NicePhim
+                </span>
+                <div className="absolute -inset-1 bg-gradient-to-r from-rose-500/20 via-pink-500/20 to-purple-500/20 blur-2xl -z-10"></div>
+              </span>
+            </h2>
           </div>
-          <h2 className="text-5xl md:text-6xl lg:text-7xl font-bold mb-6">
-            <span className="bg-gradient-to-r from-white via-gray-100 to-gray-300 bg-clip-text text-transparent">
-              Tại Sao Chọn
-            </span>
-            <br />
-            <span className="bg-gradient-to-r from-rose-400 via-pink-400 to-purple-400 bg-clip-text text-transparent">
-              NicePhim
-            </span>
-          </h2>
-          <p className="text-lg md:text-xl text-gray-400 max-w-2xl mx-auto leading-relaxed">
-            Nền tảng streaming hiện đại mang đến trải nghiệm giải trí hoàn hảo
+          <p className="text-xl md:text-2xl text-gray-400 max-w-3xl mx-auto leading-relaxed font-light">
+            Nền tảng streaming thế hệ mới với công nghệ tiên tiến
           </p>
         </div>
 
@@ -167,38 +168,7 @@ export function FeaturesSection() {
           })}
         </div>
 
-        {/* CTA Section */}
-        <div className="mt-20 text-center">
-          <div className="relative inline-block">
-            {/* Glow Background */}
-            <div className="absolute -inset-1 bg-gradient-to-r from-rose-500 via-pink-500 to-purple-500 rounded-2xl blur-xl opacity-30 group-hover:opacity-50 transition duration-1000"></div>
-            
-            {/* Buttons Container */}
-            <div className="relative flex flex-col sm:flex-row items-center gap-4 p-2 bg-white/5 backdrop-blur-xl border border-white/10 rounded-2xl">
-              <Link
-                href="/dang-ky"
-                className="group inline-flex items-center justify-center gap-3 px-8 py-4 bg-gradient-to-r from-rose-500 via-pink-500 to-red-500 text-white font-bold rounded-xl transition-all duration-500 shadow-2xl hover:shadow-pink-500/50 hover:scale-105 w-full sm:w-auto"
-              >
-                <PlaySolidIcon className="w-5 h-5" />
-                Bắt Đầu Ngay
-                <svg className="w-5 h-5 group-hover:translate-x-1 transition-transform" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M13 7l5 5m0 0l-5 5m5-5H6" />
-                </svg>
-              </Link>
-              
-              <Link
-                href="/the-loai"
-                className="group inline-flex items-center justify-center gap-3 px-8 py-4 bg-white/10 hover:bg-white/20 backdrop-blur-sm text-white font-semibold rounded-xl border border-white/20 hover:border-white/30 transition-all duration-500 w-full sm:w-auto"
-              >
-                <SparklesSolidIcon className="w-5 h-5 text-purple-400" />
-                Khám Phá Phim
-                <svg className="w-5 h-5 group-hover:translate-x-1 transition-transform" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 5l7 7-7 7" />
-                </svg>
-              </Link>
-            </div>
-          </div>
-        </div>
+
       </div>
     </section>
   );
