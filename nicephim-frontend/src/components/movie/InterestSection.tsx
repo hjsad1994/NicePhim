@@ -13,12 +13,23 @@ export function InterestSection({ genres }: InterestSectionProps) {
   const [hoveredIndex, setHoveredIndex] = useState<number | null>(null);
 
   return (
-    <section className="relative py-20 bg-gradient-to-b from-gray-900 via-black to-black overflow-hidden">
-      {/* Background Effects */}
-      <div className="absolute inset-0">
-        <div className="absolute top-0 left-1/4 w-96 h-96 bg-purple-600/10 rounded-full blur-3xl animate-pulse"></div>
-        <div className="absolute bottom-0 right-1/4 w-96 h-96 bg-pink-600/10 rounded-full blur-3xl animate-pulse delay-1000"></div>
-        <div className="absolute top-1/2 left-1/2 transform -translate-x-1/2 -translate-y-1/2 w-[600px] h-[600px] bg-gradient-to-r from-purple-600/10 via-pink-600/10 to-blue-600/10 rounded-full blur-3xl animate-pulse"></div>
+    <section className="relative py-32 bg-black overflow-hidden">
+      {/* Modern Gradient Background */}
+      <div className="absolute inset-0 overflow-hidden">
+        {/* Primary Glow - Top Left */}
+        <div className="absolute -top-40 -left-40 w-96 h-96 bg-gradient-to-br from-purple-500/20 via-violet-500/15 to-transparent rounded-full blur-3xl animate-pulse"></div>
+        
+        {/* Secondary Glow - Top Right */}
+        <div className="absolute top-20 -right-40 w-80 h-80 bg-gradient-to-bl from-pink-500/20 via-rose-500/15 to-transparent rounded-full blur-3xl animate-pulse" style={{ animationDelay: '1s' }}></div>
+        
+        {/* Tertiary Glow - Bottom Left */}
+        <div className="absolute -bottom-40 left-1/4 w-96 h-96 bg-gradient-to-tr from-blue-500/20 via-cyan-500/15 to-transparent rounded-full blur-3xl animate-pulse" style={{ animationDelay: '2s' }}></div>
+        
+        {/* Accent Glow - Bottom Right */}
+        <div className="absolute bottom-20 -right-32 w-72 h-72 bg-gradient-to-tl from-fuchsia-500/20 via-purple-500/15 to-transparent rounded-full blur-3xl animate-pulse" style={{ animationDelay: '1.5s' }}></div>
+        
+        {/* Subtle Grid Pattern */}
+        <div className="absolute inset-0 bg-[linear-gradient(rgba(255,255,255,0.02)_1px,transparent_1px),linear-gradient(90deg,rgba(255,255,255,0.02)_1px,transparent_1px)] bg-[size:64px_64px] [mask-image:radial-gradient(ellipse_80%_50%_at_50%_50%,black,transparent)]"></div>
       </div>
 
       <div className="relative max-w-7xl mx-auto px-6 lg:px-8">
