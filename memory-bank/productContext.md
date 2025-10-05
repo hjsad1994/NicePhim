@@ -49,6 +49,10 @@ Users need a modern, feature-rich movie streaming platform that supports both in
    - Broadcast scheduling with time selection and countdown displays
    - Server-managed time synchronization for coordinated playback
    - Broadcast status management and visual indicators
+   - **Enhanced video seeking**: Viewers can seek video and synchronize with room creator
+   - **Automatic host detection**: Seamless identification of room creator based on UUID comparison
+   - **Improved room management**: Better visibility and management of created rooms
+   - **Real-time sync**: Enhanced WebSocket-based synchronization between host and viewers
 
 ## Technical Implementation
 - **Backend Architecture**: Spring Boot MVC with proper separation of concerns

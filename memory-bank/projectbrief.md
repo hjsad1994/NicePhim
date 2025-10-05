@@ -20,14 +20,17 @@
 
 2. **Watch Together**
    - Real-time room creation and management
-   - Individual user control over video playback (no forced synchronization)
+   - Individual user control over video playback with enhanced synchronization options
    - WebSocket-based communication with STOMP protocol
    - Room administration features
-   - Broadcast scheduling with time coordination (available but not enforced)
+   - Broadcast scheduling with time coordination
    - Scheduled start times with countdown displays
    - Broadcast status management (scheduled, live, completed)
    - Full video player controls (play/pause/seek) for all users
-   - Simplified state management without sync complexity
+   - **Enhanced Seeking and Sync**: Viewers can seek video and synchronize with room creator
+   - **Automatic Host Detection**: UUID-based comparison system for automatic host assignment
+   - **Room Management**: Enhanced room creation and management with localStorage fallback
+   - **User Identification**: Proper mapping between backend UUID and frontend user systems
    - **Automatic Username Integration**: Seamless username usage from authenticated accounts without manual input
    - Real-time chat with proper username display instead of UUIDs
    - Enhanced user identification with consistent identity across all features

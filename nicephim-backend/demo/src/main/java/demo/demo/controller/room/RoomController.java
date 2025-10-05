@@ -344,12 +344,6 @@ public class RoomController {
 			message.put("type", "sync_response");
 		}
 
-		// Disable seeking for all users in server-managed sync mode
-		if ("seek".equals(action)) {
-			message.put("error", "Seeking is disabled in watch together mode");
-			message.put("type", "error");
-		}
-
 		// For play/pause, just acknowledge but don't broadcast to others
 		if ("play".equals(action) || "pause".equals(action)) {
 			message.put("type", "local_control");

@@ -29,6 +29,9 @@ Frontend (Next.js) ←→ Backend (Spring Boot) ←→ Database (SQL Server)
 - **Authentication Management**: localStorage-based session management with automatic username detection from authenticated user accounts
 - **Event-Driven Updates**: Custom 'auth-change' events for real-time username updates across components
 - **Username Resolution**: Automatic UUID-to-username resolution with backend API integration and caching
+- **Host Detection System**: UUID-based comparison between room creator and current user for automatic host assignment
+- **Video Seeking and Sync**: Enhanced seeking functionality allowing viewers to seek video and synchronize with room creator
+- **User ID Mapping**: Proper mapping between backend UUID and frontend user identification systems
 
 ## Backend Patterns
 - **MVC Architecture**: Controllers, Services, Repositories, DTOs with proper separation
