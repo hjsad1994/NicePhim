@@ -77,8 +77,6 @@ export default function Header() {
               {[
                 { href: "/chu-de", label: "Chủ Đề" },
                 { href: "/the-loai", label: "Thể Loại" },
-                { href: "/phim-le", label: "Phim Lẻ" },
-                { href: "/phim-bo", label: "Phim Bộ" },
                 { href: "/xem-chung", label: "Xem Chung" }
               ].map((item) => (
                 <Link
@@ -230,8 +228,6 @@ export default function Header() {
               {[
                 { href: "/chu-de", label: "Chủ Đề" },
                 { href: "/the-loai", label: "Thể Loại" },
-                { href: "/phim-le", label: "Phim Lẻ" },
-                { href: "/phim-bo", label: "Phim Bộ" },
                 { href: "/xem-chung", label: "Xem Chung" }
               ].map((item) => (
                 <Link
