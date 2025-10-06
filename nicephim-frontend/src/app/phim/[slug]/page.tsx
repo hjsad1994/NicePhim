@@ -353,21 +353,12 @@ export default function MovieDetailPage({ params }: MovieDetailPageProps) {
                   {/* Secondary Button - Watch Together */}
                   <Link
                     href={`/xem-chung/tao-moi?movie=${movie.slug}`}
-                    className="group relative inline-flex items-center px-8 py-4 overflow-hidden text-white font-bold rounded-xl transition-all duration-500 shadow-2xl hover:shadow-purple-500/50 transform hover:scale-105"
+                    className="group relative inline-flex items-center px-8 py-4 text-white font-bold rounded-xl transition-all duration-500 shadow-xl hover:shadow-white/20 transform hover:scale-105 bg-white/10 backdrop-blur-xl border border-white/20 hover:bg-white/20 hover:border-white/30"
                   >
-                    {/* Gradient Background */}
-                    <div className="absolute inset-0 bg-gradient-to-r from-purple-500 via-violet-500 to-indigo-500 transition-all duration-500 group-hover:from-purple-600 group-hover:via-violet-600 group-hover:to-indigo-600"></div>
-                    
-                    {/* Glow Effect */}
-                    <div className="absolute -inset-1 bg-gradient-to-r from-purple-500 via-violet-500 to-indigo-500 rounded-xl blur opacity-30 group-hover:opacity-60 transition-all duration-500"></div>
-                    
                     {/* Content */}
                     <div className="relative flex items-center">
                       <UsersIcon className="h-6 w-6 mr-3" />
                       <span>Xem chung</span>
-                      <svg className="w-5 h-5 ml-3 group-hover:translate-x-1 transition-transform" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M13 7l5 5m0 0l-5 5m5-5H6" />
-                      </svg>
                     </div>
                   </Link>
 
@@ -402,9 +393,6 @@ export default function MovieDetailPage({ params }: MovieDetailPageProps) {
                         <HeartOutlineIcon className="h-6 w-6 mr-3" />
                       )}
                       <span>{isFavorite ? 'Đã thích' : 'Thích'}</span>
-                      <svg className="w-5 h-5 ml-3 group-hover:translate-x-1 transition-transform" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M13 7l5 5m0 0l-5 5m5-5H6" />
-                      </svg>
                     </div>
                   </button>
                 </div>
