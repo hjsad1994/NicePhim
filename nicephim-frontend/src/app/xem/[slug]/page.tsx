@@ -278,17 +278,15 @@ export default function WatchPage({ params }: WatchPageProps) {
   });
 
   return (
-    <div className="min-h-screen bg-gradient-to-b from-black via-gray-900 to-black">
-      {/* Background Effects */}
-      <div className="absolute inset-0 overflow-hidden">
-        <div className="absolute top-0 left-1/4 w-96 h-96 bg-red-600/10 rounded-full blur-3xl animate-pulse"></div>
-        <div className="absolute bottom-0 right-1/4 w-96 h-96 bg-blue-600/10 rounded-full blur-3xl animate-pulse delay-1000"></div>
-        <div className="absolute top-1/2 left-1/2 transform -translate-x-1/2 -translate-y-1/2 w-[600px] h-[600px] bg-gradient-to-r from-red-600/10 via-blue-600/10 to-purple-600/10 rounded-full blur-3xl animate-pulse"></div>
-      </div>
+    <div className="min-h-screen bg-black relative overflow-hidden">
+      {/* Modern Gradient Background */}
+      <div className="absolute top-0 left-1/4 w-96 h-96 bg-rose-600/10 rounded-full blur-3xl animate-pulse"></div>
+      <div className="absolute bottom-0 right-1/4 w-96 h-96 bg-purple-600/10 rounded-full blur-3xl animate-pulse delay-1000"></div>
+      <div className="absolute top-1/2 left-1/2 transform -translate-x-1/2 -translate-y-1/2 w-80 h-80 bg-pink-600/5 rounded-full blur-3xl animate-pulse delay-2000"></div>
 
       {/* Video Player Section */}
-      <div className="relative w-full pt-12 px-6">
-        <div className="max-w-7xl mx-auto">
+      <div className="relative w-full pt-20 pb-8">
+        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
           <VideoPlayer
             movie={movie}
             videoSources={videoSources}
@@ -298,10 +296,10 @@ export default function WatchPage({ params }: WatchPageProps) {
       </div>
 
       {/* Content Below Video */}
-      <div className="relative max-w-7xl mx-auto px-6 lg:px-8 py-12">
-        <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
+      <div className="relative max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 pb-20">
+        <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
           {/* Main Content */}
-          <div className="lg:col-span-2 space-y-8">
+          <div className="lg:col-span-2 space-y-6">
             {/* Movie Info */}
             <MovieInfo movie={movie} />
 
