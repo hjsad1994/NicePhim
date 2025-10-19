@@ -56,11 +56,17 @@ export function VideoUpload({ onVideoUploaded, onError }: VideoUploadProps) {
         message: '📤 Đang upload video lên server...'
       });
 
-      // Upload video
+      // Upload video with extended timeout for large files
+      const controller = new AbortController();
+      const timeoutId = setTimeout(() => controller.abort(), 600000); // 10 minutes timeout
+      
       const response = await fetch('http://localhost:8080/api/videos', {
         method: 'POST',
         body: formData,
+        signal: controller.signal,
       });
+      
+      clearTimeout(timeoutId);
 
       if (!response.ok) {
         throw new Error(`Upload failed: ${response.statusText}`);
@@ -87,7 +93,9 @@ export function VideoUpload({ onVideoUploaded, onError }: VideoUploadProps) {
       let errorMessage = 'Unknown error';
       
       if (error instanceof Error) {
-        if (error.message.includes('Failed to fetch')) {
+        if (error.name === 'AbortError') {
+          errorMessage = 'Upload timeout (quá 10 phút). File quá lớn hoặc mạng quá chậm.';
+        } else if (error.message.includes('Failed to fetch')) {
           errorMessage = 'Không thể kết nối đến server. Vui lòng kiểm tra backend có đang chạy không.';
         } else {
           errorMessage = error.message;
