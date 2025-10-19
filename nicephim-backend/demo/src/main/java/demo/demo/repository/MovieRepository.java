@@ -301,6 +301,10 @@ public class MovieRepository {
     }
 
     public int deleteMovie(UUID movieId) throws DataAccessException {
+        // First delete all watch rooms referencing this movie
+        jdbcTemplate.update("DELETE FROM dbo.watch_rooms WHERE movie_id = ?", movieId);
+        
+        // Then delete the movie
         return jdbcTemplate.update("DELETE FROM dbo.movies WHERE movie_id = ?", movieId);
     }
 
