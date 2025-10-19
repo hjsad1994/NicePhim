@@ -626,7 +626,6 @@ export default function NewMovie() {
               </div>
             )}
           </div>
-        </div>
 
         {/* Episodes for series */}
         {formData.type === 'series' && (

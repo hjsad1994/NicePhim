@@ -38,10 +38,11 @@ const SimpleHLSPlayer: React.FC<SimpleHLSPlayerProps> = ({
   const [controlsTimeout, setControlsTimeout] = useState<NodeJS.Timeout | null>(null);
   const [showQualityMenu, setShowQualityMenu] = useState(false);
   const [showSpeedMenu, setShowSpeedMenu] = useState(false);
-  const [currentQuality, setCurrentQuality] = useState('1080p');
+  const [currentQuality, setCurrentQuality] = useState('Tự động');
   const [playbackRate, setPlaybackRate] = useState(1);
   const [availableLevels, setAvailableLevels] = useState<Level[]>([]);
   const [currentLevel, setCurrentLevel] = useState(-1);
+  const [isAutoQuality, setIsAutoQuality] = useState(true);
 
   // Helper function to convert HLS level to quality text
   const getQualityTextFromLevel = (level: Level) => {
@@ -89,17 +90,13 @@ const SimpleHLSPlayer: React.FC<SimpleHLSPlayerProps> = ({
         console.log('🎯 HLS Manifest loaded, available levels:', data.levels);
         setAvailableLevels(data.levels);
         
-        // Set initial quality to highest available
+        // Set initial quality to auto (adaptive bitrate)
         if (data.levels.length > 0) {
-          const highestLevel = data.levels.length - 1;
-          hls.currentLevel = highestLevel;
-          setCurrentLevel(highestLevel);
-          
-          // Update quality display based on actual level
-          const level = data.levels[highestLevel];
-          const qualityText = getQualityTextFromLevel(level);
-          setCurrentQuality(qualityText);
-          console.log('🎯 Set initial quality to:', qualityText, 'Level:', highestLevel);
+          hls.currentLevel = -1; // -1 enables adaptive bitrate
+          setCurrentLevel(-1);
+          setIsAutoQuality(true);
+          setCurrentQuality('Tự động');
+          console.log('🎯 Set initial quality to Auto (adaptive bitrate)');
         }
       });
       
@@ -108,13 +105,47 @@ const SimpleHLSPlayer: React.FC<SimpleHLSPlayerProps> = ({
         console.log('🎯 Level switched to:', data.level);
         setCurrentLevel(data.level);
         
-        // Get current levels from HLS instance
-        const currentLevels = hls.levels;
-        if (data.level >= 0 && currentLevels && currentLevels[data.level]) {
-          const level = currentLevels[data.level];
-          const qualityText = getQualityTextFromLevel(level);
-          setCurrentQuality(qualityText);
-          console.log('🎯 Updated quality display to:', qualityText);
+        // If in auto mode, show "Tự động" with current playing quality
+        if (isAutoQuality && hls.currentLevel === -1) {
+          const currentLevels = hls.levels;
+          if (data.level >= 0 && currentLevels && currentLevels[data.level]) {
+            const level = currentLevels[data.level];
+            const qualityText = getQualityTextFromLevel(level);
+            setCurrentQuality(`Tự động (${qualityText})`);
+            console.log('🎯 Auto mode - playing at:', qualityText);
+          }
+        } else if (!isAutoQuality) {
+          // Manual mode - just show the quality
+          const currentLevels = hls.levels;
+          if (data.level >= 0 && currentLevels && currentLevels[data.level]) {
+            const level = currentLevels[data.level];
+            const qualityText = getQualityTextFromLevel(level);
+            setCurrentQuality(qualityText);
+            console.log('🎯 Manual mode - quality display:', qualityText);
+          }
+        }
+      });
+      
+      // Listen for network errors and downgrade quality
+      hls.on(Hls.Events.ERROR, (event, data) => {
+        if (data.fatal) {
+          console.error('🚨 Fatal HLS error:', data);
+          switch (data.type) {
+            case Hls.ErrorTypes.NETWORK_ERROR:
+              console.log('💡 Network error detected - HLS will try to recover');
+              // HLS.js will automatically try to recover and may switch to lower quality
+              hls.startLoad();
+              break;
+            case Hls.ErrorTypes.MEDIA_ERROR:
+              console.log('💡 Media error detected - attempting recovery');
+              hls.recoverMediaError();
+              break;
+            default:
+              console.error('❌ Unrecoverable error');
+              break;
+          }
+        } else if (data.type === Hls.ErrorTypes.NETWORK_ERROR) {
+          console.log('⚠️ Non-fatal network error - HLS adaptive bitrate may adjust quality');
         }
       });
       
@@ -245,21 +276,33 @@ const SimpleHLSPlayer: React.FC<SimpleHLSPlayerProps> = ({
     console.log('🎯 Available levels:', availableLevels);
     
     if (hlsRef.current && availableLevels.length > 0) {
-      const targetLevelIndex = getLevelIndexByQuality(quality);
-      console.log('🎯 Target level index:', targetLevelIndex);
-      
-      if (targetLevelIndex >= 0) {
-        hlsRef.current.currentLevel = targetLevelIndex;
-        console.log('🎯 Switched to level:', targetLevelIndex);
+      // Check if auto mode is selected
+      if (quality === 'Tự động') {
+        // Enable adaptive bitrate mode
+        hlsRef.current.currentLevel = -1; // -1 = auto
+        setCurrentLevel(-1);
+        setIsAutoQuality(true);
+        setCurrentQuality('Tự động');
+        console.log('🎯 Switched to Auto (adaptive bitrate) mode');
       } else {
-        console.log('🎯 Quality not available, keeping current level');
-        // Don't update the display if the quality isn't available
-        setShowQualityMenu(false);
-        return;
+        // Manual quality selection
+        const targetLevelIndex = getLevelIndexByQuality(quality);
+        console.log('🎯 Target level index:', targetLevelIndex);
+        
+        if (targetLevelIndex >= 0) {
+          hlsRef.current.currentLevel = targetLevelIndex;
+          setCurrentLevel(targetLevelIndex);
+          setIsAutoQuality(false);
+          setCurrentQuality(quality);
+          console.log('🎯 Switched to manual quality:', quality, 'Level:', targetLevelIndex);
+        } else {
+          console.log('🎯 Quality not available, keeping current level');
+          setShowQualityMenu(false);
+          return;
+        }
       }
     }
     
-    setCurrentQuality(quality);
     setShowQualityMenu(false);
     console.log('🎯 Quality change completed');
   };
@@ -505,8 +548,27 @@ const SimpleHLSPlayer: React.FC<SimpleHLSPlayerProps> = ({
                   
                   {/* Quality Menu */}
                   {showQualityMenu && (
-                    <div className="absolute bottom-12 right-0 bg-black/90 rounded-lg p-2 min-w-[120px] z-20">
+                    <div className="absolute bottom-12 right-0 bg-black/90 rounded-lg p-2 min-w-[140px] z-20">
                       <div className="text-white text-xs font-medium mb-2 px-2">Chất lượng video</div>
+                      
+                      {/* Auto Quality Option */}
+                      <button
+                        onClick={(e) => {
+                          console.log('🎯 Auto quality button clicked');
+                          e.stopPropagation();
+                          handleQualityChange('Tự động');
+                        }}
+                        className={`w-full text-left px-2 py-1 text-sm rounded hover:bg-white/20 transition-colors ${
+                          isAutoQuality ? 'text-blue-400 font-medium' : 'text-white'
+                        }`}
+                      >
+                        Tự động {isAutoQuality && '✓'}
+                      </button>
+                      
+                      {/* Divider */}
+                      <div className="border-t border-white/20 my-1"></div>
+                      
+                      {/* Manual Quality Options */}
                       {availableLevels.length > 0 ? (
                         availableLevels.map((level, index) => {
                           const qualityText = getQualityTextFromLevel(level);
@@ -519,10 +581,10 @@ const SimpleHLSPlayer: React.FC<SimpleHLSPlayerProps> = ({
                                 handleQualityChange(qualityText);
                               }}
                               className={`w-full text-left px-2 py-1 text-sm rounded hover:bg-white/20 transition-colors ${
-                                currentLevel === index ? 'text-blue-400' : 'text-white'
+                                !isAutoQuality && currentLevel === index ? 'text-blue-400 font-medium' : 'text-white'
                               }`}
                             >
-                              {qualityText} {level.height ? `(${level.height}p)` : ''}
+                              {qualityText} {!isAutoQuality && currentLevel === index && '✓'}
                             </button>
                           );
                         })
@@ -536,10 +598,10 @@ const SimpleHLSPlayer: React.FC<SimpleHLSPlayerProps> = ({
                               handleQualityChange(quality);
                             }}
                             className={`w-full text-left px-2 py-1 text-sm rounded hover:bg-white/20 transition-colors ${
-                              currentQuality === quality ? 'text-blue-400' : 'text-white'
+                              !isAutoQuality && currentQuality === quality ? 'text-blue-400 font-medium' : 'text-white'
                             }`}
                           >
-                            {quality}
+                            {quality} {!isAutoQuality && currentQuality === quality && '✓'}
                           </button>
                         ))
                       )}
