@@ -45,14 +45,15 @@ const SimpleHLSPlayer: React.FC<SimpleHLSPlayerProps> = ({
   const [isAutoQuality, setIsAutoQuality] = useState(true);
 
   // Helper function to convert HLS level to quality text
-  const getQualityTextFromLevel = (level: Level) => {
+  const getQualityTextFromLevel = (level: Level, includeP: boolean = true) => {
     if (!level || !level.height) return 'Unknown';
     
     const height = level.height;
-    if (height <= 360) return '360p';
-    if (height <= 480) return '480p';
-    if (height <= 720) return '720p';
-    if (height <= 1080) return '1080p';
+    const suffix = includeP ? 'p' : '';
+    if (height <= 360) return `360${suffix}`;
+    if (height <= 480) return `480${suffix}`;
+    if (height <= 720) return `720${suffix}`;
+    if (height <= 1080) return `1080${suffix}`;
     return '4K';
   };
 
@@ -105,23 +106,21 @@ const SimpleHLSPlayer: React.FC<SimpleHLSPlayerProps> = ({
         console.log('🎯 Level switched to:', data.level);
         setCurrentLevel(data.level);
         
-        // If in auto mode, show "Tự động" with current playing quality
-        if (isAutoQuality && hls.currentLevel === -1) {
-          const currentLevels = hls.levels;
-          if (data.level >= 0 && currentLevels && currentLevels[data.level]) {
-            const level = currentLevels[data.level];
-            const qualityText = getQualityTextFromLevel(level);
-            setCurrentQuality(`Tự động (${qualityText})`);
-            console.log('🎯 Auto mode - playing at:', qualityText);
-          }
-        } else if (!isAutoQuality) {
-          // Manual mode - just show the quality
-          const currentLevels = hls.levels;
-          if (data.level >= 0 && currentLevels && currentLevels[data.level]) {
-            const level = currentLevels[data.level];
-            const qualityText = getQualityTextFromLevel(level);
+        // Get current levels from HLS instance
+        const currentLevels = hls.levels;
+        if (data.level >= 0 && currentLevels && currentLevels[data.level]) {
+          const level = currentLevels[data.level];
+          
+          // If in auto mode, show "Tự động (720)" format without "p"
+          if (isAutoQuality) {
+            const qualityShort = getQualityTextFromLevel(level, false);
+            setCurrentQuality(`Tự động (${qualityShort})`);
+            console.log('🎯 Auto mode - currently playing:', qualityShort);
+          } else {
+            // Manual mode - show quality with "p" like "720p"
+            const qualityText = getQualityTextFromLevel(level, true);
             setCurrentQuality(qualityText);
-            console.log('🎯 Manual mode - quality display:', qualityText);
+            console.log('🎯 Manual mode - quality:', qualityText);
           }
         }
       });
