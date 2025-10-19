@@ -81,7 +81,7 @@ export default function VideoUploadPage() {
         <div className="bg-blue-900/20 border border-blue-500/50 rounded-lg p-6">
           <h3 className="text-blue-400 font-medium mb-4">📋 Hướng dẫn</h3>
           <div className="space-y-2 text-sm text-gray-300">
-            <p>• Chọn file video MP4, AVI, MOV, hoặc MKV (tối đa 2GB)</p>
+            <p>• Chọn file video MP4, AVI, MOV, hoặc MKV (không giới hạn dung lượng)</p>
             <p>• Video sẽ được chuyển đổi sang định dạng HLS với nhiều chất lượng</p>
             <p>• Sau khi upload thành công, bạn có thể tạo phim với video này</p>
             <p>• Video sẽ hỗ trợ tính năng xem chung (watch together)</p>

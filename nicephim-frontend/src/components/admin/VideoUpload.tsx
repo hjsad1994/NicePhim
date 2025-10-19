@@ -34,12 +34,6 @@ export function VideoUpload({ onVideoUploaded, onError }: VideoUploadProps) {
         return;
       }
       
-      // Validate file size (max 2GB)
-      if (file.size > 2 * 1024 * 1024 * 1024) {
-        onError('File video quá lớn. Vui lòng chọn file nhỏ hơn 2GB');
-        return;
-      }
-      
       setSelectedFile(file);
       setUploadStatus({
         status: 'idle',
@@ -234,7 +228,7 @@ export function VideoUpload({ onVideoUploaded, onError }: VideoUploadProps) {
           </button>
           
           <p className="text-sm text-gray-400 mt-2">
-            Hỗ trợ: MP4, AVI, MOV, MKV (tối đa 2GB)
+            Hỗ trợ: MP4, AVI, MOV, MKV (không giới hạn dung lượng)
           </p>
         </div>
 
