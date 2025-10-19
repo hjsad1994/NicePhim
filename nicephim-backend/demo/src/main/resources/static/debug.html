@@ -1,0 +1,97 @@
+<!DOCTYPE html>
+<html lang="vi">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Debug - Test API</title>
+    <style>
+        body { font-family: Arial, sans-serif; margin: 20px; background: #f5f5f5; }
+        .container { max-width: 800px; margin: 0 auto; background: white; padding: 20px; border-radius: 8px; box-shadow: 0 2px 10px rgba(0,0,0,0.1); }
+        .btn { padding: 8px 16px; border: none; border-radius: 4px; cursor: pointer; font-size: 14px; background: #007bff; color: white; margin: 5px; }
+        .result { background: #f8f9fa; padding: 10px; border: 1px solid #ddd; border-radius: 4px; margin: 10px 0; font-family: monospace; font-size: 12px; white-space: pre-wrap; }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>🔧 Debug - Test API</h1>
+        
+        <div>
+            <button class="btn" onclick="testVideoAPI()">Test Video API</button>
+            <button class="btn" onclick="testSSEAPI()">Test SSE API</button>
+            <button class="btn" onclick="testChatAPI()">Test Chat API</button>
+        </div>
+        
+        <div class="result" id="result">Click buttons to test APIs...</div>
+    </div>
+
+    <script>
+        const result = document.getElementById('result');
+
+        function log(message) {
+            result.textContent += message + '\n';
+        }
+
+        function testVideoAPI() {
+            log('Testing Video API...');
+            fetch('http://localhost:8080/api/videos/fbac9579-1e0c-4eb5-93be-5b05ff50e593/status')
+                .then(response => response.json())
+                .then(data => {
+                    log('✅ Video API Response: ' + JSON.stringify(data, null, 2));
+                })
+                .catch(error => {
+                    log('❌ Video API Error: ' + error);
+                });
+        }
+
+        function testSSEAPI() {
+            log('Testing SSE API...');
+            const eventSource = new EventSource('http://localhost:8080/api/room/demo-room-123/events');
+            
+            eventSource.onopen = function(event) {
+                log('✅ SSE Connected');
+            };
+
+            eventSource.onmessage = function(event) {
+                log('📨 SSE Message: ' + event.data);
+            };
+
+            eventSource.onerror = function(event) {
+                log('❌ SSE Error: ' + JSON.stringify(event));
+            };
+
+            // Close after 5 seconds
+            setTimeout(() => {
+                eventSource.close();
+                log('🔌 SSE Closed after 5 seconds');
+            }, 5000);
+        }
+
+        function testChatAPI() {
+            log('Testing Chat API...');
+            fetch('http://localhost:8080/api/room/demo-room-123/chat', {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                },
+                body: JSON.stringify({
+                    message: 'Test message',
+                    username: 'TestUser'
+                })
+            })
+            .then(response => response.json())
+            .then(data => {
+                log('✅ Chat API Response: ' + JSON.stringify(data, null, 2));
+            })
+            .catch(error => {
+                log('❌ Chat API Error: ' + error);
+            });
+        }
+    </script>
+</body>
+</html>
+
+
+
+
+
+

@@ -56,7 +56,7 @@ export function FeaturesSection() {
 
       <div className="relative max-w-7xl mx-auto px-6 lg:px-8">
         {/* Section Header - Modern Minimalist Design */}
-        <div className="text-center mb-24">
+        <div className="text-center mb-12">
           <div className="inline-block mb-8">
             <h2 className="text-6xl md:text-7xl lg:text-8xl font-black mb-4 tracking-tight">
               <span className="bg-gradient-to-r from-white via-gray-50 to-gray-200 bg-clip-text text-transparent drop-shadow-2xl">
@@ -71,9 +71,6 @@ export function FeaturesSection() {
               </span>
             </h2>
           </div>
-          <p className="text-xl md:text-2xl text-gray-400 max-w-3xl mx-auto leading-relaxed font-light">
-            Nền tảng streaming thế hệ mới với công nghệ tiên tiến
-          </p>
         </div>
 
         {/* Modern Feature Cards */}

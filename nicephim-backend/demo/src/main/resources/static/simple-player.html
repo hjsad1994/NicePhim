@@ -1,0 +1,162 @@
+<!DOCTYPE html>
+<html lang="vi">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Video Player - Demo</title>
+    <script src="https://cdn.jsdelivr.net/npm/hls.js@latest"></script>
+    <style>
+        body { font-family: Arial, sans-serif; margin: 20px; background: #f5f5f5; }
+        .container { max-width: 1200px; margin: 0 auto; background: white; padding: 20px; border-radius: 8px; box-shadow: 0 2px 10px rgba(0,0,0,0.1); }
+        .video-container { position: relative; background: #000; border-radius: 8px; overflow: hidden; margin-bottom: 20px; }
+        video { width: 100%; height: auto; }
+        .controls { display: flex; gap: 10px; margin-bottom: 20px; flex-wrap: wrap; }
+        .btn { padding: 8px 16px; border: none; border-radius: 4px; cursor: pointer; font-size: 14px; }
+        .btn-primary { background: #007bff; color: white; }
+        .btn-warning { background: #ffc107; color: black; }
+        .quality-selector { margin-left: auto; }
+        .quality-selector select { padding: 8px; border: 1px solid #ddd; border-radius: 4px; }
+        .info { background: #e9ecef; padding: 15px; border-radius: 4px; margin-bottom: 20px; }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>🎬 Video Player - Demo</h1>
+        
+        <div class="info">
+            <h3>Thông tin video</h3>
+            <p><strong>Video ID:</strong> fbac9579-1e0c-4eb5-93be-5b05ff50e593</p>
+            <p><strong>HLS URL:</strong> <a href="http://localhost:8080/videos/fbac9579-1e0c-4eb5-93be-5b05ff50e593/master.m3u8" target="_blank">master.m3u8</a></p>
+        </div>
+
+        <div class="video-container">
+            <video id="videoPlayer" controls playsinline></video>
+        </div>
+
+        <div class="controls">
+            <button id="playPauseBtn" class="btn btn-primary">▶️ Phát</button>
+            <button id="seekBackBtn" class="btn btn-warning">⏪ -10s</button>
+            <button id="seekForwardBtn" class="btn btn-warning">⏩ +10s</button>
+            <div class="quality-selector">
+                <select id="qualitySelect">
+                    <option value="-1">Tự động</option>
+                </select>
+            </div>
+        </div>
+
+        <div class="info">
+            <h4>Hướng dẫn:</h4>
+            <ul>
+                <li>Video đã được chuyển đổi sang HLS với 3 chất lượng (1080p/720p/360p)</li>
+                <li>Player tự động chọn chất lượng phù hợp với mạng</li>
+                <li>Bạn có thể chọn chất lượng thủ công từ dropdown</li>
+                <li>WebSocket sync sẽ được thêm sau khi fix dependency</li>
+            </ul>
+        </div>
+    </div>
+
+    <script>
+        // Configuration
+        const VIDEO_ID = 'fbac9579-1e0c-4eb5-93be-5b05ff50e593';
+        const HLS_URL = `http://localhost:8080/videos/${VIDEO_ID}/master.m3u8`;
+
+        // State
+        let hls = null;
+
+        // DOM elements
+        const video = document.getElementById('videoPlayer');
+        const playPauseBtn = document.getElementById('playPauseBtn');
+        const seekBackBtn = document.getElementById('seekBackBtn');
+        const seekForwardBtn = document.getElementById('seekForwardBtn');
+        const qualitySelect = document.getElementById('qualitySelect');
+
+        // Initialize
+        document.addEventListener('DOMContentLoaded', function() {
+            initializeVideo();
+            setupEventListeners();
+        });
+
+        function initializeVideo() {
+            if (Hls.isSupported()) {
+                hls = new Hls({
+                    capLevelToPlayerSize: true,
+                    enableWorker: true,
+                    lowLatencyMode: false
+                });
+                hls.loadSource(HLS_URL);
+                hls.attachMedia(video);
+
+                hls.on(Hls.Events.MANIFEST_PARSED, function() {
+                    populateQualityOptions();
+                    console.log('HLS manifest loaded successfully');
+                });
+
+                hls.on(Hls.Events.ERROR, function(event, data) {
+                    console.error('HLS Error:', data);
+                    alert(`Lỗi video: ${data.details}`);
+                });
+            } else if (video.canPlayType('application/vnd.apple.mpegurl')) {
+                video.src = HLS_URL;
+                console.log('Using native HLS support');
+            } else {
+                alert('Trình duyệt không hỗ trợ HLS');
+            }
+
+            // Video event listeners
+            video.addEventListener('play', () => {
+                updatePlayPauseButton();
+            });
+
+            video.addEventListener('pause', () => {
+                updatePlayPauseButton();
+            });
+        }
+
+        function populateQualityOptions() {
+            qualitySelect.innerHTML = '<option value="-1">Tự động</option>';
+            if (hls && hls.levels) {
+                hls.levels.forEach((level, index) => {
+                    const option = document.createElement('option');
+                    option.value = index;
+                    option.textContent = `${level.height}p (${Math.round(level.bitrate/1000)}kbps)`;
+                    qualitySelect.appendChild(option);
+                });
+            }
+        }
+
+        function setupEventListeners() {
+            playPauseBtn.addEventListener('click', () => {
+                if (video.paused) {
+                    video.play();
+                } else {
+                    video.pause();
+                }
+            });
+
+            seekBackBtn.addEventListener('click', () => {
+                video.currentTime = Math.max(0, video.currentTime - 10);
+            });
+
+            seekForwardBtn.addEventListener('click', () => {
+                video.currentTime = Math.min(video.duration, video.currentTime + 10);
+            });
+
+            qualitySelect.addEventListener('change', () => {
+                if (hls) {
+                    hls.currentLevel = parseInt(qualitySelect.value);
+                }
+            });
+        }
+
+        function updatePlayPauseButton() {
+            playPauseBtn.textContent = video.paused ? '▶️ Phát' : '⏸️ Tạm dừng';
+        }
+
+        // Initialize UI
+        updatePlayPauseButton();
+    </script>
+</body>
+</html>
+
+
+
