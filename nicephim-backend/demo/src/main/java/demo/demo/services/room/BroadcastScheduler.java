@@ -17,47 +17,6 @@ public class BroadcastScheduler {
     private WatchRoomService watchRoomService;
 
     /**
-     * Scheduled task to check for rooms that need to start broadcasting
-     * Runs every 5 seconds to ensure timely broadcasts
-     */
-    @Scheduled(fixedRate = 5000)
-    public void checkScheduledBroadcasts() {
-        try {
-            List<Map<String, Object>> scheduledRooms = watchRoomService.getRoomsByStatus("scheduled");
-            long currentTime = System.currentTimeMillis();
-
-            for (Map<String, Object> room : scheduledRooms) {
-                Long scheduledStartTime = (Long) room.get("scheduled_start_time");
-                String roomId = (String) room.get("room_id");
-
-                if (scheduledStartTime != null && scheduledStartTime <= currentTime) {
-                    logger.info("🎬 Starting broadcast for room: " + roomId);
-                    startBroadcast(roomId);
-                }
-            }
-        } catch (Exception e) {
-            logger.severe("Error checking scheduled broadcasts: " + e.getMessage());
-        }
-    }
-
-    /**
-     * Start a broadcast for a room
-     */
-    private void startBroadcast(String roomId) {
-        try {
-            // Update room status to live
-            watchRoomService.updateBroadcastStatus(roomId, "live", System.currentTimeMillis());
-
-            // Set playback state to playing
-            watchRoomService.updateRoomState(roomId, 0L, 1, 1.0);
-
-            logger.info("✅ Broadcast started for room: " + roomId);
-        } catch (Exception e) {
-            logger.severe("Error starting broadcast for room " + roomId + ": " + e.getMessage());
-        }
-    }
-
-    /**
      * Sync all live rooms to ensure consistent playback
      * Runs every 30 seconds (reduced frequency)
      */

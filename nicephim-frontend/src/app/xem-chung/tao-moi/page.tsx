@@ -35,7 +35,6 @@ export default function TaoPhongXemChungPage({ searchParams }: TaoPhongXemChungP
   const [autoStart, setAutoStart] = useState<boolean>(false);
   const [privateOnly, setPrivateOnly] = useState<boolean>(false);
   const [isCreating, setIsCreating] = useState<boolean>(false);
-  const [broadcastStartTimeType, setBroadcastStartTimeType] = useState<string>('now');
 
   useEffect(() => {
     // Create particles only on client side to avoid hydration mismatch
@@ -245,7 +244,6 @@ export default function TaoPhongXemChungPage({ searchParams }: TaoPhongXemChungP
         poster: selectedPoster.src,
         autoStart,
         isPrivate: privateOnly,
-        broadcastStartTimeType,
         createdBy: user.id, // Use user ID (UUID) instead of username
         creator: currentUser, // Store username separately for display
         createdAt: new Date().toISOString(),
@@ -281,7 +279,7 @@ export default function TaoPhongXemChungPage({ searchParams }: TaoPhongXemChungP
         name: roomName,
         username: currentUser,
         movieId: movieIdToSend,
-        broadcastStartTimeType: broadcastStartTimeType
+        broadcastStartTimeType: 'now'
       };
 
       console.log('Sending room creation request:', requestData);
@@ -319,18 +317,10 @@ export default function TaoPhongXemChungPage({ searchParams }: TaoPhongXemChungP
         console.error('Error saving room to localStorage:', error);
       }
 
-      // Calculate broadcast time for display
-      let broadcastTimeText = 'Bắt đầu ngay';
-      if (broadcastStartTimeType !== 'now') {
-        const minutes = parseInt(broadcastStartTimeType);
-        broadcastTimeText = `Bắt đầu sau ${minutes} phút`;
-      }
-
       // Show success message
       alert('Đã tạo phòng "' + roomName + '" thành công!' +
             '\n\nPhim: ' + movie.title +
             '\nLoại phòng: ' + (privateOnly ? 'Riêng tư' : 'Công khai') +
-            '\n' + broadcastTimeText +
             '\nMã phòng: ' + backendRoom.room_id);
 
       // Redirect to the newly created room
@@ -630,68 +620,11 @@ export default function TaoPhongXemChungPage({ searchParams }: TaoPhongXemChungP
                   </div>
                 </div>
 
-                {/* 3. Broadcast Time */}
-                <div className="group">
-                  <div className="flex items-center gap-3 mb-3">
-                    <div className="w-8 h-8 rounded-full bg-gradient-to-r from-blue-500/20 to-blue-600/20 border border-blue-500/30 flex items-center justify-center">
-                      <span className="text-blue-400 font-bold text-sm">3</span>
-                    </div>
-                    <h3 className="text-white font-semibold text-lg">Thời gian bắt đầu phát</h3>
-                  </div>
-                  <p className="text-gray-400 mb-4 text-sm">Chọn thời gian để bắt đầu phát phim tự động. Tất cả người tham gia sẽ đồng bộ với thời gian phát này.</p>
-
-                  <div className="grid grid-cols-3 gap-3">
-                    {[
-                      { value: 'now', label: 'Bắt đầu ngay' },
-                      { value: '5', label: 'Sau 5 phút' },
-                      { value: '10', label: 'Sau 10 phút' },
-                      { value: '15', label: 'Sau 15 phút' },
-                      { value: '30', label: 'Sau 30 phút' },
-                    ].map((option) => (
-                      <button
-                        key={option.value}
-                        type="button"
-                        onClick={() => setBroadcastStartTimeType(option.value)}
-                        className={`p-4 rounded-xl border-2 transition-all duration-300 text-center h-full ${
-                          broadcastStartTimeType === option.value
-                            ? 'border-red-500/50 bg-red-500/10'
-                            : 'border-gray-400/30 bg-black/20 hover:border-white/50 hover:bg-white/5'
-                        }`}
-                      >
-                        <div className="text-white font-medium text-sm">{option.label}</div>
-                        {broadcastStartTimeType === option.value && (
-                          <div className="mt-2">
-                            <div className="w-6 h-6 rounded-full bg-red-500 flex items-center justify-center mx-auto">
-                              <svg className="w-3 h-3 text-white" fill="currentColor" viewBox="0 0 20 20">
-                                <path fillRule="evenodd" d="M16.707 5.293a1 1 0 010 1.414l-8 8a1 1 0 01-1.414 0l-4-4a1 1 0 011.414-1.414L8 12.586l7.293-7.293a1 1 0 011.414 0z" clipRule="evenodd" />
-                              </svg>
-                            </div>
-                          </div>
-                        )}
-                      </button>
-                    ))}
-                  </div>
-
-                  {broadcastStartTimeType !== 'now' && (
-                    <div className="mt-4 p-4 bg-yellow-500/10 border border-yellow-500/30 rounded-xl">
-                      <div className="flex items-center gap-2 text-yellow-400">
-                        <svg className="w-5 h-5" fill="currentColor" viewBox="0 0 20 20">
-                          <path fillRule="evenodd" d="M18 10a8 8 0 11-16 0 8 8 0 0116 0zm-7-4a1 1 0 11-2 0 1 1 0 012 0zM9 9a1 1 0 000 2v3a1 1 0 001 1h1a1 1 0 100-2v-3a1 1 0 00-1-1H9z" clipRule="evenodd" />
-                        </svg>
-                        <span className="font-medium">Phát trực tiếp theo lịch</span>
-                      </div>
-                      <p className="text-yellow-300 text-sm mt-1">
-                        Phim sẽ tự động bắt đầu sau {broadcastStartTimeType} phút. Tất cả người tham gia sẽ được đồng bộ thời gian.
-                      </p>
-                    </div>
-                  )}
-                </div>
-
-                {/* 4. Privacy */}
+                {/* 3. Privacy */}
                 <div className="group">
                   <div className="flex items-center gap-3 mb-3">
                     <div className="w-8 h-8 rounded-full bg-gradient-to-r from-green-500/20 to-green-600/20 border border-green-500/30 flex items-center justify-center">
-                      <span className="text-green-400 font-bold text-sm">4</span>
+                      <span className="text-green-400 font-bold text-sm">3</span>
                     </div>
                     <h3 className="text-white font-semibold text-lg">Quyền riêng tư</h3>
                   </div>

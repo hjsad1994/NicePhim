@@ -37,8 +37,6 @@ public class RoomController {
 			String name = (String) request.get("name");
 			String username = (String) request.get("username");
 			String movieId = (String) request.get("movieId");
-			String broadcastStartTimeType = (String) request.get("broadcastStartTimeType");
-			Long scheduledStartTime = null;
 
 			// Validate required fields
 			if (name == null || name.trim().isEmpty()) {
@@ -55,19 +53,6 @@ public class RoomController {
 				));
 			}
 
-			// Calculate scheduled start time
-			if (broadcastStartTimeType != null && !broadcastStartTimeType.equals("now")) {
-				try {
-					int minutes = Integer.parseInt(broadcastStartTimeType);
-					scheduledStartTime = System.currentTimeMillis() + (minutes * 60 * 1000L);
-				} catch (NumberFormatException e) {
-					return ResponseEntity.badRequest().body(Map.of(
-						"success", false,
-						"error", "Invalid broadcast start time type"
-					));
-				}
-			}
-
 			// Get or create user ID for username
 			System.out.println("🔍 Creating room - Username: " + username);
 			UUID userId = watchRoomService.createOrUpdateSimpleUser(username);
@@ -76,9 +61,9 @@ public class RoomController {
 			// Generate room ID
 			String roomId = UUID.randomUUID().toString();
 
-			// Create room with broadcast scheduling
+			// Create room (always start immediately)
 			Map<String, Object> room = watchRoomService.createRoomWithSchedule(
-				roomId, name, userId, movieId, scheduledStartTime, broadcastStartTimeType
+				roomId, name, userId, movieId, null, "now"
 			);
 
 			Map<String, Object> response = new HashMap<>(room);

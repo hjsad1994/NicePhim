@@ -1,6 +1,5 @@
 package demo.demo.services.room;
 
-import org.springframework.dao.DataAccessException;
 import org.springframework.jdbc.core.JdbcTemplate;
 import org.springframework.jdbc.core.RowMapper;
 import org.springframework.stereotype.Service;
@@ -353,92 +352,21 @@ public class WatchRoomService {
         }
     }
 
-    @Transactional
-    public void updateScheduledTime(String roomId, Long scheduledStartTime) {
-        try {
-            String sql = """
-                UPDATE dbo.watch_rooms
-                SET scheduled_start_time = ?, playback_state = 0, current_time_ms = 0, updated_at = GETDATE()
-                WHERE room_id = ?
-                """;
-
-            jdbcTemplate.update(sql, scheduledStartTime, UUID.fromString(roomId));
-        } catch (Exception e) {
-            System.err.println("Error updating scheduled time: " + e.getMessage());
-            // Don't throw exception to avoid disrupting WebSocket communication
-        }
-    }
-
     /**
-     * Calculate current playback position based on broadcast time
-     * Returns the current position in milliseconds that the video should be at
+     * Calculate current playback position (simplified - no scheduled broadcasts)
+     * Returns the current position in milliseconds
      */
     public Long calculateCurrentPosition(String roomId) {
         try {
             Map<String, Object> room = getRoom(roomId);
             if (room == null) {
-                System.out.println("📋 Room not found for position calculation, returning 0: " + roomId);
                 return 0L;
             }
 
-            Long scheduledStartTime = (Long) room.get("scheduled_start_time");
-            Object playbackStateObj = room.get("playback_state");
-            Integer playbackState = null;
-            if (playbackStateObj instanceof Short) {
-                playbackState = ((Short) playbackStateObj).intValue();
-            } else if (playbackStateObj instanceof Integer) {
-                playbackState = (Integer) playbackStateObj;
-            }
-            if (playbackState == null) playbackState = 0;
-            Long pausedAt = (Long) room.get("current_time_ms");
-            String broadcastStatus = (String) room.get("broadcast_status");
-
-            // Removed spammy position calculation logging - only log significant changes
-
-            if (scheduledStartTime == null || scheduledStartTime == 0 || "now".equals(broadcastStatus)) {
-                // No scheduled time or immediate broadcast, return current position
-                return pausedAt != null ? pausedAt : 0L;
-            }
-
-            long now = System.currentTimeMillis();
-
-            // If broadcast hasn't started yet
-            if (now < scheduledStartTime) {
-                // Only log when broadcast is about to start (within 5 seconds)
-                long timeUntilStart = scheduledStartTime - now;
-                if (timeUntilStart < 5000) {
-                    System.out.println("⏰ Broadcast starting in: " + timeUntilStart + "ms");
-                }
-                return 0L;
-            }
-
-            // If video is paused, return the paused position
-            if (playbackState == 2) {
-                return pausedAt != null ? pausedAt : 0L;
-            }
-
-            // If video is playing, calculate position based on elapsed time
-            if (playbackState == 1) {
-                long elapsedTime = now - scheduledStartTime;
-                // Only log significant position changes (every 30 seconds)
-                if (elapsedTime > 0 && elapsedTime % 30000 < 1000) {
-                    System.out.println("▶️ Video playing, position: " + elapsedTime + "ms");
-                }
-                return elapsedTime;
-            }
-
-            // If stopped or not started (state = 0), check if it should auto-start
-            if (now >= scheduledStartTime) {
-                System.out.println("🚀 Auto-starting video for room: " + roomId);
-                long elapsedTime = now - scheduledStartTime;
-                updateRoomState(roomId, elapsedTime, 1, 1.0);
-                return elapsedTime;
-            }
-
-            return 0L;
+            Long currentTimeMs = (Long) room.get("current_time_ms");
+            return currentTimeMs != null ? currentTimeMs : 0L;
         } catch (Exception e) {
             System.err.println("Error calculating current position: " + e.getMessage());
-            e.printStackTrace();
             return 0L;
         }
     }
