@@ -153,62 +153,6 @@ public class RoomController {
 	/**
 	 * Update room state (play/pause)
 	 */
-	@PostMapping("/api/rooms/{roomId}/state")
-	public ResponseEntity<Map<String, Object>> updateRoomState(
-			@PathVariable String roomId,
-			@RequestBody Map<String, Object> request) {
-		try {
-			String action = (String) request.get("action");
-			String username = (String) request.get("username");
-
-			if (action == null) {
-				return ResponseEntity.badRequest().body(Map.of(
-					"success", false,
-					"error", "Action is required"
-				));
-			}
-
-			// Verify user owns the room
-			Map<String, Object> room = watchRoomService.getRoom(roomId);
-			if (room == null) {
-				return ResponseEntity.notFound().build();
-			}
-
-			UUID createdBy = (UUID) room.get("created_by");
-			UUID userId = UUID.nameUUIDFromBytes(username.getBytes());
-			if (!createdBy.equals(userId)) {
-				return ResponseEntity.badRequest().body(Map.of(
-					"success", false,
-					"error", "Only room creator can control playback"
-				));
-			}
-
-			switch (action) {
-				case "play":
-					watchRoomService.togglePlayPause(roomId, false);
-					break;
-				case "pause":
-					watchRoomService.togglePlayPause(roomId, true);
-					break;
-				default:
-					return ResponseEntity.badRequest().body(Map.of(
-						"success", false,
-						"error", "Invalid action. Use 'play' or 'pause'"
-					));
-			}
-
-			return ResponseEntity.ok(Map.of(
-				"success", true,
-				"message", "Room state updated successfully"
-			));
-		} catch (Exception e) {
-			return ResponseEntity.internalServerError().body(Map.of(
-				"success", false,
-				"error", e.getMessage()
-			));
-		}
-	}
-
 	/**
 	 * Get movie details for a room
 	 */
@@ -225,49 +169,6 @@ public class RoomController {
 				"data", movieDetails
 			));
 		} catch (Exception e) {
-			return ResponseEntity.internalServerError().body(Map.of(
-				"success", false,
-				"error", e.getMessage()
-			));
-		}
-	}
-
-	/**
-	 * Get current playback position for all users to sync to
-	 */
-	@GetMapping("/api/rooms/{roomId}/current-position")
-	public ResponseEntity<Map<String, Object>> getCurrentPosition(@PathVariable String roomId) {
-		try {
-			// First check if room exists, create fallback if not
-			Map<String, Object> room = watchRoomService.getRoom(roomId);
-			if (room == null) {
-				// Create a fallback room if it doesn't exist
-				System.out.println("📋 Room not found for sync, creating fallback: " + roomId);
-				room = watchRoomService.getOrCreateRoom(roomId);
-			}
-
-			// Calculate the current position all users should sync to
-			Long currentPosition = watchRoomService.calculateCurrentPosition(roomId);
-			Long scheduledStartTime = (Long) room.get("scheduled_start_time");
-			Short playbackStateShort = (Short) room.get("playback_state");
-			Integer playbackState = playbackStateShort != null ? playbackStateShort.intValue() : null;
-
-			// Reduced logging - only log significant sync events
-			if (currentPosition > 0 || playbackState != 0) {
-				System.out.println("🔄 Sync request for room " + roomId + ": position=" + currentPosition + "ms, state=" + playbackState);
-			}
-
-			return ResponseEntity.ok(Map.of(
-				"success", true,
-				"currentPositionMs", currentPosition,
-				"currentTimeMs", System.currentTimeMillis(),
-				"scheduledStartTime", scheduledStartTime,
-				"playbackState", playbackState,
-				"broadcastStatus", room.get("broadcast_status")
-			));
-		} catch (Exception e) {
-			System.err.println("❌ Error getting current position for room " + roomId + ": " + e.getMessage());
-			e.printStackTrace();
 			return ResponseEntity.internalServerError().body(Map.of(
 				"success", false,
 				"error", e.getMessage()
@@ -366,20 +267,6 @@ public class RoomController {
 	}
 
 	/**
-	 * Helper method to remove user from room (for cleanup)
-	 */
-	public void removeUserFromRoom(String roomId, String username) {
-		Set<String> usersInRoom = roomUsers.get(roomId);
-		if (usersInRoom != null && usersInRoom.remove(username)) {
-			System.out.println("🧹 Cleaned up user " + username + " from room " + roomId);
-			if (usersInRoom.isEmpty()) {
-				roomUsers.remove(roomId);
-				System.out.println("🧹 Cleaned up empty room: " + roomId);
-			}
-		}
-	}
-
-	/**
 	 * Get server-controlled video position for manual sync
 	 */
 	@GetMapping("/api/rooms/{roomId}/server-position")
@@ -395,38 +282,6 @@ public class RoomController {
 				"playbackState", playbackState,
 				"activeUsers", activeUsers,
 				"timestamp", System.currentTimeMillis()
-			));
-		} catch (Exception e) {
-			return ResponseEntity.internalServerError().body(Map.of(
-				"success", false,
-				"error", e.getMessage()
-			));
-		}
-	}
-
-	/**
-	 * Handle user pause action (only action users can perform)
-	 */
-	@PostMapping("/api/rooms/{roomId}/pause")
-	public ResponseEntity<Map<String, Object>> handleUserPause(
-			@PathVariable String roomId,
-			@RequestBody Map<String, Object> request) {
-		try {
-			String username = (String) request.get("username");
-			Long positionMs = ((Number) request.get("positionMs")).longValue();
-
-			if (username == null || positionMs == null) {
-				return ResponseEntity.badRequest().body(Map.of(
-					"success", false,
-					"error", "Username and position are required"
-				));
-			}
-
-			watchRoomService.handleUserPause(roomId, positionMs);
-
-			return ResponseEntity.ok(Map.of(
-				"success", true,
-				"message", "Video paused successfully"
 			));
 		} catch (Exception e) {
 			return ResponseEntity.internalServerError().body(Map.of(

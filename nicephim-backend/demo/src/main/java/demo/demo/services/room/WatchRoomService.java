@@ -325,37 +325,6 @@ public class WatchRoomService {
     }
 
     /**
-     * Handle pause/resume for room
-     */
-    @Transactional
-    public void togglePlayPause(String roomId, boolean pause) {
-        try {
-            Map<String, Object> room = getRoom(roomId);
-            if (room == null) return;
-
-            Long currentPos = calculateCurrentPosition(roomId);
-            Integer newState = pause ? 2 : 1; // 2 = paused, 1 = playing
-
-            String sql = """
-                UPDATE dbo.watch_rooms
-                SET playback_state = ?, current_time_ms = ?, updated_at = GETDATE()
-                WHERE room_id = ?
-                """;
-
-            // Convert Integer to Short for TINYINT database column
-            Short newStateShort = newState != null ? newState.shortValue() : null;
-            jdbcTemplate.update(sql, newStateShort, currentPos, UUID.fromString(roomId));
-
-            System.out.println("💾 Toggled play/pause for room " + roomId + ": state=" + newState + ", position=" + currentPos);
-        } catch (Exception e) {
-            System.err.println("Error toggling play/pause: " + e.getMessage());
-        }
-    }
-
-    
-
-
-    /**
      * Get user ID by username, returns null if user doesn't exist
      */
     public UUID getUserIdByUsername(String username) {
@@ -538,25 +507,6 @@ public class WatchRoomService {
             }
         } catch (Exception e) {
             System.err.println("❌ Error updating host video position for room " + roomId + ": " + e.getMessage());
-        }
-    }
-
-    /**
-     * Handle user pause action - only update state, don't change position
-     */
-    @Transactional
-    public void handleUserPause(String roomId, Long positionMs) {
-        try {
-            String sql = """
-                UPDATE dbo.watch_rooms
-                SET playback_state = 2, current_time_ms = ?, updated_at = GETDATE()
-                WHERE room_id = ?
-                """;
-
-            int rowsUpdated = jdbcTemplate.update(sql, positionMs, UUID.fromString(roomId));
-            System.out.println("⏸️ User paused video in room " + roomId + " at " + positionMs + "ms");
-        } catch (Exception e) {
-            System.err.println("❌ Error handling user pause for room " + roomId + ": " + e.getMessage());
         }
     }
 
