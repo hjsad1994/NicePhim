@@ -301,7 +301,7 @@ public class WatchRoomService {
         } catch (Exception e) {
             System.err.println("❌ Error updating room state for " + roomId + ": " + e.getMessage());
             e.printStackTrace();
-            // Don't throw exception to avoid disrupting WebSocket communication
+            // Don't throw exception to avoid disrupting WebSocket communicationn
         }
     }
 
