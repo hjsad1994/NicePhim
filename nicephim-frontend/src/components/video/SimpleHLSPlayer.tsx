@@ -54,7 +54,9 @@ const SimpleHLSPlayer: React.FC<SimpleHLSPlayerProps> = ({
     if (height <= 480) return `480${suffix}`;
     if (height <= 720) return `720${suffix}`;
     if (height <= 1080) return `1080${suffix}`;
-    return '4K';
+    if (height <= 1440) return `2K`;
+    if (height <= 2160) return `4K`;
+    return `${height}${suffix}`;
   };
 
   // Helper function to find level index by quality text
@@ -62,7 +64,9 @@ const SimpleHLSPlayer: React.FC<SimpleHLSPlayerProps> = ({
     const targetHeight = qualityText === '360p' ? 360 :
                         qualityText === '480p' ? 480 :
                         qualityText === '720p' ? 720 :
-                        qualityText === '1080p' ? 1080 : 1080;
+                        qualityText === '1080p' ? 1080 :
+                        qualityText === '2K' ? 1440 :
+                        qualityText === '4K' ? 2160 : 1080;
     
     return availableLevels.findIndex(level => level.height === targetHeight);
   };
@@ -588,7 +592,7 @@ const SimpleHLSPlayer: React.FC<SimpleHLSPlayerProps> = ({
                           );
                         })
                       ) : (
-                        ['360p', '480p', '720p', '1080p'].map((quality) => (
+                        ['4K', '2K', '1080p', '720p', '360p'].map((quality) => (
                           <button
                             key={quality}
                             onClick={(e) => {

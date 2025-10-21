@@ -62,6 +62,7 @@ public class VideoController {
 			resp.put("status", "UNKNOWN");
 			resp.put("hlsUrl", "/videos/" + videoId + "/master.m3u8");
 			resp.put("log", "");
+			resp.put("progress", null);
 			return resp;
 		}
 		Map<String, Object> resp = new LinkedHashMap<>();
@@ -70,6 +71,11 @@ public class VideoController {
 		resp.put("hlsUrl", "/videos/" + videoId + "/master.m3u8");
 		String log = videoService.getLastLog(videoId);
 		resp.put("log", log == null ? "" : log);
+		
+		// Add progress percentage if available
+		Double progress = videoService.getProgress(videoId);
+		resp.put("progress", progress);
+		
 		return resp;
 	}
 }

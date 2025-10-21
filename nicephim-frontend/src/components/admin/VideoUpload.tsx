@@ -28,8 +28,11 @@ export function VideoUpload({ onVideoUploaded, onError }: VideoUploadProps) {
   const handleFileSelect = (event: React.ChangeEvent<HTMLInputElement>) => {
     const file = event.target.files?.[0];
     if (file) {
-      // Validate file type
-      if (!file.type.startsWith('video/')) {
+      // Validate file type - accept video/* or .ts extension
+      const isVideoMimeType = file.type.startsWith('video/');
+      const isTsFile = file.name.toLowerCase().endsWith('.ts');
+      
+      if (!isVideoMimeType && !isTsFile) {
         onError('Vui lòng chọn file video hợp lệ');
         return;
       }
@@ -221,7 +224,7 @@ export function VideoUpload({ onVideoUploaded, onError }: VideoUploadProps) {
           <input
             ref={fileInputRef}
             type="file"
-            accept="video/mp4,video/avi,video/mov,video/mkv"
+            accept="video/mp4,video/avi,video/mov,video/mkv,video/mp2t,.ts"
             onChange={handleFileSelect}
             className="hidden"
             disabled={uploadStatus.status === 'uploading' || uploadStatus.status === 'processing'}
