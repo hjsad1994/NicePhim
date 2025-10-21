@@ -33,7 +33,6 @@ export default function TaoPhongXemChungPage({ searchParams }: TaoPhongXemChungP
   const [isLoading, setIsLoading] = useState(true);
   const [roomName, setRoomName] = useState<string>('');
   const [autoStart, setAutoStart] = useState<boolean>(false);
-  const [privateOnly, setPrivateOnly] = useState<boolean>(false);
   const [isCreating, setIsCreating] = useState<boolean>(false);
 
   useEffect(() => {
@@ -243,7 +242,6 @@ export default function TaoPhongXemChungPage({ searchParams }: TaoPhongXemChungP
         movie: movie,
         poster: selectedPoster.src,
         autoStart,
-        isPrivate: privateOnly,
         createdBy: user.id, // Use user ID (UUID) instead of username
         creator: currentUser, // Store username separately for display
         createdAt: new Date().toISOString(),
@@ -320,7 +318,6 @@ export default function TaoPhongXemChungPage({ searchParams }: TaoPhongXemChungP
       // Show success message
       alert('Đã tạo phòng "' + roomName + '" thành công!' +
             '\n\nPhim: ' + movie.title +
-            '\nLoại phòng: ' + (privateOnly ? 'Riêng tư' : 'Công khai') +
             '\nMã phòng: ' + backendRoom.room_id);
 
       // Redirect to the newly created room
@@ -618,35 +615,6 @@ export default function TaoPhongXemChungPage({ searchParams }: TaoPhongXemChungP
                       </button>
                     ))}
                   </div>
-                </div>
-
-                {/* 3. Privacy */}
-                <div className="group">
-                  <div className="flex items-center gap-3 mb-3">
-                    <div className="w-8 h-8 rounded-full bg-gradient-to-r from-green-500/20 to-green-600/20 border border-green-500/30 flex items-center justify-center">
-                      <span className="text-green-400 font-bold text-sm">3</span>
-                    </div>
-                    <h3 className="text-white font-semibold text-lg">Quyền riêng tư</h3>
-                  </div>
-                  <button
-                    type="button"
-                    onClick={() => setPrivateOnly((v) => !v)}
-                    className="flex items-center gap-4 p-4 rounded-xl bg-black/20 border border-gray-400/30 hover:bg-black/30 transition-all duration-300 w-full"
-                  >
-                    <div className={`relative w-14 h-7 rounded-full transition-colors duration-300 ${
-                      privateOnly ? 'bg-gradient-to-r from-green-500 to-green-600' : 'bg-gray-600'
-                    }`}>
-                      <span className={`absolute top-0.5 left-0.5 w-6 h-6 rounded-full bg-white transition-all duration-300 shadow-lg ${
-                        privateOnly ? 'translate-x-7' : ''
-                      }`}></span>
-                    </div>
-                    <div className="flex-1 text-left">
-                      <div className="text-white font-medium">Chỉ bạn bè có thể tham gia</div>
-                      <div className="text-gray-400 text-sm">
-                        {privateOnly ? 'Chỉ người có link mời mới tham gia được' : 'Bất kỳ ai cũng có thể tham gia phòng'}
-                      </div>
-                    </div>
-                  </button>
                 </div>
 
                 {/* Action Buttons */}

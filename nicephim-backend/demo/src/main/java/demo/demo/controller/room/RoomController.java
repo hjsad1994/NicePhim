@@ -61,9 +61,9 @@ public class RoomController {
 			// Generate room ID
 			String roomId = UUID.randomUUID().toString();
 
-			// Create room (always start immediately)
-			Map<String, Object> room = watchRoomService.createRoomWithSchedule(
-				roomId, name, userId, movieId, null, "now"
+			// Create room
+			Map<String, Object> room = watchRoomService.createRoom(
+				roomId, name, userId, movieId
 			);
 
 			Map<String, Object> response = new HashMap<>(room);
@@ -200,35 +200,6 @@ public class RoomController {
 			return ResponseEntity.ok(Map.of(
 				"success", true,
 				"message", "Room state updated successfully"
-			));
-		} catch (Exception e) {
-			return ResponseEntity.internalServerError().body(Map.of(
-				"success", false,
-				"error", e.getMessage()
-			));
-		}
-	}
-
-	/**
-	 * Get current server time for a room (for sync purposes)
-	 */
-	@GetMapping("/api/rooms/{roomId}/server-time")
-	public ResponseEntity<Map<String, Object>> getServerTime(@PathVariable String roomId) {
-		try {
-			Long serverTime = watchRoomService.getServerTime(roomId);
-			Map<String, Object> room = watchRoomService.getRoom(roomId);
-
-			if (room == null) {
-				return ResponseEntity.notFound().build();
-			}
-
-			return ResponseEntity.ok(Map.of(
-				"success", true,
-				"serverTime", serverTime,
-				"currentTime", System.currentTimeMillis(),
-				"broadcastStatus", room.get("broadcast_status"),
-				"scheduledStartTime", room.get("scheduled_start_time"),
-				"actualStartTime", room.get("actual_start_time")
 			));
 		} catch (Exception e) {
 			return ResponseEntity.internalServerError().body(Map.of(
