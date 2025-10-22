@@ -95,13 +95,18 @@ const SimpleHLSPlayer: React.FC<SimpleHLSPlayerProps> = ({
         console.log('🎯 HLS Manifest loaded, available levels:', data.levels);
         setAvailableLevels(data.levels);
         
-        // Set initial quality to auto (adaptive bitrate)
+        // Set initial quality to highest available
         if (data.levels.length > 0) {
-          hls.currentLevel = -1; // -1 enables adaptive bitrate
-          setCurrentLevel(-1);
-          setIsAutoQuality(true);
-          setCurrentQuality('Tự động');
-          console.log('🎯 Set initial quality to Auto (adaptive bitrate)');
+          const highestLevel = data.levels.length - 1;
+          hls.currentLevel = highestLevel;
+          setCurrentLevel(highestLevel);
+          setIsAutoQuality(false);
+
+          // Update quality display based on actual level
+          const level = data.levels[highestLevel];
+          const qualityText = getQualityTextFromLevel(level);
+          setCurrentQuality(qualityText);
+          console.log('🎯 Set initial quality to highest:', qualityText, 'Level:', highestLevel);
         }
       });
       
@@ -573,7 +578,8 @@ const SimpleHLSPlayer: React.FC<SimpleHLSPlayerProps> = ({
                       
                       {/* Manual Quality Options */}
                       {availableLevels.length > 0 ? (
-                        availableLevels.map((level, index) => {
+                        [...availableLevels].reverse().map((level, reverseIndex) => {
+                          const index = availableLevels.length - 1 - reverseIndex;
                           const qualityText = getQualityTextFromLevel(level);
                           return (
                             <button

@@ -462,83 +462,6 @@ const WatchTogetherPlayer: React.FC<WatchTogetherPlayerProps> = ({
     }
 
     switch(messageData.type) {
-      case 'control':
-      case 'global_control':
-        console.log('🎮 Control message received:', messageData);
-        // Handle control messages from host
-        const controlData = messageData as ControlMessage;
-        console.log('🎮 Control action:', controlData.action, 'from user:', controlData.username);
-
-        console.log('🎮 Processing control message:', {
-          messageFrom: controlData.username,
-          roomCreator,
-          isHost,
-          shouldProcess: controlData.username === roomCreator && !isHost,
-          currentUsername: currentUser
-        });
-
-        // Only process control messages if they're from the host AND current user is not host
-        if (controlData.username === roomCreator && !isHost) {
-          const video = videoRef.current;
-          if (!video) return;
-
-          console.log('🔄 Applying host control action:', controlData.action);
-
-          try {
-            switch (controlData.action) {
-              case 'play':
-                if (video.paused) {
-                  video.play().then(() => {
-                    console.log('▶️ Auto-synced: started playing with host');
-                  }).catch(err => {
-                    console.error('❌ Error playing video on auto-sync:', err);
-                  });
-                }
-                break;
-              case 'pause':
-                if (!video.paused) {
-                  video.pause();
-                  console.log('⏸️ Auto-synced: paused with host');
-                }
-                break;
-              case 'seek':
-                if (controlData.time !== undefined && controlData.time >= 0) {
-                  video.currentTime = controlData.time;
-                  console.log('🎯 Auto-synced: seeked to', controlData.time, 'seconds with host');
-                }
-                break;
-            }
-
-            // Show auto-sync notification in chat
-            setChatMessages(prev => [...prev, {
-              username: 'system',
-              message: `🔄 Tự động đồng bộ với chủ phòng: ${
-                controlData.action === 'play' ? 'bắt đầu phát' :
-                controlData.action === 'pause' ? 'tạm dừng' :
-                `tua đến ${formatTime(controlData.time)}`
-              }`,
-              timestamp: Date.now(),
-              type: 'system'
-            }]);
-
-          } catch (error) {
-            console.error('❌ Error applying host control:', error);
-          }
-        }
-        break;
-      case 'local_control':
-        console.log('🎮 Local control message received:', messageData);
-        // Local control messages are just for information, no action needed
-        break;
-      case 'error':
-        console.log('❌ Error message received:', messageData);
-        setChatMessages(prev => [...prev, {
-          username: 'system',
-          message: `❌ ${(messageData as ControlMessage).error}`,
-          timestamp: Date.now(),
-          type: 'system'
-        }]);
-        break;
       case 'system':
         // Handle system messages like duplicate_join prevention
         if ((messageData as any).message === 'duplicate_join') {
@@ -584,51 +507,6 @@ const WatchTogetherPlayer: React.FC<WatchTogetherPlayerProps> = ({
   const isWebSocketConnected = useCallback(() => {
     return stompClient && stompClient.connected;
   }, [stompClient]);
-
-  const sendControl = useCallback((action: 'play' | 'pause' | 'seek', time: number) => {
-    if (isWebSocketConnected()) {
-      const controlMessage = {
-        type: 'control',
-        action,
-        time,
-        username: currentUser,
-        timestamp: Date.now()
-      };
-
-      console.log('📤 Sending control message:', controlMessage);
-      console.log('🎬 Sender info:', {
-        isHost,
-        currentUser,
-        roomCreator,
-        isActuallyHost: isHost && currentUser === roomCreator
-      });
-
-      // All users can send control messages, server will validate permissions
-      stompClient.publish({
-        destination: `/app/room/${roomId}/control`,
-        body: JSON.stringify(controlMessage)
-      });
-
-      // If host is sending control, also update server position immediately
-      if (isHost) {
-        if (action === 'play' || action === 'pause') {
-          // Update server position for play/pause actions
-          fetch(`http://localhost:8080/api/rooms/${roomId}/${action}`, {
-            method: 'POST',
-            headers: { 'Content-Type': 'application/json' },
-            body: JSON.stringify({
-              username: currentUser,
-              positionMs: Math.floor((videoRef.current?.currentTime || 0) * 1000)
-            })
-          }).catch(error => {
-            console.error('❌ Error updating server for host action:', error);
-          });
-        }
-      }
-    } else {
-      console.error('❌ Cannot send control - WebSocket not connected');
-    }
-  }, [stompClient, isConnected, roomId, currentUser, isHost]);
 
   const sendChat = useCallback((message: string) => {
     console.log('💬 sendChat called:', {
@@ -699,9 +577,6 @@ const WatchTogetherPlayer: React.FC<WatchTogetherPlayerProps> = ({
     console.log('⏸️ Pause triggered at position:', positionMs);
 
     setIsPlaying(false);
-
-    // Send control message for other users to sync
-    sendControl('pause', video.currentTime);
 
     // Notify backend about pause
     try {
@@ -923,9 +798,6 @@ const WatchTogetherPlayer: React.FC<WatchTogetherPlayerProps> = ({
     if (video.paused) {
       console.log('▶️ Play triggered at position:', video.currentTime);
       await video.play().catch(err => console.error('Error playing video:', err));
-
-      // Send control message for other users to sync
-      sendControl('play', video.currentTime);
     } else {
       video.pause(); // This will trigger handlePause
     }
@@ -948,10 +820,7 @@ const WatchTogetherPlayer: React.FC<WatchTogetherPlayerProps> = ({
       video.currentTime = time;
       console.log('✅ Seek successful:', time);
 
-      // Send control message if host is seeking (for others to sync)
-      if (isHost) {
-        sendControl('seek', time);
-      }
+      // Seek completed
     } catch (error) {
       console.error('❌ Seek failed:', error);
     }
@@ -1328,7 +1197,8 @@ const WatchTogetherPlayer: React.FC<WatchTogetherPlayerProps> = ({
                       <div className="absolute bottom-12 right-0 bg-black/90 rounded-lg p-2 min-w-[120px] z-20">
                         <div className="text-white text-xs font-medium mb-2 px-2">Chất lượng video</div>
                         {availableLevels.length > 0 ? (
-                          availableLevels.map((level, index) => {
+                          [...availableLevels].reverse().map((level, reverseIndex) => {
+                            const index = availableLevels.length - 1 - reverseIndex;
                             const qualityText = getQualityTextFromLevel(level);
                             return (
                               <button

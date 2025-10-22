@@ -12,8 +12,6 @@ import java.util.Map;
 import java.util.HashMap;
 import java.util.List;
 import java.util.UUID;
-import java.util.Set;
-import java.util.concurrent.ConcurrentHashMap;
 
 @RestController
 @CrossOrigin(origins = "http://localhost:3000")
@@ -22,10 +20,6 @@ public class RoomController {
 	@Autowired
 	private WatchRoomService watchRoomService;
 
-	// Track active users in each room to prevent duplicate join notifications
-	private Map<String, Set<String>> roomUsers = new ConcurrentHashMap<>();
-
-	
 	// REST API endpoints for room management
 
 	/**
@@ -176,39 +170,7 @@ public class RoomController {
 		}
 	}
 
-	// WebSocket message handlers (existing functionality)
-
-	/**
-	 * Handle control messages (local only, no global broadcasting)
-	 */
-	@MessageMapping("/room/{roomId}/control")
-	@SendTo("/topic/room.{roomId}")
-	public Map<String, Object> handleControl(
-			@DestinationVariable String roomId,
-			Map<String, Object> message) {
-
-		// Add timestamp for drift calculation
-		message.put("timestamp", System.currentTimeMillis());
-
-		String action = (String) message.get("action");
-		String username = (String) message.get("username");
-
-		// Handle sync requests only (no global play/pause broadcasting)
-		if ("sync".equals(action)) {
-			// Get current server position for sync
-			Long currentPosition = watchRoomService.calculateCurrentPosition(roomId);
-			message.put("currentPosition", currentPosition);
-			message.put("type", "sync_response");
-		}
-
-		// For play/pause, just acknowledge but don't broadcast to others
-		if ("play".equals(action) || "pause".equals(action)) {
-			message.put("type", "local_control");
-			message.put("message", username + " " + ("play".equals(action) ? "played" : "paused") + " locally");
-		}
-
-		return message;
-	}
+	// WebSocket message handlers
 
 	/**
 	 * Chat messages
@@ -312,17 +274,10 @@ public class RoomController {
 
 			watchRoomService.updateServerVideoPosition(roomId, positionMs, isHost);
 
-			if (isHost != null && isHost) {
-				return ResponseEntity.ok(Map.of(
-					"success", true,
-					"message", "Host position updated successfully"
-				));
-			} else {
-				return ResponseEntity.ok(Map.of(
-					"success", true,
-					"message", "Non-host position update ignored (as expected)"
-				));
-			}
+			return ResponseEntity.ok(Map.of(
+				"success", true,
+				"message", "Position updated"
+			));
 		} catch (Exception e) {
 			return ResponseEntity.internalServerError().body(Map.of(
 				"success", false,
