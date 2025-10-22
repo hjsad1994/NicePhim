@@ -48,7 +48,7 @@ public class WatchRoomService {
         room.put("name", rs.getString("name"));
         room.put("created_by", UUID.fromString(rs.getString("created_by")));
         room.put("movie_id", rs.getString("movie_id"));
-        room.put("episode_id", rs.getString("episode_id"));
+        // episode_id removed in V7 migration
 
         room.put("current_time_ms", rs.getLong("current_time_ms"));
         room.put("playback_state", rs.getShort("playback_state"));
