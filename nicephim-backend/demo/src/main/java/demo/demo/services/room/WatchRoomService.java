@@ -49,7 +49,7 @@ public class WatchRoomService {
         room.put("created_by", UUID.fromString(rs.getString("created_by")));
         room.put("movie_id", rs.getString("movie_id"));
         room.put("episode_id", rs.getString("episode_id"));
-        room.put("invite_code", rs.getString("invite_code"));
+
         room.put("current_time_ms", rs.getLong("current_time_ms"));
         room.put("playback_state", rs.getShort("playback_state"));
         room.put("playback_rate", rs.getBigDecimal("playback_rate"));
@@ -105,12 +105,9 @@ public class WatchRoomService {
             }
 
             String sql = """
-                INSERT INTO dbo.watch_rooms (room_id, name, created_by, movie_id, current_time_ms, playback_state, playback_rate, invite_code, created_at)
-                VALUES (?, ?, ?, ?, ?, ?, ?, ?, GETDATE())
+                INSERT INTO dbo.watch_rooms (room_id, name, created_by, movie_id, current_time_ms, playback_state, playback_rate, created_at)
+                VALUES (?, ?, ?, ?, ?, ?, ?, GETDATE())
                 """;
-
-            // Generate a unique invite code
-            String inviteCode = UUID.randomUUID().toString().substring(0, 8).toUpperCase();
 
             jdbcTemplate.update(sql,
                 UUID.fromString(roomId),
@@ -119,8 +116,7 @@ public class WatchRoomService {
                 movieUUID,
                 0L, // current_time_ms
                 0,  // playback_state
-                1.0, // playback_rate
-                inviteCode // invite_code
+                1.0 // playback_rate
             );
 
             System.out.println("✅ Room created successfully: " + roomId);
@@ -301,7 +297,7 @@ public class WatchRoomService {
         } catch (Exception e) {
             System.err.println("❌ Error updating room state for " + roomId + ": " + e.getMessage());
             e.printStackTrace();
-            // Don't throw exception to avoid disrupting WebSocket communicationn
+            // Don't throw exception to avoid disrupting client communication
         }
     }
 
